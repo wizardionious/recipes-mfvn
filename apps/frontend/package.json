@@ -1,0 +1,11 @@
+{
+  "name": "@recipes/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Frontend not configured yet'",
+    "build": "echo 'Frontend not configured yet'",
+    "typecheck": "echo 'Frontend not configured yet'"
+  }
+}

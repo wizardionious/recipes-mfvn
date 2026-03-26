@@ -5,8 +5,8 @@ changelog: changelog-backend
 
 # Generate changelog for backend
 changelog-backend:
-	git-cliff --unreleased --include-path backend/ -o backend/CHANGELOG.md
+	git-cliff --unreleased --include-path apps/backend/ -o apps/backend/CHANGELOG.md
 
 # Generate changelog for frontend (when ready)
 changelog-frontend:
-	git-cliff --unreleased --include-path frontend/ -o frontend/CHANGELOG.md
+	git-cliff --unreleased --include-path apps/frontend/ -o apps/frontend/CHANGELOG.md

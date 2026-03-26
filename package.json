@@ -1,0 +1,22 @@
+{
+  "name": "recipes-mfvn",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter @recipes/backend dev",
+    "build:backend": "pnpm --filter @recipes/backend build",
+    "lint": "pnpm -r typecheck && pnpm check",
+    "typecheck": "pnpm -r typecheck",
+    "check": "biome check apps/ packages/",
+    "check:fix": "biome check --write apps/ packages/",
+    "format": "biome format --write apps/ packages/"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  },
+  "packageManager": "pnpm@10.24.0"
+}
