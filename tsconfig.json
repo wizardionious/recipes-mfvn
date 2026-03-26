@@ -6,6 +6,23 @@
         "lib": [
             "ES2022"
         ],
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ],
+            "@auth/*": [
+                "./src/modules/auth/*"
+            ],
+            "@recipes/*": [
+                "./src/modules/recipes/*"
+            ],
+            "@categories/*": [
+                "./src/modules/categories/*"
+            ],
+            "@common/*": [
+                "./src/common/*"
+            ]
+        },
         "outDir": "dist",
         "rootDir": "src",
         "strict": true,
