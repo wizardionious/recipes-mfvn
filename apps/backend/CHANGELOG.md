@@ -13,3 +13,4 @@
 - Moved form schemas from backend to shared package
 - *(backend)* Updated biome configuration
 - *(backend)* Created shared types
+- *(backend)* Moved auth/me logic to service
