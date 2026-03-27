@@ -8,15 +8,19 @@
     "typecheck": "pnpm -r typecheck",
     "check": "biome check apps/ packages/",
     "check:fix": "biome check --write apps/ packages/",
-    "format": "biome format --write apps/ packages/"
+    "format": "biome format --write apps/ packages/",
+    "test": "pnpm -r test",
+    "test:run": "pnpm -r test:run"
   },
   "dependencies": {
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",
+    "@vitest/coverage-v8": "^4.1.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "packageManager": "pnpm@10.24.0"
 }
