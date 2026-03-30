@@ -1,3 +1,15 @@
+## [0.3.0] - 2026-03-30
+
+### 🚀 Features
+
+- *(recipes)* Added difficulty for filtering & isPublic for recipe protection (#7)
+
+### 📚 Documentation
+
+- Updated changelog for v0.2.0
+- Updated changelog and backend package version for v0.3.0
+
+
 ## [0.2.0] - 2026-03-28
 
 ### 🚀 Features
