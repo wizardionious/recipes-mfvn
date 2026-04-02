@@ -36,6 +36,11 @@ export interface UserSummary {
   name: string;
 }
 
+export interface RecipeSummary {
+  id: string;
+  title: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
@@ -48,6 +53,7 @@ export interface Recipe {
   cookingTime: Minutes;
   servings: number;
   isPublic: boolean;
+  isFavorited: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,20 +83,10 @@ export interface AuthResponse {
 export interface Comment {
   id: string;
   text: string;
-  recipeId: string;
+  recipe: RecipeSummary;
   author: UserSummary;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface PaginatedResult<T> {
-  items: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
+export type CommentForRecipe = Omit<Comment, "recipe">;

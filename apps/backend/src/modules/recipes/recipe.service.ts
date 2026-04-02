@@ -1,76 +1,44 @@
-import type {
-  CategorySummary,
-  Difficulty,
-  Minutes,
-  PaginatedResult,
-  Recipe,
-  UserSummary,
-} from "@recipes/shared";
-import type { QueryFilter } from "mongoose";
+import type { Paginated, Recipe } from "@recipes/shared";
+import { withPagination } from "@recipes/shared";
 import { AppError } from "@/common/errors.js";
-import { UserModel } from "@/modules/auth/user.model.js";
+import { toRecipe } from "@/common/utils/mongo.js";
 import { CategoryModel } from "@/modules/categories/category.model.js";
-import type { IRecipeDocument } from "@/modules/recipes/recipe.model.js";
+import { FavoriteModel } from "@/modules/favorites/favorite.model.js";
 import { RecipeModel } from "@/modules/recipes/recipe.model.js";
 import type {
   CreateRecipeBody,
   SearchRecipeQuery,
   UpdateRecipeBody,
 } from "@/modules/recipes/recipe.schema.js";
-
-function toRecipe(doc: unknown): Recipe {
-  const d = doc as Record<string, unknown>;
-  const category = d.category as Record<string, unknown>;
-  const author = d.author as Record<string, unknown>;
-  return {
-    id: String(d._id),
-    title: d.title as string,
-    description: d.description as string,
-    ingredients: d.ingredients as Recipe["ingredients"],
-    instructions: d.instructions as string[],
-    category: {
-      id: String(category._id),
-      name: category.name as string,
-      slug: category.slug as string,
-    } satisfies CategorySummary,
-    author: {
-      id: String(author._id),
-      email: author.email as string,
-      name: author.name as string,
-    } satisfies UserSummary,
-    difficulty: d.difficulty as Difficulty,
-    cookingTime: d.cookingTime as Minutes,
-    servings: d.servings as number,
-    isPublic: d.isPublic as boolean,
-    createdAt: (d.createdAt as Date).toISOString(),
-    updatedAt: (d.updatedAt as Date).toISOString(),
-  };
-}
+import { UserModel } from "@/modules/users/user.model.js";
+import {
+  buildRecipeFilter,
+  withVisibilityFilter,
+} from "./recipe-filter.builder.js";
 
 export class RecipeService {
   async findAll(
     query: SearchRecipeQuery,
     userId?: string,
-  ): Promise<PaginatedResult<Recipe>> {
-    const { page, limit, sort, category, difficulty, search } = query;
-    const filter: QueryFilter<IRecipeDocument> = {};
+  ): Promise<Paginated<Recipe>> {
+    const { page, limit, sort, isFavorited } = query;
+    const filter = withVisibilityFilter(buildRecipeFilter(query), userId);
 
-    if (category) {
-      filter.category = category;
-    }
-    if (difficulty) {
-      filter.difficulty = difficulty;
-    }
+    // Filter by favorites
+    if (isFavorited === true) {
+      if (!userId) {
+        // Can't filter favorites without auth
+        return withPagination([], 0, page, limit);
+      }
 
-    if (search) {
-      filter.$text = { $search: search };
-    }
+      const favorites = await FavoriteModel.find({ user: userId }).lean();
+      const favoritedRecipeIds = favorites.map((f) => f.recipe);
 
-    // Filter by visibility: show public + own private recipes
-    if (!userId) {
-      filter.isPublic = true;
-    } else {
-      filter.$or = [{ isPublic: true }, { author: userId }];
+      if (favoritedRecipeIds.length === 0) {
+        return withPagination([], 0, page, limit);
+      }
+
+      filter._id = { $in: favoritedRecipeIds };
     }
 
     const [items, total] = await Promise.all([
@@ -84,18 +52,23 @@ export class RecipeService {
       RecipeModel.countDocuments(filter),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-    return {
-      items: items.map(toRecipe),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    };
+    // Get favorited recipe IDs for current user
+    let favoritedIds = new Set<string>();
+    if (userId && items.length > 0) {
+      const recipeIds = items.map((item) => String(item._id));
+      const favorites = await FavoriteModel.find({
+        user: userId,
+        recipe: { $in: recipeIds },
+      }).lean();
+      favoritedIds = new Set(favorites.map((f) => String(f.recipe)));
+    }
+
+    return withPagination(
+      items.map((item) => toRecipe(item, favoritedIds.has(String(item._id)))),
+      total,
+      page,
+      limit,
+    );
   }
 
   async findById(id: string, userId?: string): Promise<Recipe> {
@@ -103,7 +76,6 @@ export class RecipeService {
       .populate("author", "name email")
       .populate("category", "name slug")
       .lean();
-
     if (!recipe) {
       throw new AppError("Recipe not found", 404);
     }
@@ -113,7 +85,16 @@ export class RecipeService {
       throw new AppError("Recipe not found", 404);
     }
 
-    return toRecipe(recipe);
+    let isFavorited = false;
+    if (userId) {
+      const favorite = await FavoriteModel.findOne({
+        user: userId,
+        recipe: id,
+      }).lean();
+      isFavorited = !!favorite;
+    }
+
+    return toRecipe(recipe, isFavorited);
   }
 
   async create(data: CreateRecipeBody, authorId: string): Promise<Recipe> {
@@ -132,7 +113,7 @@ export class RecipeService {
       { path: "author", select: "name email" },
       { path: "category", select: "name slug" },
     ]);
-    return toRecipe(populated.toObject());
+    return toRecipe(populated.toObject(), false);
   }
 
   async update(
@@ -155,7 +136,17 @@ export class RecipeService {
       { path: "author", select: "name email" },
       { path: "category", select: "name slug" },
     ]);
-    return toRecipe(populated.toObject());
+
+    let isFavorited = false;
+    if (userId) {
+      const favorite = await FavoriteModel.findOne({
+        user: userId,
+        recipe: id,
+      }).lean();
+      isFavorited = !!favorite;
+    }
+
+    return toRecipe(populated.toObject(), isFavorited);
   }
 
   async delete(id: string, userId: string): Promise<void> {

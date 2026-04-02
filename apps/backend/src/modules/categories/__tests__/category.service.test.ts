@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockCreate, mockFind } from "@/common/utils/test-helpers.js";
 import { CategoryService } from "../category.service.js";
 
 vi.mock("../category.model.js", () => ({
@@ -40,9 +39,11 @@ describe("CategoryService", () => {
         },
       ];
 
-      vi.mocked(CategoryModel.find).mockReturnValue(
-        mockFind(mockCategories) as never,
-      );
+      vi.mocked(CategoryModel.find).mockReturnValue({
+        sort: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(mockCategories),
+        }),
+      } as never);
 
       const result = await service.findAll();
 
@@ -59,7 +60,11 @@ describe("CategoryService", () => {
     });
 
     it("should return empty array when no categories exist", async () => {
-      vi.mocked(CategoryModel.find).mockReturnValue(mockFind([]) as never);
+      vi.mocked(CategoryModel.find).mockReturnValue({
+        sort: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue([]),
+        }),
+      } as never);
 
       const result = await service.findAll();
 
@@ -79,9 +84,10 @@ describe("CategoryService", () => {
         updatedAt: mockDate,
       };
 
-      vi.mocked(CategoryModel.create).mockResolvedValue(
-        mockCreate(mockDoc) as never,
-      );
+      vi.mocked(CategoryModel.create).mockResolvedValue({
+        ...mockDoc,
+        toObject: vi.fn().mockReturnValue(mockDoc),
+      } as never);
 
       const result = await service.create(input);
 
@@ -99,9 +105,11 @@ describe("CategoryService", () => {
 
   describe("deleteById", () => {
     it("should delete category by id", async () => {
-      vi.mocked(CategoryModel.findByIdAndDelete).mockResolvedValue({
+      vi.mocked(CategoryModel.findByIdAndDelete, {
+        partial: true,
+      }).mockResolvedValue({
         _id: "1",
-      } as never);
+      });
 
       await expect(service.deleteById("1")).resolves.toBeUndefined();
       expect(CategoryModel.findByIdAndDelete).toHaveBeenCalledWith("1");

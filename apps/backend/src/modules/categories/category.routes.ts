@@ -44,7 +44,7 @@ export async function categoryRoutes(app: FastifyInstance): Promise<void> {
   );
 
   fastify.delete(
-    "/:id",
+    "/:categoryId",
     {
       schema: {
         params: categoryParamsSchema,
@@ -55,7 +55,7 @@ export async function categoryRoutes(app: FastifyInstance): Promise<void> {
       preHandler: authGuard,
     },
     async (request, reply) => {
-      await categoryService.deleteById(request.params.id);
+      await categoryService.deleteById(request.params.categoryId);
       return reply.status(204).send();
     },
   );

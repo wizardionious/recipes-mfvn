@@ -1,5 +1,10 @@
 import { difficultySchema } from "@recipes/shared";
 import { z } from "zod";
+import {
+  idParamSchema,
+  paginationQuerySchema,
+  searchQuerySchema,
+} from "@/common/schemas.js";
 
 export {
   type CreateRecipeBody,
@@ -9,16 +14,17 @@ export {
 } from "@recipes/shared";
 
 export const recipeParamsSchema = z.object({
-  id: z.string().length(24),
+  recipeId: idParamSchema,
 });
 
-export const recipeQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  sort: z.string().default("-createdAt"),
-  category: z.string().length(24).optional(),
-  difficulty: difficultySchema.optional(),
-  search: z.string().optional(),
-});
+export const recipeQuerySchema = z
+  .object({
+    sort: z.string().default("-createdAt"),
+    categoryId: idParamSchema.optional(),
+    difficulty: difficultySchema.optional(),
+    isFavorited: z.coerce.boolean().optional(),
+  })
+  .extend(paginationQuerySchema.shape)
+  .extend(searchQuerySchema.shape);
 
 export type SearchRecipeQuery = z.infer<typeof recipeQuerySchema>;

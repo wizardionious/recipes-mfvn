@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import { authGuard } from "@/common/middleware/auth.guard.js";
 import { loginSchema, registerSchema } from "@/modules/auth/auth.schema.js";
 import { AuthService } from "@/modules/auth/auth.service.js";
 
@@ -36,27 +35,6 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const result = await authService.login(request.body);
       return reply.status(200).send(result);
-    },
-  );
-
-  fastify.get(
-    "/me",
-    {
-      schema: {
-        tags: ["Auth"],
-        summary: "Get current user",
-        security: [{ bearerAuth: [] }],
-      },
-      preHandler: authGuard,
-    },
-    async (request, reply) => {
-      const userId = request.user?.userId;
-      if (!userId) {
-        return reply.status(401).send({ error: "Not authorized" });
-      }
-
-      const user = await authService.me(userId);
-      return reply.send(user);
     },
   );
 }
