@@ -1,14 +1,11 @@
 import bcrypt from "bcryptjs";
-import type { Types } from "mongoose";
 import { model, Schema } from "mongoose";
+import type { BaseDocument } from "@/common/types/mongoose.js";
 
-export interface UserDocument {
-  _id: Types.ObjectId;
+export interface UserDocument extends BaseDocument {
   email: string;
   password: string;
   name: string;
-  createdAt: Date;
-  updatedAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
 }
 
@@ -26,7 +23,6 @@ const userSchema = new Schema<UserDocument>(
   },
   {
     timestamps: true,
-    toObject: { virtuals: true },
   },
 );
 

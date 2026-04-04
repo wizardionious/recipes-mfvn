@@ -1,13 +1,12 @@
 import type { Types } from "mongoose";
 import { model, Schema } from "mongoose";
+import type { BaseDocumentWithoutUpdate } from "@/common/types/mongoose.js";
 import { RECIPE_MODEL_NAME } from "@/modules/recipes/index.js";
 import { USER_MODEL_NAME } from "@/modules/users/index.js";
 
-export interface FavoriteDocument {
-  _id: Types.ObjectId;
+export interface FavoriteDocument extends BaseDocumentWithoutUpdate {
   user: Types.ObjectId;
   recipe: Types.ObjectId;
-  createdAt: Date;
 }
 
 const favoriteSchema = new Schema<FavoriteDocument>(
@@ -21,7 +20,6 @@ const favoriteSchema = new Schema<FavoriteDocument>(
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
-    toObject: { virtuals: true },
   },
 );
 

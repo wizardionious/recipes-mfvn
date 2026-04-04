@@ -1,13 +1,10 @@
-import type { Types } from "mongoose";
 import { model, Schema } from "mongoose";
+import type { BaseDocument } from "@/common/types/mongoose.js";
 
-export interface CategoryDocument {
-  _id: Types.ObjectId;
+export interface CategoryDocument extends BaseDocument {
   name: string;
   slug: string;
   description?: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const categorySchema = new Schema<CategoryDocument>(
@@ -18,11 +15,10 @@ const categorySchema = new Schema<CategoryDocument>(
   },
   {
     timestamps: true,
-    toObject: { virtuals: true },
   },
 );
 
-categorySchema.pre("validate", async function () {
+categorySchema.pre("validate", function () {
   if (this.isModified("name") && !this.slug) {
     this.slug = this.name
       .toLowerCase()

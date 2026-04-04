@@ -1,6 +1,7 @@
 import type { Difficulty, Minutes } from "@recipes/shared";
 import type { Types } from "mongoose";
 import { model, Schema } from "mongoose";
+import type { BaseDocument } from "@/common/types/mongoose.js";
 import { CATEGORY_MODEL_NAME } from "@/modules/categories/index.js";
 import { USER_MODEL_NAME } from "@/modules/users/index.js";
 
@@ -10,8 +11,7 @@ export interface IngredientDocument {
   unit: string;
 }
 
-export interface RecipeDocument {
-  _id: Types.ObjectId;
+export interface RecipeDocument extends BaseDocument {
   title: string;
   description: string;
   ingredients: IngredientDocument[];
@@ -22,8 +22,6 @@ export interface RecipeDocument {
   cookingTime: Minutes;
   servings: number;
   isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const ingredientSchema = new Schema<IngredientDocument>(
@@ -37,7 +35,7 @@ const ingredientSchema = new Schema<IngredientDocument>(
 
 const recipeSchema = new Schema<RecipeDocument>(
   {
-    title: { type: String, required: true, trim: true, index: "text" },
+    title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     ingredients: {
       type: [ingredientSchema],
@@ -76,7 +74,6 @@ const recipeSchema = new Schema<RecipeDocument>(
   },
   {
     timestamps: true,
-    toObject: { virtuals: true },
   },
 );
 

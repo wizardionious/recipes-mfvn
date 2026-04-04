@@ -1,15 +1,13 @@
 import type { Types } from "mongoose";
 import { model, Schema } from "mongoose";
+import type { BaseDocument } from "@/common/types/mongoose.js";
 import { RECIPE_MODEL_NAME } from "@/modules/recipes/index.js";
 import { USER_MODEL_NAME } from "@/modules/users/index.js";
 
-export interface CommentDocument {
-  _id: Types.ObjectId;
+export interface CommentDocument extends BaseDocument {
   text: string;
   recipe: Types.ObjectId;
   author: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const commentSchema = new Schema<CommentDocument>(
@@ -34,7 +32,6 @@ const commentSchema = new Schema<CommentDocument>(
   },
   {
     timestamps: true,
-    toObject: { virtuals: true },
   },
 );
 
