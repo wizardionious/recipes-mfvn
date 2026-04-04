@@ -1,0 +1,39 @@
+services:
+  mongodb:
+    image: mongo:8
+    container_name: recipe-mfvn-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADMIN_PASS}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-recipes-mfvn}
+    ports:
+      - 27017:27017
+    healthcheck:
+      test: mongosh --port 27017 -u '${MONGO_ADMIN_USER}' -p '${MONGO_ADMIN_PASS}' --authenticationDatabase admin --quiet
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    volumes:
+      - mongodb_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: recipe-mfvn-mongo-express
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_BASICAUTH: false
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ADMIN_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ADMIN_PASS}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASS}@mongodb:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASS}
+    ports:
+      - "8081:8081"
+
+volumes:
+  mongodb_data:

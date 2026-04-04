@@ -19,7 +19,7 @@ export const recipeParamsSchema = z.object({
 
 export const recipeQuerySchema = z
   .object({
-    sort: z.string().default("-createdAt"),
+    sort: z.string().trim().default("-createdAt"),
     categoryId: idParamSchema.optional(),
     difficulty: difficultySchema.optional(),
     isFavorited: z.coerce.boolean().optional(),

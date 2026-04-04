@@ -1,10 +1,10 @@
 import z from "zod";
 
-export const idParamSchema = z.string().length(24);
+export const idParamSchema = z.string().trim().length(24);
 export type IdParam = z.infer<typeof idParamSchema>;
 
 export const searchQuerySchema = z.object({
-  search: z.string().optional(),
+  search: z.string().trim().optional(),
 });
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
 

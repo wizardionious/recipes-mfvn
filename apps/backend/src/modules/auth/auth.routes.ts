@@ -1,6 +1,7 @@
 import { loginSchema, registerSchema } from "@recipes/shared";
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { env } from "@/config/env.js";
 import type { AuthService } from "@/modules/auth/index.js";
 
 export interface AuthModuleOptions {
@@ -21,6 +22,12 @@ export const authRoutes: FastifyPluginAsync<AuthModuleOptions> = async (
           tags: ["Auth"],
           summary: "Register a new user",
         },
+        config: {
+          rateLimit: {
+            max: env.RATE_LIMIT_AUTH_MAX,
+            timeWindow: env.RATE_LIMIT_AUTH_WINDOW,
+          },
+        },
       },
       async (request, reply) => {
         const result = await service.register(request.body);
@@ -34,6 +41,12 @@ export const authRoutes: FastifyPluginAsync<AuthModuleOptions> = async (
           body: loginSchema,
           tags: ["Auth"],
           summary: "Login user",
+        },
+        config: {
+          rateLimit: {
+            max: env.RATE_LIMIT_AUTH_MAX,
+            timeWindow: env.RATE_LIMIT_AUTH_WINDOW,
+          },
         },
       },
       async (request, reply) => {

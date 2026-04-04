@@ -9,6 +9,10 @@ const envSchema = z.object({
   MONGO_URI: z.string(),
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string().default("7d"),
+  RATE_LIMIT_AUTH_MAX: z.coerce.number().default(5),
+  RATE_LIMIT_AUTH_WINDOW: z.string().default("3 minutes"),
+  RATE_LIMIT_GLOBAL_MAX: z.coerce.number().default(100),
+  RATE_LIMIT_GLOBAL_WINDOW: z.string().default("1 minute"),
 });
 
 const parsed = envSchema.safeParse(process.env);

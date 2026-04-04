@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  email: z.email(),
-  password: z.string().min(6),
-  name: z.string().min(2).max(100),
+  email: z.email().trim(),
+  password: z.string().trim().min(6),
+  name: z.string().trim().min(2).max(100),
 });
 
 export const loginSchema = z.object({
-  email: z.email(),
-  password: z.string(),
+  email: z.email().trim(),
+  password: z.string().trim(),
 });
 
 export type RegisterBody = z.infer<typeof registerSchema>;
