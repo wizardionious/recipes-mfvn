@@ -9,6 +9,7 @@ const envSchema = z.object({
   MONGO_URI: z.string(),
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string().default("7d"),
+  BCRYPT_SALT_ROUNDS: z.coerce.number().default(10),
   RATE_LIMIT_AUTH_MAX: z.coerce.number().default(5),
   RATE_LIMIT_AUTH_WINDOW: z.string().default("3 minutes"),
   RATE_LIMIT_GLOBAL_MAX: z.coerce.number().default(100),

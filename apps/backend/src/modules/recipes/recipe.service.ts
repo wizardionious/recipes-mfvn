@@ -74,17 +74,19 @@ export function createRecipeService(
       ]);
 
       // Get favorited recipe IDs for current user
-      let favoritedIds = new Set<string>();
-      if (userId && items.length > 0) {
-        const recipeIds = items.map((item) => String(item._id));
-        const favorites = await favoriteModel
-          .find({
-            user: userId,
-            recipe: { $in: recipeIds },
-          })
-          .lean();
-        favoritedIds = new Set(favorites.map((f) => String(f.recipe)));
-      }
+      const favoritedIds =
+        userId && items.length > 0
+          ? new Set(
+              (
+                await favoriteModel
+                  .find({
+                    user: userId,
+                    recipe: { $in: items.map((item) => String(item._id)) },
+                  })
+                  .lean()
+              ).map((f) => String(f.recipe)),
+            )
+          : new Set<string>();
 
       return withPagination(
         items.map((item) => toRecipe(item, favoritedIds.has(String(item._id)))),

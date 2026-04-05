@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { model, Schema } from "mongoose";
 import type { BaseDocument } from "@/common/types/mongoose.js";
+import { env } from "@/config/env.js";
 
 export interface UserDocument extends BaseDocument {
   email: string;
@@ -28,7 +29,7 @@ const userSchema = new Schema<UserDocument>(
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, env.BCRYPT_SALT_ROUNDS);
 });
 
 userSchema.methods.comparePassword = async function (
