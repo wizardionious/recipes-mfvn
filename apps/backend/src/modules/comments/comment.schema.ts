@@ -4,7 +4,7 @@ import { idParamSchema, paginationQuerySchema } from "@/common/schemas.js";
 export { type CreateCommentBody, createCommentSchema } from "@recipes/shared";
 
 export const commentParamsSchema = z.object({
-  commentId: idParamSchema,
+  id: idParamSchema,
 });
 
 export const recipeCommentsParamsSchema = z.object({

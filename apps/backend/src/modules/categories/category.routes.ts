@@ -47,7 +47,7 @@ export const categoryRoutes: FastifyPluginAsync<CategoryModuleOptions> = async (
       },
     )
     .delete(
-      "/:categoryId",
+      "/:id",
       {
         schema: {
           params: categoryParamsSchema,
@@ -58,7 +58,7 @@ export const categoryRoutes: FastifyPluginAsync<CategoryModuleOptions> = async (
         onRequest: authGuard,
       },
       async (request, reply) => {
-        await service.deleteById(request.params.categoryId);
+        await service.deleteById(request.params.id);
         return reply.status(204).send();
       },
     );

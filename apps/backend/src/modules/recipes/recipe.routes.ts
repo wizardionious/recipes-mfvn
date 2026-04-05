@@ -51,7 +51,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
     )
     .get(
-      "/:recipeId",
+      "/:id",
       {
         schema: {
           params: recipeParamsSchema,
@@ -62,7 +62,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         const recipe = await service.findById(
-          request.params.recipeId,
+          request.params.id,
           request.user?.userId,
         );
         return reply.send(recipe);
@@ -86,7 +86,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
     )
     .patch(
-      "/:recipeId",
+      "/:id",
       {
         schema: {
           params: recipeParamsSchema,
@@ -100,7 +100,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       async (request, reply) => {
         assertAuthenticated(request);
         const recipe = await service.update(
-          request.params.recipeId,
+          request.params.id,
           request.body,
           request.user.userId,
         );
@@ -108,7 +108,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
     )
     .delete(
-      "/:recipeId",
+      "/:id",
       {
         schema: {
           params: recipeParamsSchema,
@@ -120,12 +120,12 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        await service.delete(request.params.recipeId, request.user.userId);
+        await service.delete(request.params.id, request.user.userId);
         return reply.status(204).send();
       },
     )
     .post(
-      "/:recipeId/favorite",
+      "/:id/favorite",
       {
         schema: {
           params: recipeParamsSchema,
@@ -139,13 +139,13 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
         assertAuthenticated(request);
         const result = await favoriteService.add(
           request.user.userId,
-          request.params.recipeId,
+          request.params.id,
         );
         return reply.send(result);
       },
     )
     .delete(
-      "/:recipeId/favorite",
+      "/:id/favorite",
       {
         schema: {
           params: recipeParamsSchema,
@@ -159,13 +159,13 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
         assertAuthenticated(request);
         const result = await favoriteService.remove(
           request.user.userId,
-          request.params.recipeId,
+          request.params.id,
         );
         return reply.send(result);
       },
     )
     .get(
-      "/:recipeId/favorite",
+      "/:id/favorite",
       {
         schema: {
           params: recipeParamsSchema,
@@ -182,13 +182,13 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
 
         const favorited = await favoriteService.isFavorited(
           userId,
-          request.params.recipeId,
+          request.params.id,
         );
         return reply.send({ favorited });
       },
     )
     .get(
-      "/:recipeId/comments",
+      "/:id/comments",
       {
         schema: {
           params: recipeParamsSchema,
@@ -199,14 +199,14 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         const result = await commentService.findByRecipe(
-          { recipeId: request.params.recipeId },
+          { recipeId: request.params.id },
           request.query,
         );
         return reply.send(result);
       },
     )
     .post(
-      "/:recipeId/comments",
+      "/:id/comments",
       {
         schema: {
           params: recipeParamsSchema,
@@ -220,7 +220,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       async (request, reply) => {
         assertAuthenticated(request);
         const comment = await commentService.create(
-          request.params.recipeId,
+          request.params.id,
           request.user.userId,
           request.body,
         );
@@ -228,7 +228,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
     )
     .delete(
-      "/comments/:commentId",
+      "/comments/:id",
       {
         schema: {
           params: commentParamsSchema,
@@ -240,10 +240,7 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        await commentService.delete(
-          request.params.commentId,
-          request.user.userId,
-        );
+        await commentService.delete(request.params.id, request.user.userId);
         return reply.status(204).send();
       },
     );

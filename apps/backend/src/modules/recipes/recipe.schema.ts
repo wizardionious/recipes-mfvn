@@ -14,7 +14,7 @@ export {
 } from "@recipes/shared";
 
 export const recipeParamsSchema = z.object({
-  recipeId: idParamSchema,
+  id: idParamSchema,
 });
 
 export const recipeQuerySchema = z
