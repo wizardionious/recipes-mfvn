@@ -22,7 +22,7 @@ export const recipeQuerySchema = z
     sort: z.string().trim().default("-createdAt"),
     categoryId: idParamSchema.optional(),
     difficulty: difficultySchema.optional(),
-    isFavorited: z.coerce.boolean().optional(),
+    isFavorited: z.stringbool().optional(),
   })
   .extend(paginationQuerySchema.shape)
   .extend(searchQuerySchema.shape);
