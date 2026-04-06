@@ -1,25 +1,19 @@
 import type { Comment, CommentForRecipe, Paginated } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
-import type { QueryFilter } from "mongoose";
 import mongoose from "mongoose";
 import { AppError } from "@/common/errors.js";
 import { toComment, toCommentForRecipe } from "@/common/utils/mongo.js";
 import type {
-  CommentDocument,
   CommentModelType,
   CommentQuery,
   CreateCommentBody,
-  RecipeCommentsParams,
 } from "@/modules/comments/index.js";
-import type {
-  RecipeDocument,
-  RecipeModelType,
-} from "@/modules/recipes/index.js";
+import type { RecipeModelType } from "@/modules/recipes/index.js";
 import type { UserDocument, UserModelType } from "@/modules/users/index.js";
 
 export interface CommentService {
   findByRecipe(
-    params: RecipeCommentsParams,
+    params: { recipeId: string; userId?: string },
     query: CommentQuery,
   ): Promise<Paginated<CommentForRecipe>>;
   create(
@@ -39,34 +33,21 @@ export function createCommentService(
   return {
     findByRecipe: async (params, query) => {
       const { page, limit } = query;
-      const { recipeId } = params;
-
       if (!mongoose.isValidObjectId(params.recipeId)) {
         throw new AppError("Invalid recipe ID", 400);
       }
-      const recipeExists = await recipeModel.exists({ _id: recipeId });
+      const recipeExists = await recipeModel.exists({ _id: params.recipeId });
       if (!recipeExists) {
         throw new AppError("Recipe not found", 404);
       }
 
-      const filter: QueryFilter<CommentDocument> = { recipe: recipeId };
-
-      const [items, total] = await Promise.all([
-        commentModel
-          .find(filter)
-          .populate<{ author: Pick<UserDocument, "_id" | "name" | "email"> }>(
-            "author",
-            "name email",
-          )
-          .sort("-createdAt")
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .lean(),
-        commentModel.countDocuments(filter),
-      ]);
+      const [comments, total] = await commentModel.findByRecipe(params, query);
+      if (!comments) {
+        return withPagination([], 0, page, limit);
+      }
 
       return withPagination(
-        items.map((item) => toCommentForRecipe(item)),
+        comments.map((item) => toCommentForRecipe(item)),
         total,
         page,
         limit,
@@ -108,27 +89,13 @@ export function createCommentService(
       }
 
       const { page, limit } = query;
-      const filter: QueryFilter<CommentDocument> = { author: userId };
 
-      const [items, total] = await Promise.all([
-        commentModel
-          .find(filter)
-          .populate<{ author: Pick<UserDocument, "_id" | "name" | "email"> }>(
-            "author",
-            "name email",
-          )
-          .populate<{ recipe: Pick<RecipeDocument, "_id" | "title"> }>(
-            "recipe",
-            "title",
-          )
-          .sort("-createdAt")
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .lean(),
-        commentModel.countDocuments(filter),
-      ]);
+      const [comments, total] = await commentModel.findByUser(userId, query);
+      if (!comments) {
+        return withPagination([], 0, page, limit);
+      }
 
-      return withPagination(items.map(toComment), total, page, limit);
+      return withPagination(comments.map(toComment), total, page, limit);
     },
 
     delete: async (id, userId) => {

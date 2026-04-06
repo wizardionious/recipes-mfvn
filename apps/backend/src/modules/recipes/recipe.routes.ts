@@ -196,10 +196,11 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
           tags: ["Recipes"],
           summary: "Get comments for a recipe",
         },
+        onRequest: optionalAuth,
       },
       async (request, reply) => {
         const result = await commentService.findByRecipe(
-          { recipeId: request.params.id },
+          { recipeId: request.params.id, userId: request.user?.userId },
           request.query,
         );
         return reply.send(result);

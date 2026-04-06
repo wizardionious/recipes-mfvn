@@ -88,11 +88,14 @@ export function toComment<T extends CommentDocument>(
 }
 
 export function toCommentForRecipe<T extends CommentDocument>(
-  doc: Replace<
-    T,
-    {
-      author: Pick<UserDocument, "_id" | "name" | "email">;
-    }
+  doc: Omit<
+    Replace<
+      T,
+      {
+        author: Pick<UserDocument, "_id" | "name" | "email">;
+      }
+    >,
+    "recipe"
   >,
 ): CommentForRecipe {
   return {
