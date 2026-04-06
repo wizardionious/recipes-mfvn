@@ -1,18 +1,14 @@
-import type { Paginated, Recipe, Replace } from "@recipes/shared";
+import type { Paginated, Recipe } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
-import mongoose from "mongoose";
+import { isValidObjectId } from "mongoose";
 import { AppError } from "@/common/errors.js";
 import { toRecipe } from "@/common/utils/mongo.js";
-import type { CategoryDocument } from "@/modules/categories/index.js";
 import type {
   FavoriteModelType,
   FavoriteQuery,
 } from "@/modules/favorites/index.js";
-import type {
-  RecipeDocument,
-  RecipeModelType,
-} from "@/modules/recipes/index.js";
-import type { UserDocument, UserModelType } from "@/modules/users/index.js";
+import type { RecipeModelType } from "@/modules/recipes/index.js";
+import type { UserModelType } from "@/modules/users/index.js";
 
 export interface FavoriteService {
   add(userId: string, recipeId: string): Promise<{ favorited: true }>;
@@ -27,7 +23,7 @@ export function createFavoriteService(
   userModel: UserModelType,
 ): FavoriteService {
   async function validateUser(userId: string): Promise<void> {
-    if (!mongoose.isValidObjectId(userId)) {
+    if (!isValidObjectId(userId)) {
       throw new AppError("Invalid user ID", 400);
     }
 
@@ -37,7 +33,7 @@ export function createFavoriteService(
     }
   }
   async function validateRecipe(recipeId: string): Promise<void> {
-    if (!mongoose.isValidObjectId(recipeId)) {
+    if (!isValidObjectId(recipeId)) {
       throw new AppError("Invalid recipe ID", 400);
     }
 
@@ -55,6 +51,7 @@ export function createFavoriteService(
       await favoriteModel.create({ user: userId, recipe: recipeId });
       return { favorited: true };
     },
+
     remove: async (userId, recipeId) => {
       await validateUser(userId);
       await validateRecipe(recipeId);
@@ -62,39 +59,16 @@ export function createFavoriteService(
       await favoriteModel.findOneAndDelete({ user: userId, recipe: recipeId });
       return { favorited: false };
     },
+
     findByUser: async (userId, query) => {
       await validateUser(userId);
 
       const { page, limit } = query;
 
-      const [favorites, total] = await Promise.all([
-        favoriteModel
-          .find({ user: userId })
-          .select({ recipe: 1, createdAt: 1 })
-          .populate<{
-            recipe: Replace<
-              RecipeDocument,
-              {
-                category: Pick<CategoryDocument, "_id" | "name" | "slug">;
-                author: Pick<UserDocument, "_id" | "name" | "email">;
-              }
-            >;
-          }>({
-            path: "recipe",
-            match: { $or: [{ isPublic: true }, { author: userId }] },
-            populate: [
-              { path: "author", select: "name email" },
-              { path: "category", select: "name slug" },
-            ],
-          })
-          .sort({ createdAt: -1 })
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .lean(),
-        favoriteModel.countDocuments({
-          user: userId,
-        }),
-      ]);
+      const [favorites, total] = await favoriteModel.findByUser(userId, query);
+      if (!favorites) {
+        return withPagination([], 0, page, limit);
+      }
 
       const items = favorites
         .map((fav) => fav.recipe)
@@ -103,6 +77,7 @@ export function createFavoriteService(
 
       return withPagination(items, total, page, limit);
     },
+
     isFavorited: async (userId, recipeId) => {
       return !!(await favoriteModel.exists({ user: userId, recipe: recipeId }));
     },
