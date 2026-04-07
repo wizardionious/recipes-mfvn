@@ -53,7 +53,14 @@ export function errorHandler(
   const isDev = env.NODE_ENV === "development";
 
   request.log.error(
-    { err: error, method: request.method, url: request.url },
+    {
+      err: error,
+      method: request.method,
+      url: request.url,
+      ...("code" in error && typeof error.code === "string"
+        ? { errorCode: error.code }
+        : {}),
+    },
     "Request error",
   );
 

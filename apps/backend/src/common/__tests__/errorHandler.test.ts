@@ -6,7 +6,14 @@ vi.mock("@/config/env.js", () => ({
 }));
 
 const { errorHandler } = await import("@/common/middleware/errorHandler.js");
-const { AppError } = await import("@/common/errors.js");
+const {
+  AppError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+} = await import("@/common/errors.js");
 
 function createMockReply() {
   const send = vi.fn();
@@ -57,6 +64,53 @@ describe("errorHandler", () => {
 
     expect(status).toHaveBeenCalledWith(403);
     expect(send).toHaveBeenCalledWith({ error: "Forbidden" });
+  });
+
+  it("should handle BadRequestError", () => {
+    const error = new BadRequestError("Invalid recipe ID");
+
+    errorHandler(error, request, reply);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(send).toHaveBeenCalledWith({ error: "Invalid recipe ID" });
+  });
+
+  it("should handle UnauthorizedError", () => {
+    const error = new UnauthorizedError("Not authorized");
+
+    errorHandler(error, request, reply);
+
+    expect(status).toHaveBeenCalledWith(401);
+    expect(send).toHaveBeenCalledWith({ error: "Not authorized" });
+  });
+
+  it("should handle ForbiddenError", () => {
+    const error = new ForbiddenError("Not authorized to delete this recipe");
+
+    errorHandler(error, request, reply);
+
+    expect(status).toHaveBeenCalledWith(403);
+    expect(send).toHaveBeenCalledWith({
+      error: "Not authorized to delete this recipe",
+    });
+  });
+
+  it("should handle NotFoundError", () => {
+    const error = new NotFoundError("Recipe not found");
+
+    errorHandler(error, request, reply);
+
+    expect(status).toHaveBeenCalledWith(404);
+    expect(send).toHaveBeenCalledWith({ error: "Recipe not found" });
+  });
+
+  it("should handle ConflictError", () => {
+    const error = new ConflictError("Email already in use");
+
+    errorHandler(error, request, reply);
+
+    expect(status).toHaveBeenCalledWith(409);
+    expect(send).toHaveBeenCalledWith({ error: "Email already in use" });
   });
 
   it("should handle ZodError with validation details", () => {
@@ -130,13 +184,13 @@ describe("errorHandler", () => {
     });
   });
 
-  it("should log errors with request context", () => {
-    const error = new AppError("Not found", 404);
+  it("should log error code for typed errors", () => {
+    const error = new NotFoundError("Recipe not found");
 
     errorHandler(error, request, reply);
 
     expect(request.log.error).toHaveBeenCalledWith(
-      { err: error, method: "GET", url: "/test" },
+      { err: error, method: "GET", url: "/test", errorCode: "NOT_FOUND" },
       "Request error",
     );
   });

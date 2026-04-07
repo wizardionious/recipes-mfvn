@@ -1,5 +1,5 @@
 import type { Comment, Paginated, Recipe, User } from "@recipes/shared";
-import { AppError } from "@/common/errors.js";
+import { NotFoundError } from "@/common/errors.js";
 import { toUser } from "@/common/utils/mongo.js";
 import type { CommentQuery, CommentService } from "@/modules/comments/index.js";
 import type { FavoriteQuery } from "@/modules/favorites/favorite.schema.js";
@@ -24,7 +24,7 @@ export function createUserService(
     getCurrentUser: async (userId) => {
       const user = await userModel.findById(userId).lean();
       if (!user) {
-        throw new AppError("User not found", 404);
+        throw new NotFoundError("User not found");
       }
 
       return toUser(user);

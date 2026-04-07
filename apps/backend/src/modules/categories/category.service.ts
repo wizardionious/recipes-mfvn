@@ -1,5 +1,5 @@
 import type { Category } from "@recipes/shared";
-import { AppError } from "@/common/errors.js";
+import { ConflictError, NotFoundError } from "@/common/errors.js";
 import { toCategory } from "@/common/utils/mongo.js";
 import type {
   CategoryModelType,
@@ -29,12 +29,12 @@ export function createCategoryService(
     deleteById: async (id) => {
       const recipeCount = await recipeModel.countDocuments({ category: id });
       if (recipeCount > 0) {
-        throw new AppError("Cannot delete category with existing recipes", 409);
+        throw new ConflictError("Cannot delete category with existing recipes");
       }
 
       const result = await categoryModel.findByIdAndDelete(id);
       if (!result) {
-        throw new AppError("Category not found", 404);
+        throw new NotFoundError("Category not found");
       }
     },
   };

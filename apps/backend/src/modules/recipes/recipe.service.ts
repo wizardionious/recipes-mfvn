@@ -1,7 +1,11 @@
 import type { Paginated, Recipe } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
 import { isValidObjectId } from "mongoose";
-import { AppError } from "@/common/errors.js";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "@/common/errors.js";
 import { toRecipe } from "@/common/utils/mongo.js";
 import type {
   CategoryDocument,
@@ -56,12 +60,12 @@ export function createRecipeService(
 
     findById: async (id, userId) => {
       if (!isValidObjectId(id)) {
-        throw new AppError("Invalid recipe ID", 400);
+        throw new BadRequestError("Invalid recipe ID");
       }
 
       const recipe = await recipeModel.findByIdFull(id, userId);
       if (!recipe) {
-        throw new AppError("Recipe not found", 404);
+        throw new NotFoundError("Recipe not found");
       }
 
       return toRecipe(recipe, recipe.isFavorited);
@@ -69,20 +73,20 @@ export function createRecipeService(
 
     create: async (data, authorId) => {
       if (!isValidObjectId(authorId)) {
-        throw new AppError("Invalid author ID", 400);
+        throw new BadRequestError("Invalid author ID");
       }
       if (!isValidObjectId(data.category)) {
-        throw new AppError("Invalid category ID", 400);
+        throw new BadRequestError("Invalid category ID");
       }
 
       const categoryExists = await categoryModel.exists({ _id: data.category });
       if (!categoryExists) {
-        throw new AppError("Category not found", 400);
+        throw new NotFoundError("Category not found");
       }
 
       const authorExists = await userModel.exists({ _id: authorId });
       if (!authorExists) {
-        throw new AppError("Author not found", 400);
+        throw new NotFoundError("Author not found");
       }
 
       const recipe = await recipeModel.create({ ...data, author: authorId });
@@ -98,15 +102,15 @@ export function createRecipeService(
 
     update: async (id, data, userId) => {
       if (!isValidObjectId(id)) {
-        throw new AppError("Invalid recipe ID", 400);
+        throw new BadRequestError("Invalid recipe ID");
       }
       const recipe = await recipeModel.findById(id);
       if (!recipe) {
-        throw new AppError("Recipe not found", 404);
+        throw new NotFoundError("Recipe not found");
       }
 
       if (!recipe.author.equals(userId)) {
-        throw new AppError("Not authorized to update this recipe", 403);
+        throw new ForbiddenError("Not authorized to update this recipe");
       }
 
       Object.assign(recipe, data);
@@ -135,15 +139,15 @@ export function createRecipeService(
 
     delete: async (id, userId) => {
       if (!isValidObjectId(id)) {
-        throw new AppError("Invalid recipe ID", 400);
+        throw new BadRequestError("Invalid recipe ID");
       }
       const recipe = await recipeModel.findById(id).select("+author");
       if (!recipe) {
-        throw new AppError("Recipe not found", 404);
+        throw new NotFoundError("Recipe not found");
       }
 
       if (!recipe.author.equals(userId)) {
-        throw new AppError("Not authorized to delete this recipe", 403);
+        throw new ForbiddenError("Not authorized to delete this recipe");
       }
 
       await recipe.deleteOne();

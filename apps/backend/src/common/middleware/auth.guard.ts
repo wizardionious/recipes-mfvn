@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { AppError } from "../errors.js";
+import { UnauthorizedError } from "../errors.js";
 import type { JwtPayload } from "../utils/jwt.js";
 import { verifyToken } from "../utils/jwt.js";
 
@@ -17,7 +17,7 @@ export function assertAuthenticated(
   request: FastifyRequest,
 ): asserts request is AuthenticatedRequest {
   if (!request.user) {
-    throw new AppError("Not authorized", 401);
+    throw new UnauthorizedError("Not authorized");
   }
 }
 
@@ -25,16 +25,16 @@ export function extractToken(request: FastifyRequest): string {
   const authHeader = request.headers.authorization;
 
   if (!authHeader) {
-    throw new Error("Missing authorization header");
+    throw new UnauthorizedError("Missing authorization header");
   }
 
   const parts = authHeader.split(" ");
   if (parts.length !== 2 || parts[0] !== "Bearer") {
-    throw new Error("Missing or invalid token");
+    throw new UnauthorizedError("Missing or invalid token");
   }
 
   if (!parts[1]) {
-    throw new Error("Missing token");
+    throw new UnauthorizedError("Missing token");
   }
 
   return parts[1];

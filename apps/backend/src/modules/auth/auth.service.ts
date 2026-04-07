@@ -1,5 +1,5 @@
 import type { AuthResponse, LoginBody, RegisterBody } from "@recipes/shared";
-import { AppError } from "@/common/errors.js";
+import { ConflictError, UnauthorizedError } from "@/common/errors.js";
 import { signToken } from "@/common/utils/jwt.js";
 import { toUser } from "@/common/utils/mongo.js";
 import type { UserModelType } from "@/modules/users/index.js";
@@ -14,7 +14,7 @@ export function createAuthService(userModel: UserModelType): AuthService {
     register: async (data) => {
       const exists = await userModel.exists({ email: data.email });
       if (exists) {
-        throw new AppError("Email already in use", 409);
+        throw new ConflictError("Email already in use");
       }
 
       const user = await userModel.create(data);
@@ -30,7 +30,7 @@ export function createAuthService(userModel: UserModelType): AuthService {
         .findOne({ email: data.email })
         .select("+password");
       if (!user || !(await user.comparePassword(data.password))) {
-        throw new AppError("Invalid email or password", 401);
+        throw new UnauthorizedError("Invalid email or password");
       }
 
       const token = signToken({ userId: user.id, email: user.email });
