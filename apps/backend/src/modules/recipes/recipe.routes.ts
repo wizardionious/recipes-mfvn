@@ -43,10 +43,10 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
         onRequest: optionalAuth,
       },
       async (request, reply) => {
-        const result = await service.findAll(
-          request.query,
-          request.user?.userId,
-        );
+        const result = await service.findAll({
+          query: request.query,
+          initiator: request.user?.userId,
+        });
         return reply.send(result);
       },
     )
@@ -61,10 +61,9 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
         onRequest: optionalAuth,
       },
       async (request, reply) => {
-        const recipe = await service.findById(
-          request.params.id,
-          request.user?.userId,
-        );
+        const recipe = await service.findById(request.params.id, {
+          initiator: request.user?.userId,
+        });
         return reply.send(recipe);
       },
     )
@@ -81,7 +80,11 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        const recipe = await service.create(request.body, request.user.userId);
+
+        const recipe = await service.create({
+          data: request.body,
+          initiator: request.user.userId,
+        });
         return reply.status(201).send(recipe);
       },
     )
@@ -99,11 +102,11 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        const recipe = await service.update(
-          request.params.id,
-          request.body,
-          request.user.userId,
-        );
+
+        const recipe = await service.update(request.params.id, {
+          data: request.body,
+          initiator: request.user.userId,
+        });
         return reply.send(recipe);
       },
     )
@@ -120,7 +123,10 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        await service.delete(request.params.id, request.user.userId);
+
+        await service.delete(request.params.id, {
+          initiator: request.user.userId,
+        });
         return reply.status(204).send();
       },
     )
@@ -137,10 +143,10 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        const result = await favoriteService.add(
-          request.user.userId,
-          request.params.id,
-        );
+
+        const result = await favoriteService.add(request.params.id, {
+          initiator: request.user.userId,
+        });
         return reply.send(result);
       },
     )
@@ -157,10 +163,10 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        const result = await favoriteService.remove(
-          request.user.userId,
-          request.params.id,
-        );
+
+        const result = await favoriteService.remove(request.params.id, {
+          initiator: request.user.userId,
+        });
         return reply.send(result);
       },
     )
@@ -180,10 +186,9 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
           return reply.send({ favorited: false });
         }
 
-        const favorited = await favoriteService.isFavorited(
-          userId,
-          request.params.id,
-        );
+        const favorited = await favoriteService.isFavorited(request.params.id, {
+          initiator: userId,
+        });
         return reply.send({ favorited });
       },
     )
@@ -199,10 +204,10 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
         onRequest: optionalAuth,
       },
       async (request, reply) => {
-        const result = await commentService.findByRecipe(
-          { recipeId: request.params.id, userId: request.user?.userId },
-          request.query,
-        );
+        const result = await commentService.findByRecipe(request.params.id, {
+          query: request.query,
+          initiator: request.user?.userId,
+        });
         return reply.send(result);
       },
     )
@@ -220,11 +225,11 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        const comment = await commentService.create(
-          request.params.id,
-          request.user.userId,
-          request.body,
-        );
+
+        const comment = await commentService.create(request.params.id, {
+          data: request.body,
+          initiator: request.user.userId,
+        });
         return reply.status(201).send(comment);
       },
     )
@@ -241,7 +246,10 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
       },
       async (request, reply) => {
         assertAuthenticated(request);
-        await commentService.delete(request.params.id, request.user.userId);
+
+        await commentService.delete(request.params.id, {
+          initiator: request.user.userId,
+        });
         return reply.status(204).send();
       },
     );

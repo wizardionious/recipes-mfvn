@@ -1,6 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import { authGuard } from "@/common/middleware/auth.guard.js";
+import {
+  assertAuthenticated,
+  authGuard,
+} from "@/common/middleware/auth.guard.js";
 import {
   categoryParamsSchema,
   createCategorySchema,
@@ -42,7 +45,12 @@ export const categoryRoutes: FastifyPluginAsync<CategoryModuleOptions> = async (
         onRequest: authGuard,
       },
       async (request, reply) => {
-        const category = await service.create(request.body);
+        assertAuthenticated(request);
+
+        const category = await service.create({
+          data: request.body,
+          initiator: request.user.userId,
+        });
         return reply.status(201).send(category);
       },
     )
@@ -58,7 +66,11 @@ export const categoryRoutes: FastifyPluginAsync<CategoryModuleOptions> = async (
         onRequest: authGuard,
       },
       async (request, reply) => {
-        await service.deleteById(request.params.id);
+        assertAuthenticated(request);
+
+        await service.deleteById(request.params.id, {
+          initiator: request.user.userId,
+        });
         return reply.status(204).send();
       },
     );

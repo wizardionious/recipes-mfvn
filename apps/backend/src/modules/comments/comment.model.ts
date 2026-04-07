@@ -1,7 +1,7 @@
 import type { Replace } from "@recipes/shared";
 import type { Model, Types } from "mongoose";
 import { model, Schema } from "mongoose";
-import type { PaginationQuery } from "@/common/schemas.js";
+import type { QueryMethodParams } from "@/common/types/methods.js";
 import type { BaseDocument } from "@/common/types/mongoose.js";
 import { toObjectId } from "@/common/utils/mongo.js";
 import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
@@ -33,14 +33,12 @@ export interface CommentDocumentPopulated
 
 type FindFullByAuthor = { by: "author"; authorId: string };
 type FindFullByRecipe = { by: "recipe"; recipeId: string };
-type FindFullParams = FindFullByAuthor | FindFullByRecipe;
-type FindFullViewer = { viewerId?: string };
+type FindFullFilter = FindFullByAuthor | FindFullByRecipe;
 
 export interface CommentModelType extends Model<CommentDocument> {
   findFull(
-    params: FindFullParams,
-    viewer: FindFullViewer,
-    pagination: PaginationQuery,
+    filter: FindFullFilter,
+    params: QueryMethodParams,
   ): Promise<[CommentDocumentPopulated[], number] | [null, 0]>;
 }
 
@@ -70,29 +68,25 @@ const commentSchema = new Schema<CommentDocument, CommentModelType>(
 );
 
 commentSchema.statics.findFull = async function (
-  params: FindFullParams,
-  viewer: FindFullViewer,
-  pagination: PaginationQuery,
+  filter: FindFullFilter,
+  params: QueryMethodParams,
 ) {
-  const filter =
-    params.by === "recipe"
-      ? { recipe: toObjectId(params.recipeId) }
-      : { author: toObjectId(params.authorId) };
-
   const comments = await this.aggregate<
     WithTotalCountResult<CommentDocumentPopulated>
   >([
     {
       $match: {
-        ...filter,
+        ...(filter.by === "recipe"
+          ? { recipe: toObjectId(filter.recipeId) }
+          : { author: toObjectId(filter.authorId) }),
       },
     },
     { $unset: "__v" },
     ...withAuthor(),
-    ...withRecipe(viewer.viewerId),
+    ...withRecipe(params.initiator),
     ...withTotalCount(
       ...withSort("-createdAt"),
-      ...withPagination(pagination.page, pagination.limit),
+      ...withPagination(params.query.page, params.query.limit),
     ),
   ]);
   if (!comments.length || !comments[0]?.items.length) {

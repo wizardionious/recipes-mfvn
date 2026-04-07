@@ -5,7 +5,9 @@ import {
   withCategories,
 } from "@/modules/recipes/index.js";
 
-export function withRecipe(userId: string): PipelineStage.FacetPipelineStage[] {
+export function withRecipe(
+  userId: string | undefined,
+): PipelineStage.FacetPipelineStage[] {
   return [
     {
       $lookup: {

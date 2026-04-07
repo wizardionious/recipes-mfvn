@@ -1,6 +1,7 @@
 import type { Replace } from "@recipes/shared";
 import type { Model } from "mongoose";
 import { model, Schema, Types } from "mongoose";
+import type { QueryMethodParams } from "@/common/types/methods.js";
 import type { BaseDocumentWithoutUpdate } from "@/common/types/mongoose.js";
 import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
 import {
@@ -8,7 +9,6 @@ import {
   withSort,
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
-import type { FavoriteQuery } from "@/modules/favorites/index.js";
 import type { RecipeDocumentPopulated } from "@/modules/recipes/index.js";
 import { RECIPE_MODEL_NAME } from "@/modules/recipes/index.js";
 import { USER_MODEL_NAME } from "@/modules/users/index.js";
@@ -30,7 +30,7 @@ export interface FavoriteDocumentPopulated
 export interface FavoriteModelType extends Model<FavoriteDocument> {
   findByUser(
     userId: string,
-    query: FavoriteQuery,
+    params: QueryMethodParams,
   ): Promise<[FavoriteDocumentPopulated[], number] | [null, 0]>;
 }
 
@@ -50,7 +50,7 @@ const favoriteSchema = new Schema<FavoriteDocument, FavoriteModelType>(
 
 favoriteSchema.statics.findByUser = async function (
   userId: string,
-  query: FavoriteQuery,
+  params: QueryMethodParams,
 ) {
   const recipes = await this.aggregate<
     WithTotalCountResult<FavoriteDocumentPopulated>
@@ -61,10 +61,10 @@ favoriteSchema.statics.findByUser = async function (
       },
     },
     { $unset: ["__v", "user"] },
-    ...withRecipe(userId),
+    ...withRecipe(params.initiator),
     ...withTotalCount(
       ...withSort("-createdAt"),
-      ...withPagination(query.page, query.limit),
+      ...withPagination(params.query.page, params.query.limit),
     ),
   ]);
   if (!recipes.length || !recipes[0]?.items.length) {
