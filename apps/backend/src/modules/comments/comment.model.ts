@@ -1,7 +1,9 @@
 import type { Replace } from "@recipes/shared";
-import type { Model } from "mongoose";
-import { model, Schema, Types } from "mongoose";
+import type { Model, Types } from "mongoose";
+import { model, Schema } from "mongoose";
+import type { PaginationQuery } from "@/common/schemas.js";
 import type { BaseDocument } from "@/common/types/mongoose.js";
+import { toObjectId } from "@/common/utils/mongo.js";
 import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
 import {
   withPagination,
@@ -13,7 +15,6 @@ import { RECIPE_MODEL_NAME, withAuthor } from "@/modules/recipes/index.js";
 import type { UserDocument } from "@/modules/users/index.js";
 import { USER_MODEL_NAME } from "@/modules/users/index.js";
 import { withRecipe } from "./comment.aggregation.js";
-import type { CommentQuery } from "./comment.schema.js";
 
 export interface CommentDocument extends BaseDocument {
   text: string;
@@ -30,14 +31,16 @@ export interface CommentDocumentPopulated
     }
   > {}
 
+type FindFullByAuthor = { by: "author"; authorId: string };
+type FindFullByRecipe = { by: "recipe"; recipeId: string };
+type FindFullParams = FindFullByAuthor | FindFullByRecipe;
+type FindFullViewer = { viewerId?: string };
+
 export interface CommentModelType extends Model<CommentDocument> {
-  findByUser(
-    userId: string,
-    query: CommentQuery,
-  ): Promise<[CommentDocumentPopulated[], number] | [null, 0]>;
-  findByRecipe(
-    params: { recipeId: string; userId?: string },
-    query: CommentQuery,
+  findFull(
+    params: FindFullParams,
+    viewer: FindFullViewer,
+    pagination: PaginationQuery,
   ): Promise<[CommentDocumentPopulated[], number] | [null, 0]>;
 }
 
@@ -66,51 +69,30 @@ const commentSchema = new Schema<CommentDocument, CommentModelType>(
   },
 );
 
-commentSchema.statics.findByUser = async function (
-  userId: string,
-  query: CommentQuery,
+commentSchema.statics.findFull = async function (
+  params: FindFullParams,
+  viewer: FindFullViewer,
+  pagination: PaginationQuery,
 ) {
+  const filter =
+    params.by === "recipe"
+      ? { recipe: toObjectId(params.recipeId) }
+      : { author: toObjectId(params.authorId) };
+
   const comments = await this.aggregate<
     WithTotalCountResult<CommentDocumentPopulated>
   >([
     {
       $match: {
-        author: Types.ObjectId.createFromHexString(userId),
+        ...filter,
       },
     },
     { $unset: "__v" },
     ...withAuthor(),
-    ...withRecipe(userId),
+    ...withRecipe(viewer.viewerId),
     ...withTotalCount(
       ...withSort("-createdAt"),
-      ...withPagination(query.page, query.limit),
-    ),
-  ]);
-  if (!comments.length || !comments[0]?.items.length) {
-    return [[], comments[0]?.total ?? 0];
-  }
-
-  return [comments[0].items, comments[0].total];
-};
-
-commentSchema.statics.findByRecipe = async function (
-  params: { recipeId: string; userId?: string },
-  query: CommentQuery,
-) {
-  const comments = await this.aggregate<
-    WithTotalCountResult<CommentDocumentPopulated>
-  >([
-    {
-      $match: {
-        recipe: Types.ObjectId.createFromHexString(params.recipeId),
-      },
-    },
-    { $unset: "__v" },
-    ...withAuthor(),
-    ...withRecipe(params.userId),
-    ...withTotalCount(
-      ...withSort("-createdAt"),
-      ...withPagination(query.page, query.limit),
+      ...withPagination(pagination.page, pagination.limit),
     ),
   ]);
   if (!comments.length || !comments[0]?.items.length) {

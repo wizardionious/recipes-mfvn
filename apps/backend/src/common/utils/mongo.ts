@@ -9,10 +9,15 @@ import type {
   User,
   UserSummary,
 } from "@recipes/shared";
+import { Types } from "mongoose";
 import type { CategoryDocument } from "@/modules/categories/category.model.js";
 import type { CommentDocument } from "@/modules/comments/comment.model.js";
 import type { RecipeDocument } from "@/modules/recipes/recipe.model.js";
 import type { UserDocument } from "@/modules/users/user.model.js";
+
+export function toObjectId(id: string): Types.ObjectId {
+  return Types.ObjectId.createFromHexString(id);
+}
 
 export function toRecipe<T extends RecipeDocument>(
   doc: Replace<

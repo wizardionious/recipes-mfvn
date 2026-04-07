@@ -20,12 +20,12 @@ export interface CommentService {
     params: { recipeId: string; userId?: string },
     query: CommentQuery,
   ): Promise<Paginated<CommentForRecipe>>;
+  findByUser(userId: string, query: CommentQuery): Promise<Paginated<Comment>>;
   create(
     recipeId: string,
     authorId: string,
     data: CreateCommentBody,
   ): Promise<CommentForRecipe>;
-  findByUser(userId: string, query: CommentQuery): Promise<Paginated<Comment>>;
   delete(id: string, userId: string): Promise<void>;
 }
 
@@ -45,7 +45,11 @@ export function createCommentService(
         throw new NotFoundError("Recipe not found");
       }
 
-      const [comments, total] = await commentModel.findByRecipe(params, query);
+      const [comments, total] = await commentModel.findFull(
+        { by: "recipe", recipeId: params.recipeId },
+        { viewerId: params.userId },
+        query,
+      );
       if (!comments) {
         return withPagination([], 0, page, limit);
       }
@@ -56,6 +60,25 @@ export function createCommentService(
         page,
         limit,
       );
+    },
+
+    findByUser: async (userId, query) => {
+      if (!mongoose.isValidObjectId(userId)) {
+        throw new BadRequestError("Invalid user ID");
+      }
+
+      const { page, limit } = query;
+
+      const [comments, total] = await commentModel.findFull(
+        { by: "author", authorId: userId },
+        { viewerId: userId },
+        query,
+      );
+      if (!comments) {
+        return withPagination([], 0, page, limit);
+      }
+
+      return withPagination(comments.map(toComment), total, page, limit);
     },
 
     create: async (recipeId, authorId, data) => {
@@ -85,21 +108,6 @@ export function createCommentService(
       }>("author", "name email");
 
       return toCommentForRecipe(populated.toObject<typeof populated>());
-    },
-
-    findByUser: async (userId, query) => {
-      if (!mongoose.isValidObjectId(userId)) {
-        throw new BadRequestError("Invalid user ID");
-      }
-
-      const { page, limit } = query;
-
-      const [comments, total] = await commentModel.findByUser(userId, query);
-      if (!comments) {
-        return withPagination([], 0, page, limit);
-      }
-
-      return withPagination(comments.map(toComment), total, page, limit);
     },
 
     delete: async (id, userId) => {
