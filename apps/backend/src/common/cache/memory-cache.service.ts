@@ -57,5 +57,10 @@ export function createMemoryCache(
     async flush(): Promise<void> {
       cache.clear();
     },
+
+    async close(): Promise<void> {
+      await this.flush();
+      // Nothing to close for in-memory cache
+    },
   };
 }

@@ -65,5 +65,10 @@ export function createRedisCache(options: RedisCacheOptions): CacheService {
     async flush(): Promise<void> {
       await redis.flushdb();
     },
+
+    async close(): Promise<void> {
+      await this.flush();
+      await redis.quit();
+    },
   };
 }

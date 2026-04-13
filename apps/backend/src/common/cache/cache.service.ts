@@ -10,4 +10,5 @@ export interface CacheService {
   delete(key: string): Promise<void>;
   deletePattern(pattern: string): Promise<void>;
   flush(): Promise<void>;
+  close(): Promise<void>;
 }

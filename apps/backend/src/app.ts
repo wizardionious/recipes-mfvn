@@ -124,7 +124,7 @@ export async function buildApp() {
   });
 
   app.addHook("onClose", async () => {
-    await cache.flush();
+    await cache.close();
   });
 
   return app;
