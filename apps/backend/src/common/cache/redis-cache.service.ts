@@ -8,7 +8,7 @@ export interface RedisCacheOptions {
 }
 
 export function createRedisCache(options: RedisCacheOptions): CacheService {
-  const { url, defaultTTL = 300, keyPrefix = "" } = options;
+  const { url, defaultTTL, keyPrefix = "" } = options;
 
   const redis = new Redis(url, {
     maxRetriesPerRequest: 3,
@@ -35,8 +35,15 @@ export function createRedisCache(options: RedisCacheOptions): CacheService {
       value: T,
       ttlSeconds?: number,
     ): Promise<void> {
-      const ttl = ttlSeconds ?? defaultTTL;
-      await redis.setex(prefixed(key), ttl, JSON.stringify(value));
+      if (ttlSeconds) {
+        await redis.setex(prefixed(key), ttlSeconds, JSON.stringify(value));
+        return;
+      } else if (defaultTTL) {
+        await redis.setex(prefixed(key), defaultTTL, JSON.stringify(value));
+        return;
+      }
+
+      await redis.set(prefixed(key), JSON.stringify(value));
     },
 
     async delete(key: string): Promise<void> {

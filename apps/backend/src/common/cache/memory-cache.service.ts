@@ -10,17 +10,17 @@ export interface MemoryCacheOptions {
  * Creates a new memory cache service.
  *
  * @param options.maxSize - The maximum number of items in the cache. Defaults to 1000.
- * @param options.defaultTtl - The default TTL for cache items in seconds. Defaults to 300.
+ * @param options.defaultTTL - The default TTL for cache items in seconds. If not set, items do not expire.
  * @returns A new memory cache service.
  */
 export function createMemoryCache(
   options: MemoryCacheOptions = {},
 ): CacheService {
-  const { maxSize = 1000, defaultTTL = 300 } = options;
+  const { maxSize = 1000, defaultTTL } = options;
 
   const cache = new LRUCache<string, NonNullable<unknown>>({
     max: maxSize,
-    ttl: defaultTTL * 1000,
+    ttl: (defaultTTL ?? 0) * 1000,
     updateAgeOnGet: true,
   });
 
@@ -34,9 +34,15 @@ export function createMemoryCache(
       value: T,
       ttlSeconds?: number,
     ): Promise<void> {
-      cache.set(key, value, {
-        ttl: (ttlSeconds ?? defaultTTL) * 1000,
-      });
+      if (ttlSeconds) {
+        cache.set(key, value, { ttl: ttlSeconds * 1000 });
+        return;
+      } else if (defaultTTL) {
+        cache.set(key, value, { ttl: defaultTTL * 1000 });
+        return;
+      }
+
+      cache.set(key, value);
     },
 
     async delete(key: string): Promise<void> {
