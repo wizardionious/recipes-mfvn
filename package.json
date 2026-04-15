@@ -4,6 +4,9 @@
   "scripts": {
     "dev:backend": "pnpm --filter @recipes/backend dev",
     "build:backend": "pnpm --filter @recipes/backend build",
+    "dev:frontend": "pnpm --filter @recipes/frontend dev",
+    "build:frontend": "pnpm --filter @recipes/frontend build",
+    "dev": "pnpm dev:backend & pnpm dev:frontend",
     "lint": "pnpm -r typecheck && pnpm check",
     "typecheck": "pnpm -r typecheck",
     "check": "biome check apps/ packages/",
@@ -17,7 +20,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.9",
+    "@biomejs/biome": "^2.4.10",
     "@vitest/coverage-v8": "^4.1.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",

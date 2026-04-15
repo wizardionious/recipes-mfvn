@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "tailwindcss-primeui";
+@import "primeicons/primeicons.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+
+  --color-terracotta: #c27a54;
+  --color-terracotta-dark: #a8643f;
+  --color-terracotta-light: #d99a78;
+}
