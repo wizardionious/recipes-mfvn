@@ -5,7 +5,6 @@ import {
 } from "@recipes/shared";
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import { z } from "zod";
 import {
   assertAuthenticated,
   authGuard,
@@ -17,7 +16,6 @@ import {
   commentQuerySchema,
   createCommentSchema,
 } from "@/modules/comments/index.js";
-import type { FavoriteService } from "@/modules/favorites/index.js";
 import type { RecipeService } from "@/modules/recipes/index.js";
 import {
   createRecipeSchema,
@@ -28,13 +26,12 @@ import {
 
 export interface RecipeModuleOptions {
   service: RecipeService;
-  favoriteService: FavoriteService;
   commentService: CommentService;
 }
 
 export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
   fastify,
-  { service, favoriteService, commentService },
+  { service, commentService },
 ) => {
   fastify
     .withTypeProvider<ZodTypeProvider>()
@@ -146,74 +143,6 @@ export const recipeRoutes: FastifyPluginAsync<RecipeModuleOptions> = async (
           initiator: { id: request.user.userId, role: request.user.role },
         });
         return reply.status(204).send();
-      },
-    )
-    .post(
-      "/:id/favorite",
-      {
-        schema: {
-          params: recipeParamsSchema,
-          response: {
-            200: z.object({ favorited: z.literal(true) }),
-          },
-          tags: ["Recipes"],
-          summary: "Add recipe to favorites",
-          security: [{ bearerAuth: [] }],
-        },
-        onRequest: authGuard,
-      },
-      async (request, reply) => {
-        assertAuthenticated(request);
-
-        const result = await favoriteService.add(request.params.id, {
-          initiator: { id: request.user.userId, role: request.user.role },
-        });
-        return reply.send(result);
-      },
-    )
-    .delete(
-      "/:id/favorite",
-      {
-        schema: {
-          params: recipeParamsSchema,
-          response: {
-            200: z.object({ favorited: z.literal(false) }),
-          },
-          tags: ["Recipes"],
-          summary: "Remove recipe from favorites",
-          security: [{ bearerAuth: [] }],
-        },
-        onRequest: authGuard,
-      },
-      async (request, reply) => {
-        assertAuthenticated(request);
-
-        const result = await favoriteService.remove(request.params.id, {
-          initiator: { id: request.user.userId, role: request.user.role },
-        });
-        return reply.send(result);
-      },
-    )
-    .get(
-      "/:id/favorite",
-      {
-        schema: {
-          params: recipeParamsSchema,
-          response: {
-            200: z.object({ favorited: z.boolean() }),
-          },
-          tags: ["Recipes"],
-          summary: "Check if recipe is favorited",
-        },
-        onRequest: authGuard,
-      },
-      async (request, reply) => {
-        assertAuthenticated(request);
-
-        const favorited = await favoriteService.isFavorited(request.params.id, {
-          initiator: { id: request.user.userId, role: request.user.role },
-        });
-        return reply.send({ favorited });
       },
     )
     .get(

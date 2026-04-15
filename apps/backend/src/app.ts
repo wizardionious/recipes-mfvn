@@ -29,6 +29,7 @@ import {
 import {
   createFavoriteService,
   FavoriteModel,
+  favoriteRoutes,
 } from "@/modules/favorites/index.js";
 import {
   createRecipeService,
@@ -108,12 +109,11 @@ export async function buildApp(log: Logger) {
       CategoryModel,
       cache,
     ),
-    favoriteService: createFavoriteService(
-      FavoriteModel,
-      RecipeModel,
-      UserModel,
-    ),
     commentService: createCommentService(CommentModel, RecipeModel, UserModel),
+    prefix: "/api/recipes",
+  });
+  app.register(favoriteRoutes, {
+    service: createFavoriteService(FavoriteModel, RecipeModel, UserModel),
     prefix: "/api/recipes",
   });
   app.register(categoryRoutes, {
