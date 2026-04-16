@@ -1,9 +1,9 @@
-import type { SearchCategoryQuery } from "@recipes/shared";
+import type { CategoryQuery } from "@recipes/shared";
 import { hashFilters } from "@/common/utils/cache.js";
 
 export const categoryCache = {
   keys: {
-    list: (filters: SearchCategoryQuery) =>
+    list: (filters: CategoryQuery) =>
       `categories:list:${hashFilters({
         sort: filters.sort,
       })}`,

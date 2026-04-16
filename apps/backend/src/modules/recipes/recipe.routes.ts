@@ -1,7 +1,12 @@
 import {
   commentForRecipeSchema,
+  commentQuerySchema,
+  createCommentSchema,
+  createRecipeSchema,
   paginatedSchema,
+  recipeQuerySchema,
   recipeSchema,
+  updateRecipeSchema,
 } from "@recipes/shared";
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -11,18 +16,9 @@ import {
   optionalAuth,
 } from "@/common/middleware/auth.guard.js";
 import type { CommentService } from "@/modules/comments/index.js";
-import {
-  commentParamsSchema,
-  commentQuerySchema,
-  createCommentSchema,
-} from "@/modules/comments/index.js";
+import { commentParamsSchema } from "@/modules/comments/index.js";
 import type { RecipeService } from "@/modules/recipes/index.js";
-import {
-  createRecipeSchema,
-  recipeParamsSchema,
-  recipeQuerySchema,
-  updateRecipeSchema,
-} from "@/modules/recipes/index.js";
+import { recipeParamsSchema } from "@/modules/recipes/index.js";
 
 export interface RecipeModuleOptions {
   service: RecipeService;

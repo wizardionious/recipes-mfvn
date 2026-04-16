@@ -1,4 +1,4 @@
-import type { Minutes } from "@recipes/shared";
+import type { Minutes, RecipeQuery } from "@recipes/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockCache,
@@ -48,7 +48,11 @@ describe("recipeService", () => {
       const populated = populateRecipeDoc(createRecipeDoc());
       recipeModel.searchFull.mockResolvedValue([[populated], 1]);
 
-      const query = { page: 1, limit: 10, sort: "-createdAt" };
+      const query = {
+        page: 1,
+        limit: 10,
+        sort: "-createdAt",
+      } satisfies RecipeQuery;
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
@@ -63,7 +67,11 @@ describe("recipeService", () => {
     it("should return empty when searchFull returns null", async () => {
       recipeModel.searchFull.mockResolvedValue([null, 0]);
 
-      const query = { page: 1, limit: 10, sort: "-createdAt" };
+      const query = {
+        page: 1,
+        limit: 10,
+        sort: "-createdAt",
+      } satisfies RecipeQuery;
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
@@ -79,7 +87,7 @@ describe("recipeService", () => {
         limit: 10,
         sort: "-createdAt",
         isFavorited: true,
-      };
+      } satisfies RecipeQuery;
       const result = await service.findAll({
         query,
         initiator: noInitiator(),

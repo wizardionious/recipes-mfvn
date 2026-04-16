@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { categorySummarySchema } from "../categories/category.schema.js";
+import {
+  createSortSchema,
+  paginationQuerySchema,
+  searchQuerySchema,
+} from "../query.js";
 import { userSummarySchema } from "../users/user.schema.js";
 import { ingredientSchema } from "./ingredient.schema.js";
 
@@ -43,3 +48,15 @@ export const recipeSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+export const recipeQuerySchema = z
+  .object({
+    sort: createSortSchema(["-createdAt", "cookingTime"]).default("-createdAt"),
+    categoryId: z.string().optional(),
+    difficulty: difficultySchema.optional(),
+    isFavorited: z.stringbool().optional(),
+  })
+  .extend(paginationQuerySchema.shape)
+  .extend(searchQuerySchema.shape);
+
+export type RecipeQuery = z.infer<typeof recipeQuerySchema>;

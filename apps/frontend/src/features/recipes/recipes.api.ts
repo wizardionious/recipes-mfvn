@@ -1,21 +1,11 @@
 import type {
   CreateRecipeBody,
-  Difficulty,
   Paginated,
   Recipe,
+  RecipeQuery,
   UpdateRecipeBody,
 } from "@recipes/shared";
 import { apiClient } from "@/common/api/client";
-
-export interface RecipeFilters {
-  page?: number;
-  limit?: number;
-  search?: string;
-  categoryId?: string;
-  difficulty?: Difficulty;
-  isFavorited?: boolean;
-  sort?: string;
-}
 
 /**
  * Retrieve recipes with the given filters.
@@ -24,7 +14,7 @@ export interface RecipeFilters {
  * @returns Paginated list of recipes.
  */
 export function getRecipes(
-  filters: RecipeFilters = {},
+  filters: Partial<RecipeQuery> = {},
 ): Promise<Paginated<Recipe>> {
   return apiClient<Paginated<Recipe>>("/api/recipes", {
     query: {

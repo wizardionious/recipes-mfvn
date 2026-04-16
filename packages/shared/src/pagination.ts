@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-export interface PaginationQuery {
-  page: number;
-  limit: number;
-}
-
 export interface Paginated<T> {
   items: T[];
   pagination: {

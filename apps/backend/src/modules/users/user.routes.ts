@@ -1,5 +1,7 @@
 import {
   commentForRecipeSchema,
+  commentQuerySchema,
+  favoriteQuerySchema,
   paginatedSchema,
   recipeSchema,
   userSchema,
@@ -10,8 +12,6 @@ import {
   assertAuthenticated,
   authGuard,
 } from "@/common/middleware/auth.guard.js";
-import { commentQuerySchema } from "@/modules/comments/index.js";
-import { favoriteQuerySchema } from "@/modules/favorites/favorite.schema.js";
 import type { UserService } from "@/modules/users/index.js";
 
 export interface UserPluginOptions {

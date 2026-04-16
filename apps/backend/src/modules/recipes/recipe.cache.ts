@@ -1,24 +1,15 @@
-import crypto from "node:crypto";
-import type { SearchRecipeQuery } from "./recipe.schema.js";
-
-function hashFilters(query: SearchRecipeQuery): string {
-  const stable = {
-    categoryId: query.categoryId,
-    difficulty: query.difficulty,
-    sort: query.sort,
-  };
-  return crypto
-    .createHash("md5")
-    .update(JSON.stringify(stable))
-    .digest("hex")
-    .slice(0, 8);
-}
+import type { RecipeQuery } from "@recipes/shared";
+import { hashFilters } from "@/common/utils/cache.js";
 
 export const recipeCache = {
   keys: {
     byId: (id: string) => `recipes:id:${id}`,
-    list: (filters: SearchRecipeQuery) =>
-      `recipes:list:${filters.page}:${filters.limit}:${hashFilters(filters)}`,
+    list: (filters: RecipeQuery) =>
+      `recipes:list:${filters.page}:${filters.limit}:${hashFilters({
+        categoryId: filters.categoryId,
+        difficulty: filters.difficulty,
+        sort: filters.sort,
+      })}`,
     allPattern: () => "recipes:*",
   },
   ttl: {

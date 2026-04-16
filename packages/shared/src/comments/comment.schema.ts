@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paginationQuerySchema } from "../query.js";
 import { recipeSummarySchema } from "../recipes/recipe.schema.js";
 import { userSummarySchema } from "../users/user.schema.js";
 
@@ -16,3 +17,5 @@ export const commentSchema = z.object({
 });
 
 export const commentForRecipeSchema = commentSchema.omit({ recipe: true });
+
+export const commentQuerySchema = paginationQuerySchema;

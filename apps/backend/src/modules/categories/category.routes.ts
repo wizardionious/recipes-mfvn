@@ -1,4 +1,8 @@
-import { categoryQuerySchema, categorySchema } from "@recipes/shared";
+import {
+  categoryQuerySchema,
+  categorySchema,
+  createCategorySchema,
+} from "@recipes/shared";
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -7,10 +11,7 @@ import {
   authGuard,
 } from "@/common/middleware/auth.guard.js";
 import { rolesGuard } from "@/common/middleware/role.guard.js";
-import {
-  categoryParamsSchema,
-  createCategorySchema,
-} from "@/modules/categories/category.schema.js";
+import { categoryParamsSchema } from "@/modules/categories/category.schema.js";
 import type { CategoryService } from "@/modules/categories/category.service.js";
 
 export interface CategoryModuleOptions {

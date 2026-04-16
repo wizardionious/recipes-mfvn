@@ -1,4 +1,4 @@
-import type { SearchCategoryQuery } from "@recipes/shared";
+import type { CategoryQuery } from "@recipes/shared";
 import type { Model } from "mongoose";
 import { model, Schema } from "mongoose";
 import type { BaseDocument } from "@/common/types/mongoose.js";
@@ -16,7 +16,7 @@ export interface CategoryDocumentWithCount extends CategoryDocument {
 
 export interface CategoryModelType extends Model<CategoryDocument> {
   searchFull(
-    query: SearchCategoryQuery,
+    query: CategoryQuery,
     withCount?: boolean,
   ): Promise<CategoryDocumentWithCount[]>;
 }
@@ -43,7 +43,7 @@ categorySchema.pre("validate", function () {
 });
 
 categorySchema.statics.searchFull = async function (
-  query: SearchCategoryQuery,
+  query: CategoryQuery,
   withCount: boolean = true,
 ): Promise<CategoryDocumentWithCount[]> {
   const result = await this.aggregate<CategoryDocumentWithCount>([

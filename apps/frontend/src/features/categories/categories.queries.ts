@@ -1,4 +1,4 @@
-import type { SearchCategoryQuery } from "@recipes/shared";
+import type { CategoryQuery } from "@recipes/shared";
 import { useQuery } from "@tanstack/vue-query";
 import type { MaybeRef } from "vue";
 import { toValue } from "vue";
@@ -13,9 +13,7 @@ const categoryKeys = {
  *
  * @returns List of categories.
  */
-export function useCategories(
-  filters: MaybeRef<Partial<SearchCategoryQuery>> = {},
-) {
+export function useCategories(filters: MaybeRef<Partial<CategoryQuery>> = {}) {
   return useQuery({
     queryKey: categoryKeys.all,
     queryFn: () => getCategories(toValue(filters)),

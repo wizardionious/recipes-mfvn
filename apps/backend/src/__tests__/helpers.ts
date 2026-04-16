@@ -1,4 +1,4 @@
-import type { Minutes } from "@recipes/shared";
+import type { Minutes, UserRole } from "@recipes/shared";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { Types } from "mongoose";
 import type { Mock } from "vitest";
@@ -12,7 +12,7 @@ import type {
   RecipeDocument,
   RecipeDocumentPopulated,
 } from "@/modules/recipes/recipe.model.js";
-import type { UserDocument, UserRole } from "@/modules/users/user.model.js";
+import type { UserDocument } from "@/modules/users/user.model.js";
 
 type LocalProcedure = (...args: unknown[]) => unknown;
 function viFn<T extends LocalProcedure>(fn?: T): Mock<T> {

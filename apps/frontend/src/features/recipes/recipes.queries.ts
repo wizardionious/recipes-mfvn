@@ -1,4 +1,4 @@
-import type { UpdateRecipeBody } from "@recipes/shared";
+import type { RecipeQuery, UpdateRecipeBody } from "@recipes/shared";
 import {
   useInfiniteQuery,
   useMutation,
@@ -7,7 +7,6 @@ import {
 } from "@tanstack/vue-query";
 import type { MaybeRef } from "vue";
 import { toValue } from "vue";
-import type { RecipeFilters } from "./recipes.api";
 import {
   createRecipe,
   deleteRecipe,
@@ -19,9 +18,10 @@ import {
 export const recipeKeys = {
   all: ["recipes"] as const,
   lists: () => [...recipeKeys.all, "list"] as const,
-  list: (query: RecipeFilters) => [...recipeKeys.lists(), query] as const,
+  list: (query: Partial<RecipeQuery>) =>
+    [...recipeKeys.lists(), query] as const,
   detail: (id: string) => [...recipeKeys.all, id] as const,
-  infinite: (query: RecipeFilters) =>
+  infinite: (query: Partial<RecipeQuery>) =>
     [...recipeKeys.list(query), "infinite"] as const,
 } as const;
 
@@ -31,7 +31,7 @@ export const recipeKeys = {
  * @param filters - filters for the query.
  * @returns Paginated list of recipes.
  */
-export function useRecipes(filters: MaybeRef<RecipeFilters>) {
+export function useRecipes(filters: MaybeRef<Partial<RecipeQuery>>) {
   return useQuery({
     queryKey: recipeKeys.list(toValue(filters)),
     queryFn: () => getRecipes(toValue(filters)),
@@ -45,7 +45,7 @@ export function useRecipes(filters: MaybeRef<RecipeFilters>) {
  * @returns Paginated list of recipes.
  */
 export function useInfiniteRecipes(
-  filters: MaybeRef<Omit<RecipeFilters, "page">>,
+  filters: MaybeRef<Omit<Partial<RecipeQuery>, "page">>,
 ) {
   return useInfiniteQuery({
     queryKey: recipeKeys.infinite(toValue(filters)),

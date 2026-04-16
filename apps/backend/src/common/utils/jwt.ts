@@ -1,7 +1,7 @@
+import type { UserRole } from "@recipes/shared";
 import jwt from "jsonwebtoken";
 import type { StringValue } from "ms";
 import { env } from "@/config/env.js";
-import type { UserRole } from "@/modules/users/user.model.js";
 
 export interface JwtPayload {
   userId: string;

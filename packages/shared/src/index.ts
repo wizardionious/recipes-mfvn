@@ -18,6 +18,9 @@ export type * from "./recipes/recipe.types.js";
 export * from "./recipes/ingredient.schema.js";
 export type * from "./recipes/ingredient.types.js";
 
+export * from "./favorites/favorite.schema.js";
+export type * from "./favorites/favorite.types.js";
+
 export * from "./pagination.js";
 export * from "./utils.js";
 export * from "./query.js";

@@ -1,4 +1,10 @@
-import type { Paginated, Recipe } from "@recipes/shared";
+import type {
+  CreateRecipeBody,
+  Paginated,
+  Recipe,
+  RecipeQuery,
+  UpdateRecipeBody,
+} from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
 import { isValidObjectId } from "mongoose";
 import type { CacheService } from "@/common/cache/cache.service.js";
@@ -21,19 +27,12 @@ import type {
   CategoryModelType,
 } from "@/modules/categories/index.js";
 import type { FavoriteModelType } from "@/modules/favorites/index.js";
-import type {
-  CreateRecipeBody,
-  RecipeModelType,
-  SearchRecipeQuery,
-  UpdateRecipeBody,
-} from "@/modules/recipes/index.js";
+import type { RecipeModelType } from "@/modules/recipes/index.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
 import type { UserDocument, UserModelType } from "@/modules/users/index.js";
 
 export interface RecipeService {
-  findAll(
-    params: QueryMethodParams<SearchRecipeQuery>,
-  ): Promise<Paginated<Recipe>>;
+  findAll(params: QueryMethodParams<RecipeQuery>): Promise<Paginated<Recipe>>;
   findById(
     id: string,
     params: InitiatedMethodParams<OptionalInitiator>,

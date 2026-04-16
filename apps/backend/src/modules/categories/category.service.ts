@@ -1,4 +1,8 @@
-import type { Category, SearchCategoryQuery } from "@recipes/shared";
+import type {
+  Category,
+  CategoryQuery,
+  CreateCategoryBody,
+} from "@recipes/shared";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { ConflictError, NotFoundError } from "@/common/errors.js";
 import type {
@@ -8,14 +12,11 @@ import type {
 } from "@/common/types/methods.js";
 import { toCategory } from "@/common/utils/mongo.js";
 import { categoryCache } from "@/modules/categories/category.cache.js";
-import type {
-  CategoryModelType,
-  CreateCategoryBody,
-} from "@/modules/categories/index.js";
+import type { CategoryModelType } from "@/modules/categories/index.js";
 import type { RecipeModelType } from "@/modules/recipes/index.js";
 
 export interface CategoryService {
-  findAll(params: QueryMethodParams<SearchCategoryQuery>): Promise<Category[]>;
+  findAll(params: QueryMethodParams<CategoryQuery>): Promise<Category[]>;
   create(params: CreateMethodParams<CreateCategoryBody>): Promise<Category>;
   deleteById(categoryId: string, params: DeleteMethodParams): Promise<void>;
 }

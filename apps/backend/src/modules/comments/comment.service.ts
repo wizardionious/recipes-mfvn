@@ -1,4 +1,9 @@
-import type { Comment, CommentForRecipe, Paginated } from "@recipes/shared";
+import type {
+  Comment,
+  CommentForRecipe,
+  CreateCommentBody,
+  Paginated,
+} from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
 import { isValidObjectId } from "mongoose";
 import {
@@ -12,10 +17,7 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toComment, toCommentForRecipe } from "@/common/utils/mongo.js";
-import type {
-  CommentModelType,
-  CreateCommentBody,
-} from "@/modules/comments/index.js";
+import type { CommentModelType } from "@/modules/comments/index.js";
 import type { RecipeModelType } from "@/modules/recipes/index.js";
 import type { UserDocument, UserModelType } from "@/modules/users/index.js";
 

@@ -1,10 +1,9 @@
+import type { UserRole } from "@recipes/shared";
 import bcrypt from "bcryptjs";
 import type { Model } from "mongoose";
 import { model, Schema } from "mongoose";
 import type { BaseDocument } from "@/common/types/mongoose.js";
 import { env } from "@/config/env.js";
-
-export type UserRole = "user" | "admin";
 
 export interface UserDocument extends BaseDocument {
   email: string;

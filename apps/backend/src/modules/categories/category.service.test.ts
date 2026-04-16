@@ -1,4 +1,4 @@
-import type { SearchCategoryQuery } from "@recipes/shared";
+import type { CategoryQuery } from "@recipes/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCategoryDoc,
@@ -44,7 +44,7 @@ describe("categoryService", () => {
       ];
       categoryModel.searchFull.mockResolvedValue(docs);
 
-      const query = { sort: "name" } satisfies SearchCategoryQuery;
+      const query = { sort: "name" } satisfies CategoryQuery;
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
@@ -61,7 +61,7 @@ describe("categoryService", () => {
     it("should return empty array when no categories exist", async () => {
       categoryModel.searchFull.mockResolvedValue([]);
 
-      const query = { sort: "name" } satisfies SearchCategoryQuery;
+      const query = { sort: "name" } satisfies CategoryQuery;
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
@@ -79,7 +79,7 @@ describe("categoryService", () => {
       ];
       categoryModel.searchFull.mockResolvedValue(docs);
 
-      const query = { sort: "name" } satisfies SearchCategoryQuery;
+      const query = { sort: "name" } satisfies CategoryQuery;
       await service.findAll({
         query,
         initiator: noInitiator(),

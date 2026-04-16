@@ -1,6 +1,11 @@
-import type { Comment, Paginated, Recipe, User } from "@recipes/shared";
+import type {
+  Comment,
+  Paginated,
+  PaginationQuery,
+  Recipe,
+  User,
+} from "@recipes/shared";
 import { NotFoundError } from "@/common/errors.js";
-import type { PaginationQuery } from "@/common/schemas.js";
 import type {
   DefaultInitiator,
   QueryMethodParams,
