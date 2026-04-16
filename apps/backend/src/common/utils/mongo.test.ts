@@ -47,6 +47,7 @@ describe("toCategory", () => {
       name: "Desserts",
       slug: "desserts",
       description: "Sweet dishes",
+      recipeCount: 0,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     });

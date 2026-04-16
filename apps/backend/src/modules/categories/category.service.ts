@@ -1,9 +1,10 @@
-import type { Category } from "@recipes/shared";
+import type { Category, SearchCategoryQuery } from "@recipes/shared";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { ConflictError, NotFoundError } from "@/common/errors.js";
 import type {
   CreateMethodParams,
   DeleteMethodParams,
+  QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toCategory } from "@/common/utils/mongo.js";
 import { categoryCache } from "@/modules/categories/category.cache.js";
@@ -14,7 +15,7 @@ import type {
 import type { RecipeModelType } from "@/modules/recipes/index.js";
 
 export interface CategoryService {
-  findAll(): Promise<Category[]>;
+  findAll(params: QueryMethodParams<SearchCategoryQuery>): Promise<Category[]>;
   create(params: CreateMethodParams<CreateCategoryBody>): Promise<Category>;
   deleteById(categoryId: string, params: DeleteMethodParams): Promise<void>;
 }
@@ -25,15 +26,15 @@ export function createCategoryService(
   cache: CacheService,
 ): CategoryService {
   return {
-    findAll: async () => {
-      const cacheKey = categoryCache.keys.all();
+    findAll: async ({ query }) => {
+      const cacheKey = categoryCache.keys.list(query);
 
       const cached = await cache.get<Category[]>(cacheKey);
       if (cached !== undefined) {
         return cached;
       }
 
-      const categories = await categoryModel.find().sort({ name: 1 }).lean();
+      const categories = await categoryModel.searchFull(query);
       const result = categories.map(toCategory);
 
       await cache.set(cacheKey, result, categoryCache.ttl.list);
@@ -44,7 +45,7 @@ export function createCategoryService(
     create: async ({ data }) => {
       const category = await categoryModel.create(data);
 
-      await cache.delete(categoryCache.keys.all());
+      await cache.deletePattern(categoryCache.keys.allPattern());
 
       return toCategory(category.toObject());
     },
@@ -62,7 +63,7 @@ export function createCategoryService(
         throw new NotFoundError("Category not found");
       }
 
-      await cache.delete(categoryCache.keys.all());
+      await cache.deletePattern(categoryCache.keys.allPattern());
     },
   };
 }

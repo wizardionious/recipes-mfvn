@@ -1,6 +1,11 @@
-import type { Category } from "@recipes/shared";
+import type { Category, SearchCategoryQuery } from "@recipes/shared";
 import { apiClient } from "@/common/api/client";
 
-export function getCategories(): Promise<Category[]> {
-  return apiClient<Category[]>("/api/categories");
+export function getCategories(
+  filters: Partial<SearchCategoryQuery> = {},
+): Promise<Category[]> {
+  return apiClient<Category[]>("/api/categories", {
+    method: "GET",
+    query: filters,
+  });
 }
