@@ -11,9 +11,8 @@ import {
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
 import type { RecipeDocument } from "@/modules/recipes/index.js";
-import { RECIPE_MODEL_NAME, withAuthor } from "@/modules/recipes/index.js";
+import { withAuthor } from "@/modules/recipes/index.js";
 import type { UserDocument } from "@/modules/users/index.js";
-import { USER_MODEL_NAME } from "@/modules/users/index.js";
 import { withRecipe } from "./comment.aggregation.js";
 
 export interface CommentDocument extends BaseDocument {
@@ -53,12 +52,12 @@ const commentSchema = new Schema<CommentDocument, CommentModelType>(
     },
     recipe: {
       type: Schema.Types.ObjectId,
-      ref: RECIPE_MODEL_NAME,
+      ref: "Recipe",
       required: true,
     },
     author: {
       type: Schema.Types.ObjectId,
-      ref: USER_MODEL_NAME,
+      ref: "User",
       required: true,
     },
   },
@@ -98,9 +97,8 @@ commentSchema.statics.findFull = async function (
 
 commentSchema.index({ recipe: 1, createdAt: -1 });
 
-export const COMMENT_MODEL_NAME = "Comment";
 export const CommentModel = model<CommentDocument, CommentModelType>(
-  COMMENT_MODEL_NAME,
+  "Comment",
   commentSchema,
 );
 

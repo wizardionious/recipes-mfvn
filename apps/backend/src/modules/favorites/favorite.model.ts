@@ -11,8 +11,6 @@ import {
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
 import type { RecipeDocumentPopulated } from "@/modules/recipes/index.js";
-import { RECIPE_MODEL_NAME } from "@/modules/recipes/index.js";
-import { USER_MODEL_NAME } from "@/modules/users/index.js";
 import { withRecipe } from "./favorite.aggregation.js";
 
 export interface FavoriteDocument extends BaseDocumentWithoutUpdate {
@@ -37,10 +35,10 @@ export interface FavoriteModelType extends Model<FavoriteDocument> {
 
 const favoriteSchema = new Schema<FavoriteDocument, FavoriteModelType>(
   {
-    user: { type: Schema.Types.ObjectId, ref: USER_MODEL_NAME, required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     recipe: {
       type: Schema.Types.ObjectId,
-      ref: RECIPE_MODEL_NAME,
+      ref: "Recipe",
       required: true,
     },
   },
@@ -78,9 +76,8 @@ favoriteSchema.statics.findByUser = async function (
 favoriteSchema.index({ user: 1, recipe: 1 }, { unique: true });
 favoriteSchema.index({ user: 1, createdAt: -1 });
 
-export const FAVORITE_MODEL_NAME = "Favorite";
 export const FavoriteModel = model<FavoriteDocument, FavoriteModelType>(
-  FAVORITE_MODEL_NAME,
+  "Favorite",
   favoriteSchema,
 );
 

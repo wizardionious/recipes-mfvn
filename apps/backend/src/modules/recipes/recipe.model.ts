@@ -20,9 +20,7 @@ import {
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
 import type { CategoryDocument } from "@/modules/categories/index.js";
-import { CATEGORY_MODEL_NAME } from "@/modules/categories/index.js";
 import type { UserDocument } from "@/modules/users/index.js";
-import { USER_MODEL_NAME } from "@/modules/users/index.js";
 import {
   byVisibility,
   withAuthor,
@@ -106,12 +104,12 @@ const recipeSchema = new Schema<RecipeDocument, RecipeModelType>(
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: CATEGORY_MODEL_NAME,
+      ref: "Category",
       required: true,
     },
     author: {
       type: Schema.Types.ObjectId,
-      ref: USER_MODEL_NAME,
+      ref: "User",
       required: true,
     },
     difficulty: {
@@ -201,9 +199,8 @@ recipeSchema.statics.findByIdFull = async function (
 recipeSchema.index({ title: "text", description: "text" });
 recipeSchema.index({ category: 1, createdAt: -1 });
 
-export const RECIPE_MODEL_NAME = "Recipe";
 export const RecipeModel = model<RecipeDocument, RecipeModelType>(
-  RECIPE_MODEL_NAME,
+  "Recipe",
   recipeSchema,
 );
 

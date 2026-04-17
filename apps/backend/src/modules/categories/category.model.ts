@@ -68,9 +68,8 @@ categorySchema.statics.searchFull = async function (
   return result;
 };
 
-export const CATEGORY_MODEL_NAME = "Category";
 export const CategoryModel = model<CategoryDocument, CategoryModelType>(
-  CATEGORY_MODEL_NAME,
+  "Category",
   categorySchema,
 );
 
