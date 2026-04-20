@@ -45,7 +45,9 @@ describe("commentService", () => {
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-01"),
       };
-      commentModel.findFull.mockResolvedValue([[populatedComment], 1]);
+      commentModel.aggregate.mockResolvedValue([
+        { items: [populatedComment], total: 1 },
+      ]);
 
       const result = await service.findByRecipe(
         recipeId.toString(),
@@ -73,7 +75,7 @@ describe("commentService", () => {
 
     it("should return empty result when no comments found", async () => {
       recipeModel.exists.mockResolvedValue(true);
-      commentModel.findFull.mockResolvedValue([[], 0]);
+      commentModel.aggregate.mockResolvedValue([]);
 
       const result = await service.findByRecipe(
         createObjectId().toString(),
@@ -95,7 +97,9 @@ describe("commentService", () => {
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-01"),
       };
-      commentModel.findFull.mockResolvedValue([[populatedComment], 1]);
+      commentModel.aggregate.mockResolvedValue([
+        { items: [populatedComment], total: 1 },
+      ]);
 
       const result = await service.findByAuthor(
         authorId.toString(),

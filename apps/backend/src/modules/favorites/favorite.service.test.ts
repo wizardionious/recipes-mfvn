@@ -126,7 +126,9 @@ describe("favoriteService", () => {
       const recipe = populateRecipeDoc(createRecipeDoc(), {
         isFavorited: true,
       });
-      favoriteModel.findByUser.mockResolvedValue([[{ recipe }], 1]);
+      favoriteModel.aggregate.mockResolvedValue([
+        { items: [{ recipe }], total: 1 },
+      ]);
 
       const result = await service.findByUser(
         createObjectId().toString(),
@@ -139,7 +141,7 @@ describe("favoriteService", () => {
 
     it("should return empty paginated result when no favorites", async () => {
       userModel.exists.mockResolvedValue(true);
-      favoriteModel.findByUser.mockResolvedValue([null, 0]);
+      favoriteModel.aggregate.mockResolvedValue([]);
 
       const result = await service.findByUser(
         createObjectId().toString(),

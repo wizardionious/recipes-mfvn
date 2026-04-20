@@ -43,3 +43,12 @@ export function withTotalCount(
     },
   ];
 }
+
+export function extractTotalCountResult<T>(
+  result: WithTotalCountResult<T>[],
+): [T[], number] {
+  if (!result.length || !result[0]?.items.length) {
+    return [[], result[0]?.total ?? 0];
+  }
+  return [result[0].items, result[0].total];
+}

@@ -189,7 +189,7 @@ const chainable = {
 export function createMockCategoryModel(overrides: Record<string, Mock> = {}) {
   return {
     find: viFn().mockReturnValue(chainable),
-    searchFull: viFn(),
+    aggregate: viFn(),
     create: viFn(),
     findByIdAndDelete: viFn(),
     countDocuments: viFn().mockResolvedValue(0),
@@ -211,8 +211,7 @@ export function createMockUserModel(overrides: Record<string, Mock> = {}) {
 export function createMockRecipeModel(overrides: Record<string, Mock> = {}) {
   return {
     findById: viFn(),
-    searchFull: viFn(),
-    findByIdFull: viFn(),
+    aggregate: viFn(),
     create: viFn(),
     countDocuments: viFn().mockResolvedValue(0),
     exists: viFn(),
@@ -222,7 +221,7 @@ export function createMockRecipeModel(overrides: Record<string, Mock> = {}) {
 
 export function createMockCommentModel(overrides: Record<string, Mock> = {}) {
   return {
-    findFull: viFn(),
+    aggregate: viFn(),
     findById: viFn(),
     create: viFn(),
     ...overrides,
@@ -231,7 +230,7 @@ export function createMockCommentModel(overrides: Record<string, Mock> = {}) {
 
 export function createMockFavoriteModel(overrides: Record<string, Mock> = {}) {
   return {
-    findByUser: viFn(),
+    aggregate: viFn(),
     create: viFn(),
     findOneAndDelete: viFn(),
     exists: viFn(),

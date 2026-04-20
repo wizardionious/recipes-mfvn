@@ -46,7 +46,9 @@ describe("recipeService", () => {
   describe("findAll", () => {
     it("should return paginated recipes", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.searchFull.mockResolvedValue([[populated], 1]);
+      recipeModel.aggregate.mockResolvedValue([
+        { items: [populated], total: 1 },
+      ]);
 
       const query = {
         page: 1,
@@ -64,8 +66,8 @@ describe("recipeService", () => {
       expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.list(query));
     });
 
-    it("should return empty when searchFull returns null", async () => {
-      recipeModel.searchFull.mockResolvedValue([null, 0]);
+    it("should return empty when aggregate returns empty result", async () => {
+      recipeModel.aggregate.mockResolvedValue([]);
 
       const query = {
         page: 1,
@@ -78,7 +80,7 @@ describe("recipeService", () => {
       });
 
       expect(result.items).toEqual([]);
-      expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.list(query));
+      expect(result.pagination.total).toBe(0);
     });
 
     it("should return empty when isFavorited filter is set but no initiator", async () => {
@@ -94,7 +96,7 @@ describe("recipeService", () => {
       });
 
       expect(result.items).toEqual([]);
-      expect(recipeModel.searchFull).not.toHaveBeenCalled();
+      expect(recipeModel.aggregate).not.toHaveBeenCalled();
       expect(cache.get).not.toHaveBeenCalled();
     });
 
@@ -104,7 +106,9 @@ describe("recipeService", () => {
         averageRating: 4.2,
         ratingCount: 15,
       });
-      recipeModel.searchFull.mockResolvedValue([[populated], 1]);
+      recipeModel.aggregate.mockResolvedValue([
+        { items: [populated], total: 1 },
+      ]);
 
       const query = {
         page: 1,
@@ -123,7 +127,9 @@ describe("recipeService", () => {
 
     it("should return null ratings when recipe has no ratings", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.searchFull.mockResolvedValue([[populated], 1]);
+      recipeModel.aggregate.mockResolvedValue([
+        { items: [populated], total: 1 },
+      ]);
 
       const query = {
         page: 1,
@@ -144,7 +150,7 @@ describe("recipeService", () => {
   describe("findById", () => {
     it("should return recipe by ID", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.findByIdFull.mockResolvedValue(populated);
+      recipeModel.aggregate.mockResolvedValue([populated]);
 
       const id = createObjectId().toString();
       const result = await service.findById(id, {
@@ -157,7 +163,7 @@ describe("recipeService", () => {
 
     it("should return cached recipe on second call for unauthenticated user", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.findByIdFull.mockResolvedValue(populated);
+      recipeModel.aggregate.mockResolvedValue([populated]);
 
       const id = createObjectId().toString();
       await service.findById(id, { initiator: noInitiator() });
@@ -168,7 +174,7 @@ describe("recipeService", () => {
         initiator: noInitiator(),
       });
 
-      expect(recipeModel.findByIdFull).not.toHaveBeenCalled();
+      expect(recipeModel.aggregate).not.toHaveBeenCalled();
       expect(result.title).toBe("Test Recipe");
       expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
     });
@@ -182,7 +188,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeModel.findByIdFull.mockResolvedValue(null);
+      recipeModel.aggregate.mockResolvedValue([]);
 
       const id = createObjectId().toString();
       await expect(
@@ -199,7 +205,7 @@ describe("recipeService", () => {
         averageRating: 3.8,
         ratingCount: 42,
       });
-      recipeModel.findByIdFull.mockResolvedValue(populated);
+      recipeModel.aggregate.mockResolvedValue([populated]);
 
       const id = createObjectId().toString();
       const result = await service.findById(id, {

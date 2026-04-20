@@ -6,9 +6,15 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toRecipe } from "@/common/utils/mongo.js";
+import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
+import { extractTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type { FavoriteModelType } from "@/modules/favorites/favorite.model.js";
-import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
+import { buildFindByUserPipeline } from "@/modules/favorites/favorite.pipeline.js";
+import type {
+  RecipeDocumentPopulated,
+  RecipeModelType,
+} from "@/modules/recipes/recipe.model.js";
 import type { UserModelType } from "@/modules/users/user.model.js";
 
 export interface FavoriteService {
@@ -70,10 +76,11 @@ export function createFavoriteService(
 
       const { page, limit } = params.query;
 
-      const [favorites, total] = await favoriteModel.findByUser(userId, params);
-      if (!favorites) {
-        return withPagination([], 0, page, limit);
-      }
+      const [favorites, total] = extractTotalCountResult(
+        await favoriteModel.aggregate<
+          WithTotalCountResult<{ recipe: RecipeDocumentPopulated }>
+        >(buildFindByUserPipeline(userId, params)),
+      );
 
       const items = favorites
         .map((fav) => fav.recipe)

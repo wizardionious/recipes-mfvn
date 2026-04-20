@@ -1,5 +1,14 @@
 import type { PipelineStage } from "mongoose";
-import type { OptionalInitiator } from "@/common/types/methods.js";
+import type {
+  OptionalInitiator,
+  QueryMethodParams,
+} from "@/common/types/methods.js";
+import { toObjectId } from "@/common/utils/mongo.js";
+import {
+  withPagination,
+  withSort,
+  withTotalCount,
+} from "@/common/utils/mongoose.aggregation.js";
 import {
   byVisibility,
   withAuthor,
@@ -7,7 +16,7 @@ import {
 } from "@/modules/recipes/recipe.aggregation.js";
 import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
 
-export function withRecipe(
+function withRecipe(
   initiator: OptionalInitiator,
 ): PipelineStage.FacetPipelineStage[] {
   return [
@@ -30,5 +39,24 @@ export function withRecipe(
       },
     },
     { $unwind: { path: "$recipe" } },
+  ];
+}
+
+export function buildFindByUserPipeline(
+  userId: string,
+  { query, initiator }: QueryMethodParams,
+): PipelineStage[] {
+  return [
+    {
+      $match: {
+        user: toObjectId(userId),
+      },
+    },
+    { $unset: ["__v", "user"] },
+    ...withRecipe(initiator),
+    ...withTotalCount(
+      ...withSort("-createdAt"),
+      ...withPagination(query.page, query.limit),
+    ),
   ];
 }

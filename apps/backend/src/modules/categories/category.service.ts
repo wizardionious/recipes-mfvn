@@ -12,7 +12,11 @@ import type {
 } from "@/common/types/methods.js";
 import { toCategory } from "@/common/utils/mongo.js";
 import { categoryCache } from "@/modules/categories/category.cache.js";
-import type { CategoryModelType } from "@/modules/categories/category.model.js";
+import type {
+  CategoryDocumentWithCount,
+  CategoryModelType,
+} from "@/modules/categories/category.model.js";
+import { buildSearchPipeline } from "@/modules/categories/category.pipeline.js";
 import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
 
 export interface CategoryService {
@@ -35,7 +39,10 @@ export function createCategoryService(
         return cached;
       }
 
-      const categories = await categoryModel.searchFull(query);
+      const categories =
+        await categoryModel.aggregate<CategoryDocumentWithCount>(
+          buildSearchPipeline(query),
+        );
       const result = categories.map(toCategory);
 
       await cache.set(cacheKey, result, categoryCache.ttl.list);

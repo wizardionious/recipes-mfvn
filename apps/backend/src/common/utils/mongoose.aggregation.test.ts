@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-const { withSort, withPagination, withTotalCount } = await import(
-  "@/common/utils/mongoose.aggregation.js"
-);
+const { withSort, withPagination, withTotalCount, extractTotalCountResult } =
+  await import("@/common/utils/mongoose.aggregation.js");
 
 describe("withSort", () => {
   it("should return createdAt descending sort by default", () => {
@@ -65,5 +64,27 @@ describe("withTotalCount", () => {
     );
 
     expect(result[0]?.$facet?.items).toHaveLength(3);
+  });
+});
+
+describe("extractTotalCountResult", () => {
+  it("should extract items and total from facet result", () => {
+    const result = extractTotalCountResult([
+      { items: [{ id: 1 }, { id: 2 }], total: 5 },
+    ]);
+
+    expect(result).toEqual([[{ id: 1 }, { id: 2 }], 5]);
+  });
+
+  it("should return empty when result is empty array", () => {
+    const result = extractTotalCountResult([]);
+
+    expect(result).toEqual([[], 0]);
+  });
+
+  it("should return empty items with total when items is empty", () => {
+    const result = extractTotalCountResult([{ items: [], total: 10 }]);
+
+    expect(result).toEqual([[], 10]);
   });
 });

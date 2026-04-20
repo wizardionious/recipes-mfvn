@@ -12,8 +12,14 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toComment, toCommentForRecipe } from "@/common/utils/mongo.js";
+import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
+import { extractTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
-import type { CommentModelType } from "@/modules/comments/comment.model.js";
+import type {
+  CommentDocumentPopulated,
+  CommentModelType,
+} from "@/modules/comments/comment.model.js";
+import { buildFindPipeline } from "@/modules/comments/comment.pipeline.js";
 import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
 import type {
   UserDocument,
@@ -48,13 +54,11 @@ export function createCommentService(
 
       const { page, limit } = query;
 
-      const [comments, total] = await commentModel.findFull(
-        { by: "recipe", recipeId },
-        { query, initiator },
+      const [comments, total] = extractTotalCountResult(
+        await commentModel.aggregate<
+          WithTotalCountResult<CommentDocumentPopulated>
+        >(buildFindPipeline({ by: "recipe", recipeId }, { query, initiator })),
       );
-      if (!comments) {
-        return withPagination([], 0, page, limit);
-      }
 
       return withPagination(
         comments.map((item) => toCommentForRecipe(item)),
@@ -69,13 +73,11 @@ export function createCommentService(
 
       const { page, limit } = query;
 
-      const [comments, total] = await commentModel.findFull(
-        { by: "author", authorId },
-        { query, initiator },
+      const [comments, total] = extractTotalCountResult(
+        await commentModel.aggregate<
+          WithTotalCountResult<CommentDocumentPopulated>
+        >(buildFindPipeline({ by: "author", authorId }, { query, initiator })),
       );
-      if (!comments) {
-        return withPagination([], 0, page, limit);
-      }
 
       return withPagination(comments.map(toComment), total, page, limit);
     },

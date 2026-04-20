@@ -9,6 +9,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],
     },
+    setupFiles: ["dotenv/config"],
     alias: {
       "@/": new URL("./src/", import.meta.url).pathname,
     },

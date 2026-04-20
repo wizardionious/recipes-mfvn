@@ -17,6 +17,8 @@ import type {
   UpdateMethodParams,
 } from "@/common/types/methods.js";
 import { toRecipe } from "@/common/utils/mongo.js";
+import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
+import { extractTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type {
   CategoryDocument,
@@ -24,7 +26,14 @@ import type {
 } from "@/modules/categories/category.model.js";
 import type { FavoriteModelType } from "@/modules/favorites/favorite.model.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
-import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
+import type {
+  RecipeDocumentPopulated,
+  RecipeModelType,
+} from "@/modules/recipes/recipe.model.js";
+import {
+  buildFindByIdPipeline,
+  buildSearchPipeline,
+} from "@/modules/recipes/recipe.pipeline.js";
 import type {
   UserDocument,
   UserModelType,
@@ -70,13 +79,11 @@ export function createRecipeService(
         }
       }
 
-      const [recipes, total] = await recipeModel.searchFull({
-        query,
-        initiator,
-      });
-      if (!recipes) {
-        return withPagination([], 0, page, limit);
-      }
+      const [recipes, total] = extractTotalCountResult(
+        await recipeModel.aggregate<
+          WithTotalCountResult<RecipeDocumentPopulated>
+        >(buildSearchPipeline({ query, initiator })),
+      );
 
       const result = withPagination(
         recipes.map((recipe) => toRecipe(recipe, recipe.isFavorited)),
@@ -106,7 +113,10 @@ export function createRecipeService(
         }
       }
 
-      const recipe = await recipeModel.findByIdFull(id, params);
+      const recipes = await recipeModel.aggregate<RecipeDocumentPopulated>(
+        buildFindByIdPipeline(id, params),
+      );
+      const recipe = recipes[0];
       if (!recipe) {
         throw new NotFoundError("Recipe not found");
       }

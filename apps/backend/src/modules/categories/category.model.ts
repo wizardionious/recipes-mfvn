@@ -1,9 +1,6 @@
-import type { CategoryQuery } from "@recipes/shared";
 import type { Model } from "mongoose";
 import { model, Schema } from "mongoose";
 import type { BaseDocument } from "@/common/types/mongoose.js";
-import { withSort } from "@/common/utils/mongoose.aggregation.js";
-import { recipesCollectionName } from "../recipes/recipe.model.js";
 
 export interface CategoryDocument extends BaseDocument {
   name: string;
@@ -15,14 +12,9 @@ export interface CategoryDocumentWithCount extends CategoryDocument {
   recipeCount: number;
 }
 
-export interface CategoryModelType extends Model<CategoryDocument> {
-  searchFull(
-    query: CategoryQuery,
-    withCount?: boolean,
-  ): Promise<CategoryDocumentWithCount[]>;
-}
+export type CategoryModelType = Model<CategoryDocument>;
 
-const categorySchema = new Schema<CategoryDocument, CategoryModelType>(
+const categorySchema = new Schema<CategoryDocument>(
   {
     name: { type: String, required: true, unique: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true },
@@ -42,31 +34,6 @@ categorySchema.pre("validate", function () {
       .trim();
   }
 });
-
-categorySchema.statics.searchFull = async function (
-  query: CategoryQuery,
-  withCount: boolean = true,
-): Promise<CategoryDocumentWithCount[]> {
-  const result = await this.aggregate<CategoryDocumentWithCount>([
-    ...(withCount
-      ? [
-          {
-            $lookup: {
-              from: recipesCollectionName,
-              localField: "_id",
-              foreignField: "category",
-              as: "recipes",
-            },
-          },
-          { $addFields: { recipeCount: { $size: "$recipes" } } },
-          { $project: { recipes: 0 } },
-        ]
-      : []),
-    ...withSort(query.sort),
-  ]);
-
-  return result;
-};
 
 export const CategoryModel = model<CategoryDocument, CategoryModelType>(
   "Category",

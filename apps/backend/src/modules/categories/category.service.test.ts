@@ -42,7 +42,7 @@ describe("categoryService", () => {
           recipeCount: 0,
         },
       ];
-      categoryModel.searchFull.mockResolvedValue(docs);
+      categoryModel.aggregate.mockResolvedValue(docs);
 
       const query = { sort: "name" } satisfies CategoryQuery;
       const result = await service.findAll({
@@ -50,7 +50,7 @@ describe("categoryService", () => {
         initiator: noInitiator(),
       });
 
-      expect(categoryModel.searchFull).toHaveBeenCalled();
+      expect(categoryModel.aggregate).toHaveBeenCalled();
       expect(result).toHaveLength(2);
       expect(result[0]?.name).toBe("Desserts");
       expect(result[0]?.recipeCount).toBe(5);
@@ -59,7 +59,7 @@ describe("categoryService", () => {
     });
 
     it("should return empty array when no categories exist", async () => {
-      categoryModel.searchFull.mockResolvedValue([]);
+      categoryModel.aggregate.mockResolvedValue([]);
 
       const query = { sort: "name" } satisfies CategoryQuery;
       const result = await service.findAll({
@@ -77,7 +77,7 @@ describe("categoryService", () => {
           recipeCount: 3,
         },
       ];
-      categoryModel.searchFull.mockResolvedValue(docs);
+      categoryModel.aggregate.mockResolvedValue(docs);
 
       const query = { sort: "name" } satisfies CategoryQuery;
       await service.findAll({
@@ -92,7 +92,7 @@ describe("categoryService", () => {
         initiator: noInitiator(),
       });
 
-      expect(categoryModel.searchFull).not.toHaveBeenCalled();
+      expect(categoryModel.aggregate).not.toHaveBeenCalled();
       expect(result).toHaveLength(1);
       expect(cache.get).toHaveBeenCalledWith(categoryCache.keys.list(query));
     });
