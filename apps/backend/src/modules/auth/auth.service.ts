@@ -3,7 +3,7 @@ import { ConflictError, UnauthorizedError } from "@/common/errors.js";
 import type { Logger } from "@/common/logger.js";
 import { signToken } from "@/common/utils/jwt.js";
 import { toUser } from "@/common/utils/mongo.js";
-import type { UserModelType } from "@/modules/users/index.js";
+import type { UserModelType } from "@/modules/users/user.model.js";
 
 export interface AuthService {
   register(data: RegisterBody): Promise<AuthResponse>;

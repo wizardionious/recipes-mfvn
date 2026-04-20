@@ -1,9 +1,7 @@
 import type { PipelineStage } from "mongoose";
 import type { OptionalInitiator } from "@/common/types/methods.js";
-import {
-  byVisibility,
-  recipesCollectionName,
-} from "@/modules/recipes/index.js";
+import { byVisibility } from "@/modules/recipes/recipe.aggregation.js";
+import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
 
 export function withRecipe(
   initiator: OptionalInitiator,

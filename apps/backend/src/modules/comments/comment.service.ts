@@ -13,9 +13,12 @@ import type {
 } from "@/common/types/methods.js";
 import { toComment, toCommentForRecipe } from "@/common/utils/mongo.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
-import type { CommentModelType } from "@/modules/comments/index.js";
-import type { RecipeModelType } from "@/modules/recipes/index.js";
-import type { UserDocument, UserModelType } from "@/modules/users/index.js";
+import type { CommentModelType } from "@/modules/comments/comment.model.js";
+import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
+import type {
+  UserDocument,
+  UserModelType,
+} from "@/modules/users/user.model.js";
 
 export interface CommentService {
   findByRecipe(

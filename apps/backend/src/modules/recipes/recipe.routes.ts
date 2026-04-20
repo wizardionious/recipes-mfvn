@@ -15,10 +15,10 @@ import {
   authGuard,
   optionalAuth,
 } from "@/common/middleware/auth.guard.js";
-import type { CommentService } from "@/modules/comments/index.js";
-import { commentParamsSchema } from "@/modules/comments/index.js";
-import type { RecipeService } from "@/modules/recipes/index.js";
-import { recipeParamsSchema } from "@/modules/recipes/index.js";
+import { commentParamsSchema } from "@/modules/comments/comment.schema.js";
+import type { CommentService } from "@/modules/comments/comment.service.js";
+import { recipeParamsSchema } from "@/modules/recipes/recipe.schema.js";
+import type { RecipeService } from "@/modules/recipes/recipe.service.js";
 
 export interface RecipeModuleOptions {
   service: RecipeService;

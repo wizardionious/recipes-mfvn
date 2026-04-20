@@ -6,8 +6,8 @@ import {
   assertAuthenticated,
   authGuard,
 } from "@/common/middleware/auth.guard.js";
-import type { RecipeRatingService } from "@/modules/recipe-ratings/index.js";
-import { recipeParamsSchema } from "@/modules/recipes/index.js";
+import type { RecipeRatingService } from "@/modules/recipe-ratings/recipe-rating.service.js";
+import { recipeParamsSchema } from "@/modules/recipes/recipe.schema.js";
 
 export interface RecipeRatingModuleOptions {
   service: RecipeRatingService;

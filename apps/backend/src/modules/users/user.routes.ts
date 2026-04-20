@@ -12,7 +12,7 @@ import {
   assertAuthenticated,
   authGuard,
 } from "@/common/middleware/auth.guard.js";
-import type { UserService } from "@/modules/users/index.js";
+import type { UserService } from "@/modules/users/user.service.js";
 
 export interface UserPluginOptions {
   service: UserService;

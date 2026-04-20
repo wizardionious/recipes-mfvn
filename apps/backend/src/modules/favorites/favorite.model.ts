@@ -10,7 +10,7 @@ import {
   withSort,
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
-import type { RecipeDocumentPopulated } from "@/modules/recipes/index.js";
+import type { RecipeDocumentPopulated } from "@/modules/recipes/recipe.model.js";
 import { withRecipe } from "./favorite.aggregation.js";
 
 export interface FavoriteDocument extends BaseDocumentWithoutUpdate {

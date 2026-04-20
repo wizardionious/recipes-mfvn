@@ -6,7 +6,7 @@ import {
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { env } from "@/config/env.js";
-import type { AuthService } from "@/modules/auth/index.js";
+import type { AuthService } from "@/modules/auth/auth.service.js";
 
 export interface AuthModuleOptions {
   service: AuthService;

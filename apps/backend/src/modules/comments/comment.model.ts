@@ -10,9 +10,9 @@ import {
   withSort,
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
-import type { RecipeDocument } from "@/modules/recipes/index.js";
-import { withAuthor } from "@/modules/recipes/index.js";
-import type { UserDocument } from "@/modules/users/index.js";
+import { withAuthor } from "@/modules/recipes/recipe.aggregation.js";
+import type { RecipeDocument } from "@/modules/recipes/recipe.model.js";
+import type { UserDocument } from "@/modules/users/user.model.js";
 import { withRecipe } from "./comment.aggregation.js";
 
 export interface CommentDocument extends BaseDocument {

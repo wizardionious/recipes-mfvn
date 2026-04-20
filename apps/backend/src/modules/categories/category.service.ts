@@ -12,8 +12,8 @@ import type {
 } from "@/common/types/methods.js";
 import { toCategory } from "@/common/utils/mongo.js";
 import { categoryCache } from "@/modules/categories/category.cache.js";
-import type { CategoryModelType } from "@/modules/categories/index.js";
-import type { RecipeModelType } from "@/modules/recipes/index.js";
+import type { CategoryModelType } from "@/modules/categories/category.model.js";
+import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
 
 export interface CategoryService {
   findAll(params: QueryMethodParams<CategoryQuery>): Promise<Category[]>;

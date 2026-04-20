@@ -5,8 +5,8 @@ import {
   assertAuthenticated,
   authGuard,
 } from "@/common/middleware/auth.guard.js";
-import type { FavoriteService } from "@/modules/favorites/index.js";
-import { recipeParamsSchema } from "@/modules/recipes/index.js";
+import type { FavoriteService } from "@/modules/favorites/favorite.service.js";
+import { recipeParamsSchema } from "@/modules/recipes/recipe.schema.js";
 
 export interface FavoriteModuleOptions {
   service: FavoriteService;

@@ -16,36 +16,25 @@ import { errorHandler } from "@/common/middleware/errorHandler.js";
 import { env } from "@/config/env.js";
 import { createRateLimitOptions } from "@/config/rate-limit.js";
 import { swaggerOptions, swaggerUiOptions } from "@/config/swagger.js";
-import { authRoutes, createAuthService } from "@/modules/auth/index.js";
-import {
-  CategoryModel,
-  categoryRoutes,
-  createCategoryService,
-} from "@/modules/categories/index.js";
-import {
-  CommentModel,
-  createCommentService,
-} from "@/modules/comments/index.js";
-import {
-  createFavoriteService,
-  FavoriteModel,
-  favoriteRoutes,
-} from "@/modules/favorites/index.js";
-import {
-  createRecipeRatingService,
-  RecipeRatingModel,
-  recipeRatingRoutes,
-} from "@/modules/recipe-ratings/index.js";
-import {
-  createRecipeService,
-  RecipeModel,
-  recipeRoutes,
-} from "@/modules/recipes/index.js";
-import {
-  createUserService,
-  UserModel,
-  userRoutes,
-} from "@/modules/users/index.js";
+import { authRoutes } from "@/modules/auth/auth.routes.js";
+import { createAuthService } from "@/modules/auth/auth.service.js";
+import { CategoryModel } from "@/modules/categories/category.model.js";
+import { categoryRoutes } from "@/modules/categories/category.routes.js";
+import { createCategoryService } from "@/modules/categories/category.service.js";
+import { CommentModel } from "@/modules/comments/comment.model.js";
+import { createCommentService } from "@/modules/comments/comment.service.js";
+import { FavoriteModel } from "@/modules/favorites/favorite.model.js";
+import { favoriteRoutes } from "@/modules/favorites/favorite.routes.js";
+import { createFavoriteService } from "@/modules/favorites/favorite.service.js";
+import { RecipeRatingModel } from "@/modules/recipe-ratings/recipe-rating.model.js";
+import { recipeRatingRoutes } from "@/modules/recipe-ratings/recipe-rating.routes.js";
+import { createRecipeRatingService } from "@/modules/recipe-ratings/recipe-rating.service.js";
+import { RecipeModel } from "@/modules/recipes/recipe.model.js";
+import { recipeRoutes } from "@/modules/recipes/recipe.routes.js";
+import { createRecipeService } from "@/modules/recipes/recipe.service.js";
+import { UserModel } from "@/modules/users/user.model.js";
+import { userRoutes } from "@/modules/users/user.routes.js";
+import { createUserService } from "@/modules/users/user.service.js";
 
 declare module "fastify" {
   interface FastifyInstance {

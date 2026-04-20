@@ -11,9 +11,9 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toUser } from "@/common/utils/mongo.js";
-import type { CommentService } from "@/modules/comments/index.js";
+import type { CommentService } from "@/modules/comments/comment.service.js";
 import type { FavoriteService } from "@/modules/favorites/favorite.service.js";
-import type { UserModelType } from "@/modules/users/index.js";
+import type { UserModelType } from "@/modules/users/user.model.js";
 
 export interface UserService {
   getCurrentUser(userId: string): Promise<User>;

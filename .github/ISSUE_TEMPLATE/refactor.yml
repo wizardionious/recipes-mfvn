@@ -1,0 +1,43 @@
+name: Refactor
+description: Propose a code improvement or refactoring task
+labels: [refactor]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear and concise description of the refactoring task.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this refactoring needed? What problems does it solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Which files, modules, or areas of the codebase are affected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: plan
+    attributes:
+      label: Implementation Plan
+      description: Step-by-step plan for the refactoring.
+    validations:
+      required: false
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / Considerations
+      description: Any potential risks, breaking changes, or things to watch out for?
+    validations:
+      required: false

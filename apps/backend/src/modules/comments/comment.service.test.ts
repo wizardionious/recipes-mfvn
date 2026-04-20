@@ -15,8 +15,8 @@ import {
 } from "@/common/errors.js";
 import type { CommentModelType } from "@/modules/comments/comment.model.js";
 import { createCommentService } from "@/modules/comments/comment.service.js";
-import type { RecipeModelType } from "@/modules/recipes/index.js";
-import type { UserModelType } from "@/modules/users/index.js";
+import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
+import type { UserModelType } from "@/modules/users/user.model.js";
 
 describe("commentService", () => {
   const commentModel = createMockCommentModel();

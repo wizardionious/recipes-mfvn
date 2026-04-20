@@ -21,11 +21,14 @@ import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type {
   CategoryDocument,
   CategoryModelType,
-} from "@/modules/categories/index.js";
-import type { FavoriteModelType } from "@/modules/favorites/index.js";
-import type { RecipeModelType } from "@/modules/recipes/index.js";
+} from "@/modules/categories/category.model.js";
+import type { FavoriteModelType } from "@/modules/favorites/favorite.model.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
-import type { UserDocument, UserModelType } from "@/modules/users/index.js";
+import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
+import type {
+  UserDocument,
+  UserModelType,
+} from "@/modules/users/user.model.js";
 
 export interface RecipeService {
   findAll(params: QueryMethodParams<RecipeQuery>): Promise<Paginated<Recipe>>;

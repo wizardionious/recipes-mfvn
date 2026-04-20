@@ -19,8 +19,8 @@ import {
   withSort,
   withTotalCount,
 } from "@/common/utils/mongoose.aggregation.js";
-import type { CategoryDocument } from "@/modules/categories/index.js";
-import type { UserDocument } from "@/modules/users/index.js";
+import type { CategoryDocument } from "@/modules/categories/category.model.js";
+import type { UserDocument } from "@/modules/users/user.model.js";
 import {
   byVisibility,
   withAuthor,
