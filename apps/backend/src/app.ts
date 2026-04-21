@@ -9,7 +9,6 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
-import type { CacheService } from "@/common/cache/cache.service.js";
 import { createCacheService } from "@/common/cache/create-cache.service.js";
 import type { Logger } from "@/common/logger.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
@@ -36,12 +35,6 @@ import { UserModel } from "@/modules/users/user.model.js";
 import { userRoutes } from "@/modules/users/user.routes.js";
 import { createUserService } from "@/modules/users/user.service.js";
 
-declare module "fastify" {
-  interface FastifyInstance {
-    cache: CacheService;
-  }
-}
-
 export async function buildApp(log: Logger) {
   const app = Fastify({
     loggerInstance: log,
@@ -54,8 +47,6 @@ export async function buildApp(log: Logger) {
     },
     app.log,
   );
-
-  app.decorate("cache", cache);
 
   // Validation & serialization
   app.setValidatorCompiler(validatorCompiler);
@@ -82,45 +73,65 @@ export async function buildApp(log: Logger) {
   // Health check
   app.get("/health", async () => ({ status: "ok" }));
 
+  const commentService = createCommentService(
+    CommentModel,
+    RecipeModel,
+    UserModel,
+  );
+  const favoriteService = createFavoriteService(
+    FavoriteModel,
+    RecipeModel,
+    UserModel,
+  );
+  const userService = createUserService(
+    commentService,
+    favoriteService,
+    UserModel,
+  );
+  const recipeRatingService = createRecipeRatingService(
+    RecipeRatingModel,
+    RecipeModel,
+    UserModel,
+    cache,
+  );
+  const categoryService = createCategoryService(
+    CategoryModel,
+    RecipeModel,
+    cache,
+  );
+  const recipeService = createRecipeService(
+    RecipeModel,
+    UserModel,
+    FavoriteModel,
+    CategoryModel,
+    cache,
+  );
+  const authService = createAuthService(UserModel, log);
+
   // Routes
   app.register(authRoutes, {
-    service: createAuthService(UserModel, log),
+    service: authService,
     prefix: "/api/auth",
   });
   app.register(userRoutes, {
-    service: createUserService(
-      createCommentService(CommentModel, RecipeModel, UserModel),
-      createFavoriteService(FavoriteModel, RecipeModel, UserModel),
-      UserModel,
-    ),
+    service: userService,
     prefix: "/api/users",
   });
   app.register(recipeRoutes, {
-    service: createRecipeService(
-      RecipeModel,
-      UserModel,
-      FavoriteModel,
-      CategoryModel,
-      cache,
-    ),
-    commentService: createCommentService(CommentModel, RecipeModel, UserModel),
+    service: recipeService,
+    commentService,
     prefix: "/api/recipes",
   });
   app.register(favoriteRoutes, {
-    service: createFavoriteService(FavoriteModel, RecipeModel, UserModel),
+    service: favoriteService,
     prefix: "/api/recipes",
   });
   app.register(recipeRatingRoutes, {
-    service: createRecipeRatingService(
-      RecipeRatingModel,
-      RecipeModel,
-      UserModel,
-      cache,
-    ),
+    service: recipeRatingService,
     prefix: "/api/recipes",
   });
   app.register(categoryRoutes, {
-    service: createCategoryService(CategoryModel, RecipeModel, cache),
+    service: categoryService,
     prefix: "/api/categories",
   });
 
