@@ -8,6 +8,7 @@ import type {
 import { withPagination } from "@recipes/shared";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { ForbiddenError, NotFoundError } from "@/common/errors.js";
+import type { TypedEmitter } from "@/common/events.js";
 import type {
   CreateMethodParams,
   DeleteMethodParams,
@@ -59,6 +60,7 @@ export function createRecipeService(
   favoriteModel: FavoriteModelType,
   categoryModel: CategoryModelType,
   cache: CacheService,
+  bus: TypedEmitter,
 ): RecipeService {
   return {
     findAll: async ({ query, initiator }) => {
@@ -150,7 +152,8 @@ export function createRecipeService(
         { path: "category", select: "name slug" },
       ]);
 
-      await cache.deletePattern(recipeCache.keys.allPattern());
+      await cache.deletePattern(recipeCache.keys.listPattern());
+      bus.emit("recipe:changed");
 
       return toRecipe(populated.toObject<typeof populated>(), false);
     },
@@ -185,8 +188,9 @@ export function createRecipeService(
 
       await Promise.all([
         cache.delete(recipeCache.keys.byId(id)),
-        cache.deletePattern(recipeCache.keys.allPattern()),
+        cache.deletePattern(recipeCache.keys.listPattern()),
       ]);
+      bus.emit("recipe:changed");
 
       return toRecipe(populated.toObject<typeof populated>(), isFavorited);
     },
@@ -204,10 +208,9 @@ export function createRecipeService(
 
       await recipe.deleteOne();
 
-      await Promise.all([
-        cache.delete(recipeCache.keys.byId(id)),
-        cache.deletePattern(recipeCache.keys.allPattern()),
-      ]);
+      await cache.delete(recipeCache.keys.byId(id));
+      await cache.deletePattern(recipeCache.keys.listPattern());
+      bus.emit("recipe:changed");
     },
   };
 }

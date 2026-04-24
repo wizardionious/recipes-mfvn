@@ -4,10 +4,10 @@ import { hashFilters } from "@/common/utils/cache.js";
 export const categoryCache = {
   keys: {
     list: (filters: CategoryQuery) =>
-      `categories:list:${hashFilters({
+      `list:${hashFilters({
         sort: filters.sort,
       })}`,
-    allPattern: () => "categories:*",
+    allPattern: () => "*",
   },
   ttl: {
     list: 3600,

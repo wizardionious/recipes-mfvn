@@ -1,6 +1,7 @@
 import type { Minutes, RecipeQuery } from "@recipes/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createMockBus,
   createMockCache,
   createMockCategoryModel,
   createMockFavoriteModel,
@@ -30,12 +31,14 @@ describe("recipeService", () => {
   const favoriteModel = createMockFavoriteModel();
   const categoryModel = createMockCategoryModel();
   const cache = createMockCache();
+  const bus = createMockBus();
   const service = createRecipeService(
     recipeModel as unknown as RecipeModelType,
     userModel as unknown as UserModelType,
     favoriteModel as unknown as FavoriteModelType,
     categoryModel as unknown as CategoryModelType,
     cache,
+    bus,
   );
 
   beforeEach(async () => {
@@ -260,8 +263,9 @@ describe("recipeService", () => {
       expect(result.averageRating).toBeNull();
       expect(result.ratingCount).toBe(0);
       expect(cache.deletePattern).toHaveBeenCalledWith(
-        recipeCache.keys.allPattern(),
+        recipeCache.keys.listPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should throw BadRequestError for invalid author ID", async () => {
@@ -335,8 +339,9 @@ describe("recipeService", () => {
       expect(result.ratingCount).toBe(0);
       expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
       expect(cache.deletePattern).toHaveBeenCalledWith(
-        recipeCache.keys.allPattern(),
+        recipeCache.keys.listPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should update recipe when user is admin", async () => {
@@ -363,8 +368,9 @@ describe("recipeService", () => {
       ).resolves.toBeDefined();
       expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
       expect(cache.deletePattern).toHaveBeenCalledWith(
-        recipeCache.keys.allPattern(),
+        recipeCache.keys.listPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should throw BadRequestError for invalid ID", async () => {
@@ -418,8 +424,9 @@ describe("recipeService", () => {
       ).resolves.toBeUndefined();
       expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
       expect(cache.deletePattern).toHaveBeenCalledWith(
-        recipeCache.keys.allPattern(),
+        recipeCache.keys.listPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should delete recipe when user is admin", async () => {
@@ -438,8 +445,9 @@ describe("recipeService", () => {
       ).resolves.toBeUndefined();
       expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
       expect(cache.deletePattern).toHaveBeenCalledWith(
-        recipeCache.keys.allPattern(),
+        recipeCache.keys.listPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should throw BadRequestError for invalid ID", async () => {

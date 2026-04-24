@@ -2,6 +2,7 @@ import type { CategoryQuery } from "@recipes/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCategoryDoc,
+  createMockBus,
   createMockCache,
   createMockCategoryModel,
   createMockRecipeModel,
@@ -19,10 +20,12 @@ describe("categoryService", () => {
   const categoryModel = createMockCategoryModel();
   const recipeModel = createMockRecipeModel();
   const cache = createMockCache();
+  const bus = createMockBus();
   const service = createCategoryService(
     categoryModel as unknown as CategoryModelType,
     recipeModel as unknown as RecipeModelType,
     cache,
+    bus,
   );
 
   beforeEach(async () => {
@@ -119,6 +122,7 @@ describe("categoryService", () => {
       expect(cache.deletePattern).toHaveBeenCalledWith(
         categoryCache.keys.allPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("category:changed");
     });
   });
 
@@ -135,6 +139,7 @@ describe("categoryService", () => {
       expect(cache.deletePattern).toHaveBeenCalledWith(
         categoryCache.keys.allPattern(),
       );
+      expect(bus.emit).toHaveBeenCalledWith("category:changed");
     });
 
     it("should throw ConflictError when recipes exist", async () => {

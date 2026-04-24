@@ -3,14 +3,15 @@ import { hashFilters } from "@/common/utils/cache.js";
 
 export const recipeCache = {
   keys: {
-    byId: (id: string) => `recipes:id:${id}`,
+    byId: (id: string) => `id:${id}`,
     list: (filters: RecipeQuery) =>
-      `recipes:list:${filters.page}:${filters.limit}:${hashFilters({
+      `list:${filters.page}:${filters.limit}:${hashFilters({
         categoryId: filters.categoryId,
         difficulty: filters.difficulty,
         sort: filters.sort,
       })}`,
-    allPattern: () => "recipes:*",
+    listPattern: () => "list:*",
+    allPattern: () => "*",
   },
   ttl: {
     byId: 600,

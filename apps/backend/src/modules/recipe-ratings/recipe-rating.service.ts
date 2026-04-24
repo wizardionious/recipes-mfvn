@@ -1,12 +1,11 @@
 import type { RecipeRatingBody } from "@recipes/shared";
-import type { CacheService } from "@/common/cache/cache.service.js";
 import { NotFoundError } from "@/common/errors.js";
+import type { TypedEmitter } from "@/common/events.js";
 import type {
   CreateMethodParams,
   DeleteMethodParams,
 } from "@/common/types/methods.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
-import { recipeCache } from "@/modules/recipes/recipe.cache.js";
 import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
 import type { UserModelType } from "@/modules/users/user.model.js";
 import type { RecipeRatingModelType } from "./recipe-rating.model.js";
@@ -23,7 +22,7 @@ export function createRecipeRatingService(
   ratingModel: RecipeRatingModelType,
   recipeModel: RecipeModelType,
   userModel: UserModelType,
-  cache: CacheService,
+  bus: TypedEmitter,
 ): RecipeRatingService {
   async function validateUser(userId: string): Promise<void> {
     assertValidId(userId, "User");
@@ -46,7 +45,7 @@ export function createRecipeRatingService(
         { upsert: true, returnDocument: "after" },
       );
 
-      await cache.deletePattern(recipeCache.keys.allPattern());
+      bus.emit("recipe:rated", recipeId);
 
       return { value: rating.value };
     },
@@ -66,7 +65,7 @@ export function createRecipeRatingService(
         );
       }
 
-      await cache.deletePattern(recipeCache.keys.allPattern());
+      bus.emit("recipe:rated", recipeId);
     },
   };
 }

@@ -5,6 +5,8 @@ import type { Mock } from "vitest";
 import { vi } from "vitest";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { createMemoryCache } from "@/common/cache/memory-cache.service.js";
+import type { TypedEmitter } from "@/common/events.js";
+import { createEventBus } from "@/common/events.js";
 import type { Logger } from "@/common/logger.js";
 import type { CategoryDocument } from "@/modules/categories/category.model.js";
 import type { CommentDocument } from "@/modules/comments/comment.model.js";
@@ -275,6 +277,18 @@ export function createMockCache(): MockCache {
     ...memoryCache,
     spies,
   };
+}
+
+// ── Event bus mock ──
+
+export interface MockBus extends TypedEmitter {
+  emit: Mock;
+}
+
+export function createMockBus(): MockBus {
+  const bus = createEventBus();
+  const emit = vi.spyOn(bus, "emit");
+  return Object.assign(bus, { emit });
 }
 
 // ── Service param builders ──

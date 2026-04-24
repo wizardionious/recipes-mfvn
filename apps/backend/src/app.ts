@@ -10,6 +10,8 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import { createCacheService } from "@/common/cache/create-cache.service.js";
+import { createNamespacedCache } from "@/common/cache/namespaced-cache.js";
+import { createEventBus } from "@/common/events.js";
 import type { Logger } from "@/common/logger.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
 import { env } from "@/config/env.js";
@@ -61,7 +63,14 @@ export async function buildApp(log: Logger) {
   // Health check
   app.get("/health", async () => ({ status: "ok" }));
 
-  const services = createServices(cache, log);
+  const bus = createEventBus();
+  const recipeCache = createNamespacedCache("recipes", cache);
+  const categoryCache = createNamespacedCache("categories", cache);
+  const services = createServices(recipeCache, categoryCache, bus, log);
+
+  // Cross-service cache invalidation via events
+  bus.on("category:changed", () => recipeCache.deletePattern("*"));
+  bus.on("recipe:rated", () => recipeCache.deletePattern("*"));
 
   // Routes
   app.register(authRoutes, {

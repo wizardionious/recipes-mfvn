@@ -5,6 +5,7 @@ import type {
 } from "@recipes/shared";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { ConflictError, NotFoundError } from "@/common/errors.js";
+import type { TypedEmitter } from "@/common/events.js";
 import type {
   CreateMethodParams,
   DeleteMethodParams,
@@ -29,6 +30,7 @@ export function createCategoryService(
   categoryModel: CategoryModelType,
   recipeModel: RecipeModelType,
   cache: CacheService,
+  bus: TypedEmitter,
 ): CategoryService {
   return {
     findAll: async ({ query }) => {
@@ -54,6 +56,7 @@ export function createCategoryService(
       const category = await categoryModel.create(data);
 
       await cache.deletePattern(categoryCache.keys.allPattern());
+      bus.emit("category:changed");
 
       return toCategory(category.toObject());
     },
@@ -72,6 +75,7 @@ export function createCategoryService(
       }
 
       await cache.deletePattern(categoryCache.keys.allPattern());
+      bus.emit("category:changed");
     },
   };
 }
