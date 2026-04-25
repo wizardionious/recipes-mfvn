@@ -26,19 +26,25 @@ describe("authService", () => {
   describe("register", () => {
     it("should register user and return auth response", async () => {
       userModel.exists.mockResolvedValue(null);
-      const doc = createUserDoc({ email: "new@test.com", name: "New User" });
+      const doc = createUserDoc({
+        email: "new@test.com",
+        name: "New User",
+        level: "Beginner",
+      });
       userModel.create.mockResolvedValue({ ...doc, toObject: () => doc });
 
       const result = await service.register({
         email: "new@test.com",
         password: "Password123!",
         name: "New User",
+        level: "Beginner",
       });
 
       expect(userModel.exists).toHaveBeenCalledWith({ email: "new@test.com" });
       expect(userModel.create).toHaveBeenCalled();
       expect(signToken).toHaveBeenCalled();
       expect(result.user.email).toBe("new@test.com");
+      expect(result.user.level).toBe("Beginner");
       expect(result.token).toBe("mock-jwt-token");
     });
 

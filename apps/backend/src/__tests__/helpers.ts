@@ -120,6 +120,7 @@ export function createUserDoc(
     password: "hashedPassword",
     name: "Test User",
     role: "user",
+    level: "Chef",
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     comparePassword: vi.fn().mockResolvedValue(true),

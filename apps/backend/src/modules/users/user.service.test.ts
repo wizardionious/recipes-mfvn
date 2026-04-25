@@ -37,7 +37,11 @@ describe("userService", () => {
 
   describe("getCurrentUser", () => {
     it("should return user by ID", async () => {
-      const doc = createUserDoc({ email: "user@test.com", name: "Test" });
+      const doc = createUserDoc({
+        email: "user@test.com",
+        name: "Test",
+        level: "Home Cook",
+      });
       const lean = vi.fn().mockResolvedValue(doc);
       userModel.findById.mockReturnValue({ lean });
 
@@ -46,6 +50,7 @@ describe("userService", () => {
       expect(result.email).toBe("user@test.com");
       expect(result.name).toBe("Test");
       expect(result).not.toHaveProperty("password");
+      expect(result.level).toBe("Home Cook");
     });
 
     it("should throw NotFoundError when user not found", async () => {

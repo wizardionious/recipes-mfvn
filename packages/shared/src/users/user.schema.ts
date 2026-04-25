@@ -4,7 +4,7 @@ export const userSummarySchema = z.object({
   id: z.string(),
   email: z.string(),
   name: z.string(),
-  level: z.string().optional()
+  level: z.string().optional(),
 });
 
 export const userSchema = z.object({

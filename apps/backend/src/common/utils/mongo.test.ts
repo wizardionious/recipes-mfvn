@@ -67,6 +67,7 @@ describe("toUser", () => {
     const doc = createUserDoc({
       email: "john@test.com",
       name: "John",
+      level: "Trainee",
     });
 
     const result = toUser(doc);
@@ -75,6 +76,7 @@ describe("toUser", () => {
       id: doc._id.toString(),
       email: "john@test.com",
       name: "John",
+      level: "Trainee",
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     });
