@@ -134,6 +134,7 @@ export function toUser(doc: UserDocument): User {
     id: doc._id.toString(),
     email: doc.email,
     name: doc.name,
+    level: doc.level,
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };

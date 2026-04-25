@@ -10,6 +10,7 @@ export interface UserDocument extends BaseDocument {
   password: string;
   name: string;
   role: UserRole;
+  level?: string;
   comparePassword(candidate: string): Promise<boolean>;
 }
 
@@ -31,6 +32,7 @@ const userSchema = new Schema<UserDocument, UserModelType>(
       enum: ["user", "admin"],
       default: "user",
     },
+    level: { type: String, trim: true },
   },
   {
     timestamps: true,
