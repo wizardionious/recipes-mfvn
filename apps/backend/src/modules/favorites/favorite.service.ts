@@ -58,7 +58,7 @@ export function createFavoriteService(
       await validateUser(initiator.id);
       await validateRecipe(recipeId);
 
-      await repository.delete(initiator.id, recipeId);
+      await repository.delete({ user: initiator.id, recipe: recipeId });
       return { favorited: false };
     },
 
@@ -76,7 +76,7 @@ export function createFavoriteService(
     },
 
     isFavorited: async (recipeId, { initiator }) => {
-      return repository.exists(initiator.id, recipeId);
+      return repository.exists({ user: initiator.id, recipe: recipeId });
     },
   };
 }

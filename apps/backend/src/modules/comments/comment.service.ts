@@ -97,7 +97,10 @@ export function createCommentService(
         throw new NotFoundError("Comment not found");
       }
 
-      if (!comment.author.equals(initiator.id) && initiator.role !== "admin") {
+      if (
+        !comment.author._id.equals(initiator.id) &&
+        initiator.role !== "admin"
+      ) {
         throw new ForbiddenError("Not authorized to delete this comment");
       }
 

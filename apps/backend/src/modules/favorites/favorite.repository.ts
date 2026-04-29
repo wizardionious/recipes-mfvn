@@ -1,4 +1,7 @@
-import type { PipelineStage, QueryFilter } from "mongoose";
+import type { RequireKeys } from "@recipes/shared";
+import type { PipelineStage } from "mongoose";
+import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
+import { BaseRepository } from "@/common/base.repository.js";
 import type {
   OptionalInitiator,
   QueryMethodParams,
@@ -18,20 +21,19 @@ import {
 } from "@/modules/recipes/recipe.aggregation.js";
 import type { RecipeDocumentPopulated } from "@/modules/recipes/recipe.model.js";
 import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
-import type { FavoriteDocument, FavoriteModelType } from "./favorite.model.js";
+import type { FavoriteDocument } from "./favorite.model.js";
 
-export type CreateFavoriteBody = {
-  user: string;
-  recipe: string;
-};
+export type FavoriteCreateInput = RequireKeys<
+  CreateInput<FavoriteDocument>,
+  "user" | "recipe"
+>;
+export type FavoriteUpdateInput = UpdateInput<FavoriteDocument>;
 
-export class FavoriteRepository {
-  private model: FavoriteModelType;
-
-  constructor(model: FavoriteModelType) {
-    this.model = model;
-  }
-
+export class FavoriteRepository extends BaseRepository<
+  FavoriteDocument,
+  FavoriteCreateInput,
+  FavoriteUpdateInput
+> {
   async findByUser(
     userId: string,
     { query, initiator }: QueryMethodParams,
@@ -58,39 +60,6 @@ export class FavoriteRepository {
       .filter((recipe) => recipe != null);
 
     return [recipes, total];
-  }
-
-  async findOne(
-    filter: QueryFilter<FavoriteDocument>,
-  ): Promise<FavoriteDocument | null> {
-    return this.model.findOne(filter).lean();
-  }
-
-  async create(data: CreateFavoriteBody): Promise<FavoriteDocument> {
-    return this.model.create(data);
-  }
-
-  async delete(
-    userId: string,
-    recipeId: string,
-  ): Promise<FavoriteDocument | null> {
-    return this.model
-      .findOneAndDelete({
-        user: userId,
-        recipe: recipeId,
-      })
-      .lean();
-  }
-
-  async exists(userId: string, recipeId: string): Promise<boolean> {
-    return !!(await this.model.exists({
-      user: userId,
-      recipe: recipeId,
-    }));
-  }
-
-  async aggregate<T>(pipeline: PipelineStage[]): Promise<T[]> {
-    return this.model.aggregate<T>(pipeline);
   }
 }
 

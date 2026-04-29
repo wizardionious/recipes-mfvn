@@ -91,7 +91,10 @@ describe("favoriteService", () => {
       const result = await service.remove(recipeId, { initiator: init });
 
       expect(result).toEqual({ favorited: false });
-      expect(favoriteRepository.delete).toHaveBeenCalledWith(init.id, recipeId);
+      expect(favoriteRepository.delete).toHaveBeenCalledWith({
+        user: init.id,
+        recipe: recipeId,
+      });
     });
   });
 

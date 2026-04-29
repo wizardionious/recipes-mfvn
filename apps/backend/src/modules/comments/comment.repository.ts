@@ -1,5 +1,7 @@
-import type { CreateCommentBody } from "@recipes/shared";
-import type { PipelineStage, QueryFilter } from "mongoose";
+import type { RequireKeys } from "@recipes/shared";
+import type { PipelineStage } from "mongoose";
+import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
+import { BaseRepository } from "@/common/base.repository.js";
 import type {
   OptionalInitiator,
   QueryMethodParams,
@@ -16,20 +18,30 @@ import {
   byVisibility,
   withAuthor,
 } from "@/modules/recipes/recipe.aggregation.js";
+import type { RecipeDocument } from "@/modules/recipes/recipe.model.js";
 import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
+import type { UserDocument } from "@/modules/users/user.model.js";
 import type {
   CommentDocument,
   CommentDocumentPopulated,
-  CommentModelType,
 } from "./comment.model.js";
 
-export class CommentRepository {
-  private model: CommentModelType;
+export type CommentCreateInput = RequireKeys<
+  CreateInput<CommentDocument>,
+  "recipe" | "author" | "text"
+>;
+export type CommentUpdateInput = UpdateInput<CommentDocument>;
+export type CommentDefaultPopulate = {
+  author: Pick<UserDocument, "_id" | "name" | "email">;
+  recipe: Pick<RecipeDocument, "_id" | "title">;
+};
 
-  constructor(model: CommentModelType) {
-    this.model = model;
-  }
-
+export class CommentRepository extends BaseRepository<
+  CommentDocument,
+  CommentCreateInput,
+  CommentUpdateInput,
+  CommentDefaultPopulate
+> {
   async findByRecipe(
     recipeId: string,
     { query, initiator }: QueryMethodParams,
@@ -78,35 +90,11 @@ export class CommentRepository {
     return extractTotalCountResult(result);
   }
 
-  async findById(id: string): Promise<CommentDocument | null> {
-    return this.model.findById(id).lean();
-  }
-
-  async findOne(
-    filter: QueryFilter<CommentDocument>,
-  ): Promise<CommentDocument | null> {
-    return this.model.findOne(filter).lean();
-  }
-
-  async create(
-    data: CreateCommentBody & { recipe: string; author: string },
-  ): Promise<Omit<CommentDocumentPopulated, "recipe">> {
-    const comment = await this.model.create(data);
-
-    return (
-      await comment.populate({
-        path: "author",
-        select: "name email",
-      })
-    ).toObject<Omit<CommentDocumentPopulated, "recipe">>();
-  }
-
-  async delete(id: string): Promise<CommentDocument | null> {
-    return this.model.findByIdAndDelete(id).lean();
-  }
-
-  async aggregate<T>(pipeline: PipelineStage[]): Promise<T[]> {
-    return this.model.aggregate<T>(pipeline);
+  protected override getDefaultPopulate() {
+    return [
+      { path: "author", select: "_id name email" },
+      { path: "recipe", select: "_id title" },
+    ];
   }
 }
 

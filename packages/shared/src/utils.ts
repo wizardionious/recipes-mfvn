@@ -8,6 +8,14 @@ export type Replace<T, R extends Record<PropertyKey, unknown>> = Omit<
 > &
   R;
 
+export type PartialKeys<T, K extends keyof T> = Prettify<
+  Omit<T, K> & Partial<Pick<T, K>>
+>;
+
+export type RequireKeys<T, K extends keyof T> = Prettify<
+  Omit<T, K> & Required<Pick<T, K>>
+>;
+
 export type RenameField<
   T extends object,
   K extends keyof T,
