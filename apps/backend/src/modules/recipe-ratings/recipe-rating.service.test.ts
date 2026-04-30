@@ -1,26 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockBus,
-  createMockRatingModel,
   createMockRecipeModel,
+  createMockRecipeRatingRepository,
   createMockUserModel,
   createObjectId,
   initiator,
 } from "@/__tests__/helpers.js";
 import { BadRequestError, NotFoundError } from "@/common/errors.js";
+import type { RecipeRatingRepository } from "@/modules/recipe-ratings/recipe-rating.repository.js";
+import { createRecipeRatingService } from "@/modules/recipe-ratings/recipe-rating.service.js";
 import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
 import type { UserModelType } from "@/modules/users/user.model.js";
-import type { RecipeRatingModelType } from "./recipe-rating.model.js";
-import { createRecipeRatingService } from "./recipe-rating.service.js";
 
 describe("recipeRatingService", () => {
-  const ratingModel = createMockRatingModel();
+  const repository = createMockRecipeRatingRepository();
   const recipeModel = createMockRecipeModel();
   const userModel = createMockUserModel();
   const bus = createMockBus();
 
   const service = createRecipeRatingService(
-    ratingModel as unknown as RecipeRatingModelType,
+    repository as unknown as RecipeRatingRepository,
     recipeModel as unknown as RecipeModelType,
     userModel as unknown as UserModelType,
     bus,
@@ -34,8 +34,12 @@ describe("recipeRatingService", () => {
     it("should create a new rating", async () => {
       userModel.exists.mockResolvedValue(true);
       recipeModel.exists.mockResolvedValue(true);
-      ratingModel.findOneAndUpdate.mockResolvedValue({
+      repository.upsert.mockResolvedValue({
+        _id: createObjectId(),
+        user: createObjectId(),
+        recipe: createObjectId(),
         value: 4,
+        createdAt: new Date(),
       });
 
       const init = initiator();
@@ -46,10 +50,9 @@ describe("recipeRatingService", () => {
       });
 
       expect(result).toEqual({ value: 4 });
-      expect(ratingModel.findOneAndUpdate).toHaveBeenCalledWith(
+      expect(repository.upsert).toHaveBeenCalledWith(
         { user: init.id, recipe: recipeId },
-        { value: 4 },
-        { upsert: true, returnDocument: "after" },
+        4,
       );
       expect(bus.emit).toHaveBeenCalledWith("recipe:rated", recipeId);
     });
@@ -57,8 +60,12 @@ describe("recipeRatingService", () => {
     it("should update an existing rating", async () => {
       userModel.exists.mockResolvedValue(true);
       recipeModel.exists.mockResolvedValue(true);
-      ratingModel.findOneAndUpdate.mockResolvedValue({
+      repository.upsert.mockResolvedValue({
+        _id: createObjectId(),
+        user: createObjectId(),
+        recipe: createObjectId(),
         value: 5,
+        createdAt: new Date(),
       });
 
       const init = initiator();
@@ -120,15 +127,19 @@ describe("recipeRatingService", () => {
     it("should remove an existing rating", async () => {
       userModel.exists.mockResolvedValue(true);
       recipeModel.exists.mockResolvedValue(true);
-      ratingModel.findOneAndDelete.mockResolvedValue({
+      repository.delete.mockResolvedValue({
         _id: createObjectId(),
+        user: createObjectId(),
+        recipe: createObjectId(),
+        value: 4,
+        createdAt: new Date(),
       });
 
       const init = initiator();
       const recipeId = createObjectId().toString();
       await service.remove(recipeId, { initiator: init });
 
-      expect(ratingModel.findOneAndDelete).toHaveBeenCalledWith({
+      expect(repository.delete).toHaveBeenCalledWith({
         user: init.id,
         recipe: recipeId,
       });
@@ -138,7 +149,7 @@ describe("recipeRatingService", () => {
     it("should throw NotFoundError when rating does not exist", async () => {
       userModel.exists.mockResolvedValue(true);
       recipeModel.exists.mockResolvedValue(true);
-      ratingModel.findOneAndDelete.mockResolvedValue(null);
+      repository.delete.mockResolvedValue(null);
 
       await expect(
         service.remove(createObjectId().toString(), {

@@ -9,11 +9,18 @@ import type {
 } from "mongoose";
 import type { RefKeys } from "@/common/types/mongoose.js";
 
+// biome-ignore lint/complexity/noBannedTypes: default object value
+type EmptyObject = {};
+
 export type Merge<A, B> = Prettify<Omit<A, keyof B> & B>;
 export type PopulateKeys<T> = Partial<Prettify<Record<RefKeys<T>, unknown>>>;
 
 export type TimestampKeys = "createdAt" | "updatedAt";
 export type AutoFields = "_id" | TimestampKeys;
+
+export type UpdateResult<T, TUpsert extends boolean> = TUpsert extends true
+  ? T
+  : T | null;
 
 export type RepositoryPopulate = PopulateOptions | PopulateOptions[];
 export type RepositoryQueryOptions = Omit<QueryOptions, "populate"> & {
@@ -40,8 +47,7 @@ export class BaseRepository<
   TDoc extends { _id: Types.ObjectId },
   TCreate extends CreateInput<TDoc> = CreateInput<TDoc>,
   TUpdate extends UpdateInput<TDoc> = UpdateInput<TDoc>,
-  // biome-ignore lint/complexity/noBannedTypes: default object value
-  TDefaultPopulate extends PopulateKeys<TDoc> = {},
+  TDefaultPopulate extends PopulateKeys<TDoc> = EmptyObject,
 > {
   protected readonly model: Model<TDoc>;
 
@@ -105,23 +111,38 @@ export class BaseRepository<
     return doc.toObject<Merge<TDoc, TPopulate>>();
   }
 
-  async update<TPopulate extends PopulateKeys<TDoc> = TDefaultPopulate>(
-    id: string,
+  async update<
+    TPopulate extends PopulateKeys<TDoc> = TDefaultPopulate,
+    const TUpsert extends boolean = false,
+  >(
+    filter: string | QueryFilter<TDoc>,
     data: TUpdate,
-    options: RepositoryQueryOptions = {},
-  ): Promise<Merge<TDoc, TPopulate> | null> {
+    options: RepositoryQueryOptions & {
+      upsert?: TUpsert;
+    } = {},
+  ): Promise<UpdateResult<Merge<TDoc, TPopulate>, TUpsert>> {
     const { queryOptions, populate } = this.resolveOptions(options);
-    const query = this.model.findByIdAndUpdate(id, this.castInput(data), {
-      returnDocument: "after",
-      runValidators: true,
-      ...queryOptions,
-    });
+
+    const query =
+      typeof filter === "string"
+        ? this.model.findByIdAndUpdate(filter, this.castInput(data), {
+            returnDocument: "after",
+            runValidators: true,
+            ...queryOptions,
+          })
+        : this.model.findOneAndUpdate(filter, this.castInput(data), {
+            returnDocument: "after",
+            runValidators: true,
+            ...queryOptions,
+          });
 
     if (populate) {
       query.populate<TPopulate>(populate);
     }
 
-    return query.lean<Merge<TDoc, TPopulate>>();
+    return query.lean<Merge<TDoc, TPopulate>>() as Promise<
+      UpdateResult<Merge<TDoc, TPopulate>, TUpsert>
+    >;
   }
 
   /**

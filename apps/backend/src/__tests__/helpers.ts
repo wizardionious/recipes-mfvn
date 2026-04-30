@@ -182,6 +182,19 @@ export function createCommentDoc(
 
 // ── Mongoose model mock factories ──
 
+export function createMockRepository(overrides: Record<string, Mock> = {}) {
+  return {
+    findById: viFn(),
+    findOne: viFn(),
+    exists: viFn(),
+    create: viFn(),
+    update: viFn(),
+    delete: viFn(),
+    aggregate: viFn(),
+    ...overrides,
+  };
+}
+
 const chainable = {
   select: viFn().mockReturnThis(),
   sort: viFn().mockReturnThis(),
@@ -290,6 +303,16 @@ export function createMockRatingModel(overrides: Record<string, Mock> = {}) {
     findOneAndUpdate: viFn(),
     findOneAndDelete: viFn(),
     exists: viFn(),
+    ...overrides,
+  };
+}
+
+export function createMockRecipeRatingRepository(
+  overrides: Record<string, Mock> = {},
+) {
+  return {
+    ...createMockRepository(overrides),
+    upsert: viFn(),
     ...overrides,
   };
 }

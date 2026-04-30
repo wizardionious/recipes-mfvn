@@ -8,7 +8,7 @@ import type {
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
 import type { UserModelType } from "@/modules/users/user.model.js";
-import type { RecipeRatingModelType } from "./recipe-rating.model.js";
+import type { RecipeRatingRepository } from "./recipe-rating.repository.js";
 
 export interface RecipeRatingService {
   rate(
@@ -19,7 +19,7 @@ export interface RecipeRatingService {
 }
 
 export function createRecipeRatingService(
-  ratingModel: RecipeRatingModelType,
+  repository: RecipeRatingRepository,
   recipeModel: RecipeModelType,
   userModel: UserModelType,
   bus: TypedEmitter,
@@ -39,10 +39,9 @@ export function createRecipeRatingService(
       await validateUser(initiator.id);
       await validateRecipe(recipeId);
 
-      const rating = await ratingModel.findOneAndUpdate(
+      const rating = await repository.upsert(
         { user: initiator.id, recipe: recipeId },
-        { value: data.value },
-        { upsert: true, returnDocument: "after" },
+        data.value,
       );
 
       bus.emit("recipe:rated", recipeId);
@@ -54,7 +53,7 @@ export function createRecipeRatingService(
       await validateUser(initiator.id);
       await validateRecipe(recipeId);
 
-      const result = await ratingModel.findOneAndDelete({
+      const result = await repository.delete({
         user: initiator.id,
         recipe: recipeId,
       });

@@ -16,6 +16,7 @@ import { FavoriteRepository } from "@/modules/favorites/favorite.repository.js";
 import type { FavoriteService } from "@/modules/favorites/favorite.service.js";
 import { createFavoriteService } from "@/modules/favorites/favorite.service.js";
 import { RecipeRatingModel } from "@/modules/recipe-ratings/recipe-rating.model.js";
+import { RecipeRatingRepository } from "@/modules/recipe-ratings/recipe-rating.repository.js";
 import type { RecipeRatingService } from "@/modules/recipe-ratings/recipe-rating.service.js";
 import { createRecipeRatingService } from "@/modules/recipe-ratings/recipe-rating.service.js";
 import { RecipeModel } from "@/modules/recipes/recipe.model.js";
@@ -44,6 +45,7 @@ export function createServices(
   const commentRepository = new CommentRepository(CommentModel);
   const categoryRepository = new CategoryRepository(CategoryModel);
   const favoriteRepository = new FavoriteRepository(FavoriteModel);
+  const recipeRatingRepository = new RecipeRatingRepository(RecipeRatingModel);
 
   const commentService = createCommentService(
     commentRepository,
@@ -61,7 +63,7 @@ export function createServices(
     UserModel,
   );
   const recipeRatingService = createRecipeRatingService(
-    RecipeRatingModel,
+    recipeRatingRepository,
     RecipeModel,
     UserModel,
     bus,
