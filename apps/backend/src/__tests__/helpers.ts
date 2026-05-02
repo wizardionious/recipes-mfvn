@@ -265,6 +265,28 @@ export function createMockRecipeModel(overrides: Record<string, Mock> = {}) {
   };
 }
 
+export function createMockRecipeRepository(
+  overrides: Record<string, Mock> = {},
+) {
+  return {
+    aggregateSearch: viFn(),
+    aggregateById: viFn(),
+    findDocumentById: viFn(),
+    create: viFn(),
+    save: viFn(),
+    deleteDocument: viFn(),
+    findById: viFn(),
+    findOne: viFn(),
+    find: viFn(),
+    update: viFn(),
+    delete: viFn(),
+    exists: viFn(),
+    count: viFn(),
+    aggregate: viFn(),
+    ...overrides,
+  };
+}
+
 export function createMockCommentModel(overrides: Record<string, Mock> = {}) {
   return {
     aggregate: viFn(),

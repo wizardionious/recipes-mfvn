@@ -1,11 +1,12 @@
 import type { Minutes, RecipeQuery } from "@recipes/shared";
+import type { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockBus,
   createMockCache,
   createMockCategoryRepository,
   createMockFavoriteRepository,
-  createMockRecipeModel,
+  createMockRecipeRepository,
   createMockUserRepository,
   createObjectId,
   createRecipeDoc,
@@ -21,19 +22,33 @@ import {
 import type { CategoryRepository } from "@/modules/categories/category.repository.js";
 import type { FavoriteRepository } from "@/modules/favorites/favorite.repository.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
-import type { RecipeModelType } from "@/modules/recipes/recipe.model.js";
+import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 import { createRecipeService } from "@/modules/recipes/recipe.service.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
 
+function createMockRecipe(authorId?: Types.ObjectId) {
+  const author = authorId ?? createObjectId();
+  const doc = createRecipeDoc({ author });
+  return {
+    ...doc,
+    author: {
+      _id: doc.author,
+      equals: (id: string) => id === doc.author.toString(),
+    },
+    save: vi.fn().mockResolvedValue(undefined),
+    deleteOne: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe("recipeService", () => {
-  const recipeModel = createMockRecipeModel();
+  const recipeRepository = createMockRecipeRepository();
   const userRepository = createMockUserRepository();
   const favoriteRepository = createMockFavoriteRepository();
   const categoryRepository = createMockCategoryRepository();
   const cache = createMockCache();
   const bus = createMockBus();
   const service = createRecipeService(
-    recipeModel as unknown as RecipeModelType,
+    recipeRepository as unknown as RecipeRepository,
     userRepository as unknown as UserRepository,
     favoriteRepository as unknown as FavoriteRepository,
     categoryRepository as unknown as CategoryRepository,
@@ -49,9 +64,7 @@ describe("recipeService", () => {
   describe("findAll", () => {
     it("should return paginated recipes", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.aggregate.mockResolvedValue([
-        { items: [populated], total: 1 },
-      ]);
+      recipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
 
       const query = {
         page: 1,
@@ -70,7 +83,7 @@ describe("recipeService", () => {
     });
 
     it("should return empty when aggregate returns empty result", async () => {
-      recipeModel.aggregate.mockResolvedValue([]);
+      recipeRepository.aggregateSearch.mockResolvedValue([[], 0]);
 
       const query = {
         page: 1,
@@ -99,7 +112,7 @@ describe("recipeService", () => {
       });
 
       expect(result.items).toEqual([]);
-      expect(recipeModel.aggregate).not.toHaveBeenCalled();
+      expect(recipeRepository.aggregateSearch).not.toHaveBeenCalled();
       expect(cache.get).not.toHaveBeenCalled();
     });
 
@@ -109,9 +122,7 @@ describe("recipeService", () => {
         averageRating: 4.2,
         ratingCount: 15,
       });
-      recipeModel.aggregate.mockResolvedValue([
-        { items: [populated], total: 1 },
-      ]);
+      recipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
 
       const query = {
         page: 1,
@@ -130,9 +141,7 @@ describe("recipeService", () => {
 
     it("should return null ratings when recipe has no ratings", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.aggregate.mockResolvedValue([
-        { items: [populated], total: 1 },
-      ]);
+      recipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
 
       const query = {
         page: 1,
@@ -153,7 +162,7 @@ describe("recipeService", () => {
   describe("findById", () => {
     it("should return recipe by ID", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.aggregate.mockResolvedValue([populated]);
+      recipeRepository.aggregateById.mockResolvedValue(populated);
 
       const id = createObjectId().toString();
       const result = await service.findById(id, {
@@ -166,7 +175,7 @@ describe("recipeService", () => {
 
     it("should return cached recipe on second call for unauthenticated user", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeModel.aggregate.mockResolvedValue([populated]);
+      recipeRepository.aggregateById.mockResolvedValue(populated);
 
       const id = createObjectId().toString();
       await service.findById(id, { initiator: noInitiator() });
@@ -177,7 +186,7 @@ describe("recipeService", () => {
         initiator: noInitiator(),
       });
 
-      expect(recipeModel.aggregate).not.toHaveBeenCalled();
+      expect(recipeRepository.aggregateById).not.toHaveBeenCalled();
       expect(result.title).toBe("Test Recipe");
       expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
     });
@@ -191,7 +200,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeModel.aggregate.mockResolvedValue([]);
+      recipeRepository.aggregateById.mockResolvedValue(undefined);
 
       const id = createObjectId().toString();
       await expect(
@@ -208,7 +217,7 @@ describe("recipeService", () => {
         averageRating: 3.8,
         ratingCount: 42,
       });
-      recipeModel.aggregate.mockResolvedValue([populated]);
+      recipeRepository.aggregateById.mockResolvedValue(populated);
 
       const id = createObjectId().toString();
       const result = await service.findById(id, {
@@ -239,25 +248,26 @@ describe("recipeService", () => {
 
       const authorId = createObjectId();
       const categoryId = createObjectId();
-      const doc = createRecipeDoc({ title: "New Recipe" });
-      const populated = populateRecipeDoc(doc, {
-        author: { _id: authorId, name: "Chef", email: "chef@test.com" },
-        category: { _id: categoryId, name: "Italian", slug: "italian" },
-      });
+      const populated = populateRecipeDoc(
+        createRecipeDoc({ title: "New Recipe" }),
+        {
+          author: { _id: authorId, name: "Chef", email: "chef@test.com" },
+          category: { _id: categoryId, name: "Italian", slug: "italian" },
+        },
+      );
 
-      recipeModel.create.mockResolvedValue({
-        ...doc,
-        populate: vi.fn().mockResolvedValue({
-          toObject: () => populated,
-        }),
-      });
+      recipeRepository.create.mockResolvedValue(populated);
 
       const result = await service.create({
         data: { ...createData, category: categoryId.toString() },
         initiator: initiator(authorId.toString()),
       });
 
-      expect(recipeModel.create).toHaveBeenCalled();
+      expect(recipeRepository.create).toHaveBeenCalledWith({
+        ...createData,
+        category: categoryId.toString(),
+        author: authorId.toString(),
+      });
       expect(result.title).toBe("New Recipe");
       expect(result.userRating).toBeNull();
       expect(result.averageRating).toBeNull();
@@ -313,16 +323,14 @@ describe("recipeService", () => {
   describe("update", () => {
     it("should update recipe when author matches", async () => {
       const authorId = createObjectId();
-      const doc = createRecipeDoc({ author: authorId });
-      const recipe = {
-        ...doc,
-        save: vi.fn().mockResolvedValue(undefined),
-        populate: vi.fn().mockResolvedValue({
-          toObject: () => populateRecipeDoc(doc, { title: "Updated" }),
+      const recipe = createMockRecipe(authorId);
+      recipeRepository.findDocumentById.mockResolvedValue(recipe);
+      favoriteRepository.exists.mockResolvedValue(false);
+      recipeRepository.save.mockResolvedValue(
+        populateRecipeDoc(createRecipeDoc({ author: authorId }), {
+          title: "Updated",
         }),
-      };
-      recipeModel.findById.mockResolvedValue(recipe);
-      favoriteRepository.exists.mockReturnValue(false);
+      );
 
       const id = createObjectId().toString();
       const result = await service.update(id, {
@@ -330,7 +338,12 @@ describe("recipeService", () => {
         initiator: initiator(authorId.toString()),
       });
 
-      expect(recipe.save).toHaveBeenCalled();
+      expect(recipeRepository.findDocumentById).toHaveBeenCalledWith(id, {
+        populate: false,
+      });
+      expect(recipeRepository.save).toHaveBeenCalledWith(recipe, {
+        title: "Updated",
+      });
       expect(result.title).toBe("Updated");
       expect(result.userRating).toBeNull();
       expect(result.averageRating).toBeNull();
@@ -344,16 +357,14 @@ describe("recipeService", () => {
 
     it("should update recipe when user is admin", async () => {
       const authorId = createObjectId();
-      const doc = createRecipeDoc({ author: authorId });
-      const recipe = {
-        ...doc,
-        save: vi.fn().mockResolvedValue(undefined),
-        populate: vi.fn().mockResolvedValue({
-          toObject: () => populateRecipeDoc(doc, { title: "Updated" }),
+      const recipe = createMockRecipe(authorId);
+      recipeRepository.findDocumentById.mockResolvedValue(recipe);
+      favoriteRepository.exists.mockResolvedValue(false);
+      recipeRepository.save.mockResolvedValue(
+        populateRecipeDoc(createRecipeDoc({ author: authorId }), {
+          title: "Updated",
         }),
-      };
-      recipeModel.findById.mockResolvedValue(recipe);
-      favoriteRepository.exists.mockReturnValue(false);
+      );
 
       const id = createObjectId().toString();
       await expect(
@@ -379,7 +390,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeModel.findById.mockResolvedValue(null);
+      recipeRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.update(createObjectId().toString(), {
@@ -390,8 +401,8 @@ describe("recipeService", () => {
     });
 
     it("should throw ForbiddenError when not author and not admin", async () => {
-      const recipe = createRecipeDoc();
-      recipeModel.findById.mockResolvedValue(recipe);
+      const recipe = createMockRecipe();
+      recipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       await expect(
         service.update(recipe._id.toString(), {
@@ -405,12 +416,8 @@ describe("recipeService", () => {
   describe("delete", () => {
     it("should delete recipe when author matches", async () => {
       const authorId = createObjectId();
-      recipeModel.findById.mockReturnValue({
-        select: vi.fn().mockResolvedValue({
-          author: { equals: (id: string) => id === authorId.toString() },
-          deleteOne: vi.fn().mockResolvedValue(undefined),
-        }),
-      });
+      const recipe = createMockRecipe(authorId);
+      recipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       const id = createObjectId().toString();
       await expect(
@@ -418,6 +425,7 @@ describe("recipeService", () => {
           initiator: initiator(authorId.toString()),
         }),
       ).resolves.toBeUndefined();
+      expect(recipeRepository.deleteDocument).toHaveBeenCalledWith(recipe);
       expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
       expect(cache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
@@ -426,12 +434,8 @@ describe("recipeService", () => {
     });
 
     it("should delete recipe when user is admin", async () => {
-      recipeModel.findById.mockReturnValue({
-        select: vi.fn().mockResolvedValue({
-          author: { equals: () => false },
-          deleteOne: vi.fn().mockResolvedValue(undefined),
-        }),
-      });
+      const recipe = createMockRecipe();
+      recipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       const id = createObjectId().toString();
       await expect(
@@ -439,6 +443,7 @@ describe("recipeService", () => {
           initiator: initiator(createObjectId().toString(), "admin"),
         }),
       ).resolves.toBeUndefined();
+      expect(recipeRepository.deleteDocument).toHaveBeenCalledWith(recipe);
       expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
       expect(cache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
@@ -453,9 +458,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeModel.findById.mockReturnValue({
-        select: vi.fn().mockResolvedValue(null),
-      });
+      recipeRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.delete(createObjectId().toString(), {
@@ -465,12 +468,8 @@ describe("recipeService", () => {
     });
 
     it("should throw ForbiddenError when not author and not admin", async () => {
-      recipeModel.findById.mockReturnValue({
-        select: vi.fn().mockResolvedValue({
-          author: { equals: () => false },
-          deleteOne: vi.fn(),
-        }),
-      });
+      const recipe = createMockRecipe();
+      recipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       await expect(
         service.delete(createObjectId().toString(), {

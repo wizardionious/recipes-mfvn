@@ -6,6 +6,7 @@ import type {
   UpdateRecipeBody,
 } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
+import type { EmptyObject } from "@/common/base.repository.js";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { ForbiddenError, NotFoundError } from "@/common/errors.js";
 import type { TypedEmitter } from "@/common/events.js";
@@ -18,23 +19,12 @@ import type {
   UpdateMethodParams,
 } from "@/common/types/methods.js";
 import { toRecipe } from "@/common/utils/mongo.js";
-import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
-import { extractTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
-import type { CategoryDocument } from "@/modules/categories/category.model.js";
 import type { CategoryRepository } from "@/modules/categories/category.repository.js";
 import type { FavoriteRepository } from "@/modules/favorites/favorite.repository.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
-import type {
-  RecipeDocumentPopulated,
-  RecipeModelType,
-} from "@/modules/recipes/recipe.model.js";
-import {
-  buildFindByIdPipeline,
-  buildSearchPipeline,
-} from "@/modules/recipes/recipe.pipeline.js";
-import type { UserDocument } from "@/modules/users/user.model.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
+import type { RecipeRepository } from "./recipe.repository.js";
 
 export interface RecipeService {
   findAll(params: QueryMethodParams<RecipeQuery>): Promise<Paginated<Recipe>>;
@@ -51,7 +41,7 @@ export interface RecipeService {
 }
 
 export function createRecipeService(
-  recipeModel: RecipeModelType,
+  repository: RecipeRepository,
   userRepository: UserRepository,
   favoriteRepository: FavoriteRepository,
   categoryRepository: CategoryRepository,
@@ -77,11 +67,10 @@ export function createRecipeService(
         }
       }
 
-      const [recipes, total] = extractTotalCountResult(
-        await recipeModel.aggregate<
-          WithTotalCountResult<RecipeDocumentPopulated>
-        >(buildSearchPipeline({ query, initiator })),
-      );
+      const [recipes, total] = await repository.aggregateSearch({
+        query,
+        initiator,
+      });
 
       const result = withPagination(
         recipes.map((recipe) => toRecipe(recipe, recipe.isFavorited)),
@@ -98,10 +87,10 @@ export function createRecipeService(
       return result;
     },
 
-    findById: async (id, params) => {
+    findById: async (id, { initiator }) => {
       assertValidId(id, "Recipe");
 
-      const isAuthenticated = !!params.initiator.id;
+      const isAuthenticated = !!initiator.id;
 
       if (!isAuthenticated) {
         const cacheKey = recipeCache.keys.byId(id);
@@ -111,10 +100,9 @@ export function createRecipeService(
         }
       }
 
-      const recipes = await recipeModel.aggregate<RecipeDocumentPopulated>(
-        buildFindByIdPipeline(id, params),
-      );
-      const recipe = recipes[0];
+      const recipe = await repository.aggregateById(id, {
+        initiator,
+      });
       if (!recipe) {
         throw new NotFoundError("Recipe not found");
       }
@@ -136,27 +124,23 @@ export function createRecipeService(
       await assertExists(categoryRepository, data.category);
       await assertExists(userRepository, initiator.id);
 
-      const recipe = await recipeModel.create({
+      const recipe = await repository.create({
         ...data,
         author: initiator.id,
       });
-      const populated = await recipe.populate<{
-        author: Pick<UserDocument, "_id" | "name" | "email">;
-        category: Pick<CategoryDocument, "_id" | "name" | "slug">;
-      }>([
-        { path: "author", select: "name email" },
-        { path: "category", select: "name slug" },
-      ]);
 
       await cache.deletePattern(recipeCache.keys.listPattern());
       bus.emit("recipe:changed");
 
-      return toRecipe(populated.toObject<typeof populated>(), false);
+      return toRecipe(recipe, false);
     },
 
     update: async (id, { data, initiator }) => {
       assertValidId(id, "Recipe");
-      const recipe = await recipeModel.findById(id);
+
+      const recipe = await repository.findDocumentById<EmptyObject>(id, {
+        populate: false,
+      });
       if (!recipe) {
         throw new NotFoundError("Recipe not found");
       }
@@ -165,16 +149,7 @@ export function createRecipeService(
         throw new ForbiddenError("Not authorized to update this recipe");
       }
 
-      Object.assign(recipe, data);
-      await recipe.save();
-      const populated = await recipe.populate<{
-        author: Pick<UserDocument, "_id" | "name" | "email">;
-        category: Pick<CategoryDocument, "_id" | "name" | "slug">;
-      }>([
-        { path: "author", select: "name email" },
-        { path: "category", select: "name slug" },
-      ]);
-
+      const updated = await repository.save(recipe, data);
       const isFavorited = await favoriteRepository.exists({
         user: initiator.id,
         recipe: id,
@@ -186,12 +161,14 @@ export function createRecipeService(
       ]);
       bus.emit("recipe:changed");
 
-      return toRecipe(populated.toObject<typeof populated>(), isFavorited);
+      return toRecipe(updated, isFavorited);
     },
 
     delete: async (id, { initiator }) => {
       assertValidId(id, "Recipe");
-      const recipe = await recipeModel.findById(id).select("+author");
+      const recipe = await repository.findDocumentById<EmptyObject>(id, {
+        populate: false,
+      });
       if (!recipe) {
         throw new NotFoundError("Recipe not found");
       }
@@ -200,7 +177,7 @@ export function createRecipeService(
         throw new ForbiddenError("Not authorized to delete this recipe");
       }
 
-      await recipe.deleteOne();
+      await repository.deleteDocument(recipe);
 
       await cache.delete(recipeCache.keys.byId(id));
       await cache.deletePattern(recipeCache.keys.listPattern());

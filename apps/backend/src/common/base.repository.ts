@@ -1,5 +1,6 @@
 import type { Prettify } from "@recipes/shared";
 import type {
+  HydratedDocument,
   Model,
   PipelineStage,
   PopulateOptions,
@@ -10,7 +11,7 @@ import type {
 import type { RefKeys } from "@/common/types/mongoose.js";
 
 // biome-ignore lint/complexity/noBannedTypes: default object value
-type EmptyObject = {};
+export type EmptyObject = {};
 
 export type Merge<A, B> = Prettify<Omit<A, keyof B> & B>;
 export type PopulateKeys<T> = Partial<Prettify<Record<RefKeys<T>, unknown>>>;
@@ -22,8 +23,11 @@ export type UpdateResult<T, TUpsert extends boolean> = TUpsert extends true
   ? T
   : T | null;
 
-export type RepositoryPopulate = PopulateOptions | PopulateOptions[];
-export type RepositoryQueryOptions = Omit<QueryOptions, "populate"> & {
+/**
+ * Populate options can be set to `false` to disable population.
+ */
+export type RepositoryPopulate = PopulateOptions | PopulateOptions[] | false;
+export type RepositoryQueryOptions = Omit<QueryOptions, "populate" | "lean"> & {
   populate?: RepositoryPopulate;
 };
 
@@ -69,6 +73,25 @@ export class BaseRepository<
     }
 
     return query.lean<Merge<TDoc, TPopulate>>();
+  }
+
+  async findDocumentById<
+    TPopulate extends PopulateKeys<TDoc> = TDefaultPopulate,
+  >(
+    id: string,
+    options: RepositoryQueryOptions = {},
+  ): Promise<Merge<HydratedDocument<TDoc>, TPopulate> | null> {
+    const { queryOptions, populate } = this.resolveOptions(options);
+    const query = this.model.findById(id, null, queryOptions);
+
+    if (populate) {
+      query.populate<TPopulate>(populate);
+    }
+
+    return query.exec() as Promise<Merge<
+      HydratedDocument<TDoc>,
+      TPopulate
+    > | null>;
   }
 
   async findOne<TPopulate extends PopulateKeys<TDoc> = TDefaultPopulate>(
@@ -172,6 +195,28 @@ export class BaseRepository<
     return query.lean<Merge<TDoc, TPopulate>>();
   }
 
+  async deleteDocument(doc: HydratedDocument<TDoc>): Promise<void> {
+    await doc.deleteOne();
+  }
+
+  async save<TPopulate extends PopulateKeys<TDoc> = TDefaultPopulate>(
+    doc: HydratedDocument<TDoc>,
+    data?: TUpdate,
+    options: { populate?: RepositoryPopulate } = {},
+  ): Promise<Merge<TDoc, TPopulate>> {
+    if (data) {
+      Object.assign(doc, this.castInput(data));
+    }
+    await doc.save();
+
+    const populate = this.mergePopulate(options.populate);
+    if (populate) {
+      await doc.populate<TPopulate>(populate);
+    }
+
+    return doc.toObject<Merge<TDoc, TPopulate>>();
+  }
+
   async exists(filter: QueryFilter<TDoc>): Promise<boolean> {
     return !!(await this.model.exists(filter));
   }
@@ -199,14 +244,18 @@ export class BaseRepository<
   protected mergePopulate(
     populate?: RepositoryPopulate,
   ): RepositoryPopulate | undefined {
+    if (populate === false) {
+      return undefined;
+    }
+
     return populate ?? this.getDefaultPopulate();
   }
 
   protected resolveOptions(options: RepositoryQueryOptions = {}): {
-    queryOptions: Omit<RepositoryQueryOptions, "populate">;
+    queryOptions: Omit<RepositoryQueryOptions, "populate" | "lean">;
     populate?: RepositoryPopulate;
   } {
-    const { populate, ...queryOptions } = options;
+    const { populate, lean, ...queryOptions } = options;
 
     return {
       queryOptions,
