@@ -1,6 +1,7 @@
 import type {
   Category,
   CategoryQuery,
+  CategoryWithComputed,
   CreateCategoryBody,
 } from "@recipes/shared";
 import type { CacheService } from "@/common/cache/cache.service.js";
@@ -17,7 +18,9 @@ import type { CategoryRepository } from "@/modules/categories/category.repositor
 import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 
 export interface CategoryService {
-  findAll(params: QueryMethodParams<CategoryQuery>): Promise<Category[]>;
+  findAll(
+    params: QueryMethodParams<CategoryQuery>,
+  ): Promise<CategoryWithComputed[]>;
   create(params: CreateMethodParams<CreateCategoryBody>): Promise<Category>;
   deleteById(id: string, params: DeleteMethodParams): Promise<void>;
 }
@@ -32,7 +35,7 @@ export function createCategoryService(
     findAll: async ({ query }) => {
       const cacheKey = categoryCache.keys.list(query);
 
-      const cached = await cache.get<Category[]>(cacheKey);
+      const cached = await cache.get<CategoryWithComputed[]>(cacheKey);
       if (cached !== undefined) {
         return cached;
       }

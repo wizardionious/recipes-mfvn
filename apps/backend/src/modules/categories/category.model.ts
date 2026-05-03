@@ -8,10 +8,6 @@ export interface CategoryDocument extends BaseDocument {
   description?: string;
 }
 
-export interface CategoryDocumentWithCount extends CategoryDocument {
-  recipeCount: number;
-}
-
 export type CategoryModelType = Model<CategoryDocument>;
 
 const categorySchema = new Schema<CategoryDocument>(

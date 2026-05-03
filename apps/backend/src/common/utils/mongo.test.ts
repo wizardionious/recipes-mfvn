@@ -1,4 +1,4 @@
-import type { Minutes } from "@recipes/shared";
+import type { Minutes, RecipeComputed } from "@recipes/shared";
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
 import {
@@ -11,7 +11,6 @@ import {
 import {
   toCategory,
   toComment,
-  toCommentForRecipe,
   toObjectId,
   toRecipe,
   toUser,
@@ -117,7 +116,7 @@ describe("toRecipe", () => {
       userRating: 4,
       averageRating: 4.2,
       ratingCount: 10,
-    } satisfies RecipeDocumentPopulated;
+    } satisfies RecipeDocumentPopulated & RecipeComputed;
 
     const result = toRecipe(doc, doc.isFavorited);
 
@@ -188,21 +187,5 @@ describe("toComment", () => {
       id: recipeId.toString(),
       title: "Pasta",
     });
-  });
-});
-
-describe("toCommentForRecipe", () => {
-  it("should map comment document to CommentForRecipe DTO (no recipe field)", () => {
-    const authorId = createObjectId();
-    const doc = {
-      ...createCommentDoc({ text: "Great!" }),
-      author: { _id: authorId, name: "User", email: "user@test.com" },
-    };
-
-    const result = toCommentForRecipe(doc);
-
-    expect(result.text).toBe("Great!");
-    expect(result).not.toHaveProperty("recipe");
-    expect(result.author.id).toBe(authorId.toString());
   });
 });

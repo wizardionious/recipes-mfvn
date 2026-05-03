@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { Category } from "@recipes/shared";
+import type { CategoryWithComputed } from "@recipes/shared";
 import { RouterLink } from "vue-router";
 import { getCategoryPresentation } from "../category.presentation";
 
 const props = defineProps<{
-  category: Pick<Category, "name" | "recipeCount" | "slug">;
+  category: Pick<CategoryWithComputed, "name" | "recipeCount" | "slug">;
 }>();
 </script>
 

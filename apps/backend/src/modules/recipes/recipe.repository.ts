@@ -1,4 +1,4 @@
-import type { RecipeQuery, RequireKeys } from "@recipes/shared";
+import type { RecipeComputed, RecipeQuery, RequireKeys } from "@recipes/shared";
 import type { PipelineStage } from "mongoose";
 import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
 import { BaseRepository } from "@/common/base.repository.js";
@@ -59,10 +59,10 @@ export class RecipeRepository extends BaseRepository<
     query,
     initiator,
   }: QueryMethodParams<RecipeQuery>): Promise<
-    [RecipeDocumentPopulated[], number]
+    [Array<RecipeDocumentPopulated & RecipeComputed>, number]
   > {
     const result = await this.aggregate<
-      WithTotalCountResult<RecipeDocumentPopulated>
+      WithTotalCountResult<RecipeDocumentPopulated & RecipeComputed>
     >(buildSearchPipeline({ query, initiator }));
 
     return extractTotalCountResult(result);
@@ -71,10 +71,10 @@ export class RecipeRepository extends BaseRepository<
   async aggregateById(
     id: string,
     { initiator }: InitiatedMethodParams<OptionalInitiator>,
-  ): Promise<RecipeDocumentPopulated | undefined> {
-    const result = await this.aggregate<RecipeDocumentPopulated>(
-      buildFindByIdPipeline(id, { initiator }),
-    );
+  ): Promise<(RecipeDocumentPopulated & RecipeComputed) | undefined> {
+    const result = await this.aggregate<
+      RecipeDocumentPopulated & RecipeComputed
+    >(buildFindByIdPipeline(id, { initiator }));
 
     return result[0];
   }

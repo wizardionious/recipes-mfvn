@@ -1,4 +1,5 @@
 import {
+  categoryComputedSchema,
   categoryQuerySchema,
   categorySchema,
   createCategorySchema,
@@ -30,7 +31,7 @@ export const categoryRoutes: FastifyPluginAsync<CategoryModuleOptions> = async (
         schema: {
           querystring: categoryQuerySchema,
           response: {
-            200: z.array(categorySchema),
+            200: z.array(categorySchema.extend(categoryComputedSchema.shape)),
           },
           tags: ["Categories"],
           summary: "Get all categories",

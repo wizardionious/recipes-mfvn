@@ -1,4 +1,4 @@
-import type { Minutes, UserRole } from "@recipes/shared";
+import type { Minutes, RecipeComputed, UserRole } from "@recipes/shared";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { Types } from "mongoose";
 import type { Mock } from "vitest";
@@ -150,8 +150,8 @@ export function createRecipeDoc(
 
 export function populateRecipeDoc(
   recipe: RecipeDocument,
-  overrides: Partial<RecipeDocumentPopulated> = {},
-): RecipeDocumentPopulated {
+  overrides: Partial<RecipeDocumentPopulated & RecipeComputed> = {},
+): RecipeDocumentPopulated & RecipeComputed {
   return {
     ...recipe,
     category: { _id: createObjectId(), name: "Italian", slug: "italian" },

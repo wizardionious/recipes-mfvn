@@ -7,20 +7,24 @@ export const createCategorySchema = z.object({
   description: z.string().trim().max(200).optional(),
 });
 
-export const categorySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  description: z.string().optional(),
+export const categorySchema = createCategorySchema
+  .extend({
+    id: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .required({
+    slug: true,
+  });
+
+export const categoryComputedSchema = z.object({
   recipeCount: z.number().int().nonnegative(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
-export const categorySummarySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
+export const categorySummarySchema = categorySchema.pick({
+  id: true,
+  name: true,
+  slug: true,
 });
 
 export const categoryQuerySchema = z.object({

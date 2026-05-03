@@ -1,19 +1,19 @@
 import type {
-  Category,
+  CategoryComputed,
   CategorySummary,
+  CategoryWithComputed,
   Comment,
-  CommentForRecipe,
+  Prettify,
   Recipe,
+  RecipeComputed,
   RecipeSummary,
+  RecipeWithComputed,
   Replace,
   User,
   UserSummary,
 } from "@recipes/shared";
 import { Types } from "mongoose";
-import type {
-  CategoryDocument,
-  CategoryDocumentWithCount,
-} from "@/modules/categories/category.model.js";
+import type { CategoryDocument } from "@/modules/categories/category.model.js";
 import type { CommentDocument } from "@/modules/comments/comment.model.js";
 import type { RecipeDocument } from "@/modules/recipes/recipe.model.js";
 import type { UserDocument } from "@/modules/users/user.model.js";
@@ -29,13 +29,10 @@ export function toRecipe<T extends RecipeDocument>(
       category: Pick<CategoryDocument, "_id" | "name" | "slug">;
       author: Pick<UserDocument, "_id" | "name" | "email">;
     }
-  > & {
-    userRating?: number | null;
-    averageRating?: number | null;
-    ratingCount?: number;
-  },
+  > &
+    Partial<Omit<RecipeComputed, "isFavorited">>,
   isFavorited: boolean,
-): Recipe {
+): RecipeWithComputed {
   return {
     id: doc._id.toString(),
     title: doc.title,
@@ -66,14 +63,14 @@ export function toRecipe<T extends RecipeDocument>(
 }
 
 export function toCategory(
-  doc: CategoryDocument | CategoryDocumentWithCount,
-): Category {
+  doc: Prettify<CategoryDocument & Partial<CategoryComputed>>,
+): CategoryWithComputed {
   return {
     id: doc._id.toString(),
     name: doc.name,
     slug: doc.slug,
     description: doc.description,
-    recipeCount: "recipeCount" in doc ? doc.recipeCount : 0,
+    recipeCount: doc.recipeCount ?? 0,
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };
@@ -95,30 +92,6 @@ export function toComment<T extends CommentDocument>(
       id: doc.recipe._id.toString(),
       title: doc.recipe.title,
     } satisfies RecipeSummary,
-    author: {
-      id: doc.author._id.toString(),
-      email: doc.author.email,
-      name: doc.author.name,
-    } satisfies UserSummary,
-    createdAt: doc.createdAt.toISOString(),
-    updatedAt: doc.updatedAt.toISOString(),
-  };
-}
-
-export function toCommentForRecipe<T extends CommentDocument>(
-  doc: Omit<
-    Replace<
-      T,
-      {
-        author: Pick<UserDocument, "_id" | "name" | "email">;
-      }
-    >,
-    "recipe"
-  >,
-): CommentForRecipe {
-  return {
-    id: doc._id.toString(),
-    text: doc.text,
     author: {
       id: doc.author._id.toString(),
       email: doc.author.email,

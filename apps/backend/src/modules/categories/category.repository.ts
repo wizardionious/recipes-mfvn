@@ -1,13 +1,13 @@
-import type { CategoryQuery, RequireKeys } from "@recipes/shared";
+import type {
+  CategoryComputed,
+  CategoryQuery,
+  RequireKeys,
+} from "@recipes/shared";
 import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
 import { BaseRepository } from "@/common/base.repository.js";
 import { withSort } from "@/common/utils/mongoose.aggregation.js";
 import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
 import type { CategoryDocument } from "./category.model.js";
-
-export type RecipeCount = {
-  recipeCount: number;
-};
 
 export type CategoryCreateInput = RequireKeys<
   CreateInput<CategoryDocument>,
@@ -22,8 +22,8 @@ export class CategoryRepository extends BaseRepository<
 > {
   async findMany(
     query: CategoryQuery,
-  ): Promise<(CategoryDocument & RecipeCount)[]> {
-    return this.aggregate<CategoryDocument & RecipeCount>([
+  ): Promise<Array<CategoryDocument & CategoryComputed>> {
+    return this.aggregate<CategoryDocument & CategoryComputed>([
       {
         $lookup: {
           from: recipesCollectionName,

@@ -1,4 +1,8 @@
-import type { Paginated, PaginationQuery, Recipe } from "@recipes/shared";
+import type {
+  Paginated,
+  PaginationQuery,
+  RecipeWithComputed,
+} from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
 import type {
   DefaultInitiator,
@@ -23,7 +27,7 @@ export interface FavoriteService {
   findByUser(
     userId: string,
     params: QueryMethodParams<PaginationQuery, DefaultInitiator>,
-  ): Promise<Paginated<Recipe>>;
+  ): Promise<Paginated<RecipeWithComputed>>;
   isFavorited(
     recipeId: string,
     params: InitiatedMethodParams,

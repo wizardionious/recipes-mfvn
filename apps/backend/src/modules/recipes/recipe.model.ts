@@ -31,12 +31,7 @@ export interface RecipeDocumentPopulated
       category: Pick<CategoryDocument, "_id" | "name" | "slug">;
       author: Pick<UserDocument, "_id" | "name" | "email">;
     }
-  > {
-  isFavorited: boolean;
-  userRating: number | null;
-  averageRating: number | null;
-  ratingCount: number;
-}
+  > {}
 
 export type RecipeModelType = Model<RecipeDocument>;
 

@@ -10,7 +10,6 @@ import { ingredientSchema } from "./ingredient.schema.js";
 
 export const minutesSchema = z.number().int().min(1).brand<"Minutes">();
 export const secondsSchema = z.number().int().min(1).brand<"Seconds">();
-
 export const difficultySchema = z.enum(["easy", "medium", "hard"]);
 
 export const createRecipeSchema = z.object({
@@ -27,29 +26,32 @@ export const createRecipeSchema = z.object({
 
 export const updateRecipeSchema = createRecipeSchema.partial();
 
-export const recipeSummarySchema = z.object({
-  id: z.string(),
-  title: z.string(),
-});
+export const recipeSchema = createRecipeSchema
+  // add persistence fields
+  .extend({
+    id: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  // add new fields
+  .extend({
+    author: userSummarySchema,
+  })
+  // rewrite fields
+  .extend({
+    category: categorySummarySchema,
+  });
 
-export const recipeSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  ingredients: z.array(ingredientSchema),
-  instructions: z.array(z.string()),
-  category: categorySummarySchema,
-  author: userSummarySchema,
-  difficulty: difficultySchema,
-  cookingTime: z.number(),
-  servings: z.number(),
-  isPublic: z.boolean(),
+export const recipeComputedSchema = z.object({
   isFavorited: z.boolean(),
   userRating: z.number().int().min(1).max(5).nullable(),
   averageRating: z.number().nullable(),
   ratingCount: z.number().int().nonnegative(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+});
+
+export const recipeSummarySchema = recipeSchema.pick({
+  id: true,
+  title: true,
 });
 
 export const recipeQuerySchema = z
@@ -61,5 +63,3 @@ export const recipeQuerySchema = z
   })
   .extend(paginationQuerySchema.shape)
   .extend(searchQuerySchema.shape);
-
-export type RecipeQuery = z.infer<typeof recipeQuerySchema>;

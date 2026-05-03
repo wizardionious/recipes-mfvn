@@ -1,8 +1,8 @@
 import type {
   CreateRecipeBody,
   Paginated,
-  Recipe,
   RecipeQuery,
+  RecipeWithComputed,
   UpdateRecipeBody,
 } from "@recipes/shared";
 import { apiClient } from "@/common/api/client";
@@ -13,10 +13,8 @@ import { apiClient } from "@/common/api/client";
  * @param filters - filters for the query.
  * @returns Paginated list of recipes.
  */
-export function getRecipes(
-  filters: Partial<RecipeQuery> = {},
-): Promise<Paginated<Recipe>> {
-  return apiClient<Paginated<Recipe>>("/api/recipes", {
+export function getRecipes(filters: Partial<RecipeQuery> = {}) {
+  return apiClient<Paginated<RecipeWithComputed>>("/api/recipes", {
     query: {
       page: filters.page,
       limit: filters.limit,
@@ -35,8 +33,8 @@ export function getRecipes(
  * @param id - recipe id.
  * @returns Recipe.
  */
-export function getRecipe(id: string): Promise<Recipe> {
-  return apiClient<Recipe>(`/api/recipes/${id}`);
+export function getRecipe(id: string) {
+  return apiClient<RecipeWithComputed>(`/api/recipes/${id}`);
 }
 
 /**
@@ -45,8 +43,8 @@ export function getRecipe(id: string): Promise<Recipe> {
  * @param body - recipe data.
  * @returns Created recipe.
  */
-export function createRecipe(body: CreateRecipeBody): Promise<Recipe> {
-  return apiClient<Recipe>("/api/recipes", {
+export function createRecipe(body: CreateRecipeBody) {
+  return apiClient<RecipeWithComputed>("/api/recipes", {
     method: "POST",
     body,
   });
@@ -59,11 +57,8 @@ export function createRecipe(body: CreateRecipeBody): Promise<Recipe> {
  * @param body - recipe data.
  * @returns Updated recipe.
  */
-export function updateRecipe(
-  id: string,
-  body: UpdateRecipeBody,
-): Promise<Recipe> {
-  return apiClient<Recipe>(`/api/recipes/${id}`, {
+export function updateRecipe(id: string, body: UpdateRecipeBody) {
+  return apiClient<RecipeWithComputed>(`/api/recipes/${id}`, {
     method: "PATCH",
     body,
   });
@@ -74,7 +69,7 @@ export function updateRecipe(
  *
  * @param id - recipe id.
  */
-export function deleteRecipe(id: string): Promise<void> {
+export function deleteRecipe(id: string) {
   return apiClient<void>(`/api/recipes/${id}`, {
     method: "DELETE",
   });

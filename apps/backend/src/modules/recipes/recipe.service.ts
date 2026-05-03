@@ -1,8 +1,8 @@
 import type {
   CreateRecipeBody,
   Paginated,
-  Recipe,
   RecipeQuery,
+  RecipeWithComputed,
   UpdateRecipeBody,
 } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
@@ -27,16 +27,20 @@ import type { UserRepository } from "@/modules/users/user.repository.js";
 import type { RecipeRepository } from "./recipe.repository.js";
 
 export interface RecipeService {
-  findAll(params: QueryMethodParams<RecipeQuery>): Promise<Paginated<Recipe>>;
+  findAll(
+    params: QueryMethodParams<RecipeQuery>,
+  ): Promise<Paginated<RecipeWithComputed>>;
   findById(
     id: string,
     params: InitiatedMethodParams<OptionalInitiator>,
-  ): Promise<Recipe>;
-  create(params: CreateMethodParams<CreateRecipeBody>): Promise<Recipe>;
+  ): Promise<RecipeWithComputed>;
+  create(
+    params: CreateMethodParams<CreateRecipeBody>,
+  ): Promise<RecipeWithComputed>;
   update(
     id: string,
     params: UpdateMethodParams<UpdateRecipeBody>,
-  ): Promise<Recipe>;
+  ): Promise<RecipeWithComputed>;
   delete(id: string, params: DeleteMethodParams): Promise<void>;
 }
 
@@ -61,7 +65,7 @@ export function createRecipeService(
       if (!isAuthenticated) {
         const cacheKey = recipeCache.keys.list(query);
 
-        const cached = await cache.get<Paginated<Recipe>>(cacheKey);
+        const cached = await cache.get<Paginated<RecipeWithComputed>>(cacheKey);
         if (cached !== undefined) {
           return cached;
         }
@@ -94,7 +98,7 @@ export function createRecipeService(
 
       if (!isAuthenticated) {
         const cacheKey = recipeCache.keys.byId(id);
-        const cached = await cache.get<Recipe>(cacheKey);
+        const cached = await cache.get<RecipeWithComputed>(cacheKey);
         if (cached !== undefined) {
           return cached;
         }

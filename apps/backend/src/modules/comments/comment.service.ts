@@ -1,9 +1,4 @@
-import type {
-  Comment,
-  CommentForRecipe,
-  CreateCommentBody,
-  Paginated,
-} from "@recipes/shared";
+import type { Comment, CreateCommentBody, Paginated } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
 import { ForbiddenError, NotFoundError } from "@/common/errors.js";
 import type {
@@ -11,7 +6,7 @@ import type {
   DeleteMethodParams,
   QueryMethodParams,
 } from "@/common/types/methods.js";
-import { toComment, toCommentForRecipe } from "@/common/utils/mongo.js";
+import { toComment } from "@/common/utils/mongo.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
@@ -21,7 +16,7 @@ export interface CommentService {
   findByRecipe(
     recipeId: string,
     params: QueryMethodParams,
-  ): Promise<Paginated<CommentForRecipe>>;
+  ): Promise<Paginated<Comment>>;
   findByAuthor(
     authorId: string,
     params: QueryMethodParams,
@@ -29,7 +24,7 @@ export interface CommentService {
   create(
     recipeId: string,
     params: CreateMethodParams<CreateCommentBody>,
-  ): Promise<CommentForRecipe>;
+  ): Promise<Comment>;
   delete(commentId: string, params: DeleteMethodParams): Promise<void>;
 }
 
@@ -49,7 +44,7 @@ export function createCommentService(
       });
 
       return withPagination(
-        comments.map((item) => toCommentForRecipe(item)),
+        comments.map((item) => toComment(item)),
         total,
         query.page,
         query.limit,
@@ -86,7 +81,7 @@ export function createCommentService(
         author: initiator.id,
       });
 
-      return toCommentForRecipe(comment);
+      return toComment(comment);
     },
 
     delete: async (id, { initiator }) => {
