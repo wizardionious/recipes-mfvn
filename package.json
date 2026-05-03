@@ -3,9 +3,10 @@
   "private": true,
   "scripts": {
     "dev:backend": "pnpm --filter @recipes/backend dev",
-    "build:backend": "pnpm --filter @recipes/backend build",
+    "build:shared": "pnpm --filter @recipes/shared build",
+    "build:backend": "pnpm build:shared && pnpm --filter @recipes/backend build",
     "dev:frontend": "pnpm --filter @recipes/frontend dev",
-    "build:frontend": "pnpm --filter @recipes/frontend build",
+    "build:frontend": "pnpm build:shared && pnpm --filter @recipes/frontend build",
     "dev": "pnpm dev:backend & pnpm dev:frontend",
     "lint": "pnpm -r typecheck && pnpm check",
     "typecheck": "pnpm -r typecheck",
