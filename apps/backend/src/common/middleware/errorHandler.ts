@@ -45,6 +45,31 @@ function isFastifyBodyError(error: unknown): boolean {
   );
 }
 
+interface ErrorResponse {
+  error: string;
+  code: string;
+  status: number;
+  details?: unknown;
+  stack?: string;
+}
+
+function buildErrorResponse(
+  status: number,
+  message: string,
+  code: string,
+  details?: unknown,
+  stack?: string,
+): ErrorResponse {
+  const response: ErrorResponse = { error: message, code, status };
+  if (details !== undefined) {
+    response.details = details;
+  }
+  if (stack !== undefined) {
+    response.stack = stack;
+  }
+  return response;
+}
+
 export function errorHandler(
   error: FastifyError | (Error & { statusCode?: number }),
   request: FastifyRequest,
@@ -65,22 +90,37 @@ export function errorHandler(
   );
 
   if (error instanceof AppError) {
-    reply.status(error.statusCode).send({ error: error.message });
+    reply
+      .status(error.statusCode)
+      .send(
+        buildErrorResponse(
+          error.statusCode,
+          error.message,
+          error.code ?? "INTERNAL_SERVER",
+        ),
+      );
     return;
   }
 
   if (error instanceof ZodError) {
-    reply.status(400).send({
-      error: "Validation error",
-      details: error.issues,
-    });
+    reply.status(400).send(
+      buildErrorResponse(400, "Validation error", "VALIDATION_ERROR", {
+        issues: error.issues,
+      }),
+    );
     return;
   }
 
   if (isMongooseCastError(error)) {
-    reply.status(400).send({
-      error: `Invalid ${error.path}: ${String(error.value)}`,
-    });
+    reply
+      .status(400)
+      .send(
+        buildErrorResponse(
+          400,
+          `Invalid ${error.path}: ${String(error.value)}`,
+          "INVALID_FIELD",
+        ),
+      );
     return;
   }
 
@@ -89,24 +129,30 @@ export function errorHandler(
       field,
       message: err.message,
     }));
-    reply.status(400).send({
-      error: "Validation failed",
-      details,
-    });
+    reply
+      .status(400)
+      .send(
+        buildErrorResponse(
+          400,
+          "Validation failed",
+          "VALIDATION_FAILED",
+          details,
+        ),
+      );
     return;
   }
 
   if (isMongoDuplicateKeyError(error)) {
-    reply.status(409).send({
-      error: "Duplicate entry",
-    });
+    reply
+      .status(409)
+      .send(buildErrorResponse(409, "Duplicate entry", "DUPLICATE_ENTRY"));
     return;
   }
 
   if (isFastifyBodyError(error)) {
-    reply.status(400).send({
-      error: error.message,
-    });
+    reply
+      .status(400)
+      .send(buildErrorResponse(400, error.message, "INVALID_BODY"));
     return;
   }
 
@@ -114,17 +160,30 @@ export function errorHandler(
     ("statusCode" in error ? error.statusCode : undefined) ?? 500;
 
   if (statusCode !== 500) {
-    reply.status(statusCode).send({ error: error.message });
+    reply
+      .status(statusCode)
+      .send(buildErrorResponse(statusCode, error.message, "HTTP_ERROR"));
     return;
   }
 
   if (isDev) {
-    reply.status(500).send({
-      error: error.message,
-      stack: error.stack,
-    });
+    reply
+      .status(500)
+      .send(
+        buildErrorResponse(
+          500,
+          error.message,
+          "INTERNAL_SERVER_ERROR",
+          undefined,
+          error.stack,
+        ),
+      );
     return;
   }
 
-  reply.status(500).send({ error: "Internal server error" });
+  reply
+    .status(500)
+    .send(
+      buildErrorResponse(500, "Internal server error", "INTERNAL_SERVER_ERROR"),
+    );
 }

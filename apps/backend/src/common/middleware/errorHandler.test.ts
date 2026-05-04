@@ -30,28 +30,44 @@ describe("errorHandler", () => {
       errorHandler(new AppError("Not found", 404), request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(404);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Not found" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Not found",
+        code: "INTERNAL_SERVER",
+        status: 404,
+      });
     });
 
     it("should handle AppError with 403", () => {
       errorHandler(new AppError("Forbidden", 403), request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(403);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Forbidden" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Forbidden",
+        code: "INTERNAL_SERVER",
+        status: 403,
+      });
     });
 
     it("should handle BadRequestError", () => {
       errorHandler(new BadRequestError("Invalid recipe ID"), request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(400);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Invalid recipe ID" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Invalid recipe ID",
+        code: "BAD_REQUEST",
+        status: 400,
+      });
     });
 
     it("should handle UnauthorizedError", () => {
       errorHandler(new UnauthorizedError("Not authorized"), request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(401);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Not authorized" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Not authorized",
+        code: "UNAUTHORIZED",
+        status: 401,
+      });
     });
 
     it("should handle ForbiddenError", () => {
@@ -64,6 +80,8 @@ describe("errorHandler", () => {
       expect(reply.status).toHaveBeenCalledWith(403);
       expect(reply.send).toHaveBeenCalledWith({
         error: "Not authorized to delete this recipe",
+        code: "FORBIDDEN",
+        status: 403,
       });
     });
 
@@ -71,7 +89,11 @@ describe("errorHandler", () => {
       errorHandler(new NotFoundError("Recipe not found"), request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(404);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Recipe not found" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Recipe not found",
+        code: "NOT_FOUND",
+        status: 404,
+      });
     });
 
     it("should handle ConflictError", () => {
@@ -80,6 +102,8 @@ describe("errorHandler", () => {
       expect(reply.status).toHaveBeenCalledWith(409);
       expect(reply.send).toHaveBeenCalledWith({
         error: "Email already in use",
+        code: "CONFLICT",
+        status: 409,
       });
     });
   });
@@ -102,7 +126,9 @@ describe("errorHandler", () => {
       expect(reply.status).toHaveBeenCalledWith(400);
       expect(reply.send).toHaveBeenCalledWith({
         error: "Validation error",
-        details: error.issues,
+        code: "VALIDATION_ERROR",
+        status: 400,
+        details: { issues: error.issues },
       });
     });
 
@@ -118,6 +144,8 @@ describe("errorHandler", () => {
       expect(reply.status).toHaveBeenCalledWith(400);
       expect(reply.send).toHaveBeenCalledWith({
         error: "Invalid _id: invalid-id",
+        code: "INVALID_FIELD",
+        status: 400,
       });
     });
 
@@ -129,7 +157,11 @@ describe("errorHandler", () => {
       errorHandler(error, request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(409);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Duplicate entry" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Duplicate entry",
+        code: "DUPLICATE_ENTRY",
+        status: 409,
+      });
     });
   });
 
@@ -142,7 +174,11 @@ describe("errorHandler", () => {
       errorHandler(error, request, reply);
 
       expect(reply.status).toHaveBeenCalledWith(400);
-      expect(reply.send).toHaveBeenCalledWith({ error: "Bad request" });
+      expect(reply.send).toHaveBeenCalledWith({
+        error: "Bad request",
+        code: "HTTP_ERROR",
+        status: 400,
+      });
     });
 
     it("should show message and stack in development for 500", () => {
@@ -154,6 +190,8 @@ describe("errorHandler", () => {
       expect(reply.status).toHaveBeenCalledWith(500);
       expect(reply.send).toHaveBeenCalledWith({
         error: "Something broke",
+        code: "INTERNAL_SERVER_ERROR",
+        status: 500,
         stack: error.stack,
       });
     });

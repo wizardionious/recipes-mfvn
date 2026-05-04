@@ -3,10 +3,10 @@ import {
   categoryQuerySchema,
   categorySchema,
   createCategorySchema,
+  paginatedSchema,
 } from "@recipes/shared";
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import { z } from "zod";
 import {
   assertAuthenticated,
   authGuard,
@@ -31,18 +31,20 @@ export const categoryRoutes: FastifyPluginAsync<CategoryModuleOptions> = async (
         schema: {
           querystring: categoryQuerySchema,
           response: {
-            200: z.array(categorySchema.extend(categoryComputedSchema.shape)),
+            200: paginatedSchema(
+              categorySchema.extend(categoryComputedSchema.shape),
+            ),
           },
           tags: ["Categories"],
           summary: "Get all categories",
         },
       },
       async (request, reply) => {
-        const categories = await service.findAll({
+        const result = await service.findAll({
           query: request.query,
           initiator: { id: request.user?.userId, role: request.user?.role },
         });
-        return reply.send(categories);
+        return reply.send(result);
       },
     )
     .post(

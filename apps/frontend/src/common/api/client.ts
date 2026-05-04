@@ -1,12 +1,20 @@
 const TOKEN_KEY = "auth_token";
 
 export class ApiError extends Error {
+  code: string;
+
   constructor(
     public status: number,
     public statusText: string,
-    public body: unknown,
+    public body: {
+      error: string;
+      code: string;
+      status: number;
+      details?: unknown;
+    },
   ) {
-    super(`API Error ${status}: ${statusText}`);
+    super(body.error || `API Error ${status}: ${statusText}`);
+    this.code = body.code || "UNKNOWN_ERROR";
   }
 }
 
@@ -24,12 +32,29 @@ export function removeToken(): void {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let body: unknown;
+    let raw: unknown;
     try {
-      body = await response.json();
+      raw = await response.json();
     } catch {
-      body = null;
+      raw = null;
     }
+    const body =
+      typeof raw === "object" &&
+      raw !== null &&
+      "error" in raw &&
+      "code" in raw &&
+      "status" in raw
+        ? (raw as {
+            error: string;
+            code: string;
+            status: number;
+            details?: unknown;
+          })
+        : {
+            error: "Unknown error",
+            code: "UNKNOWN_ERROR",
+            status: response.status,
+          };
     throw new ApiError(response.status, response.statusText, body);
   }
 

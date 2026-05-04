@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createSortSchema } from "../query.js";
+import { createSortSchema, paginationQuerySchema } from "../query.js";
 
 export const createCategorySchema = z.object({
   name: z.string().trim().min(2).max(50),
@@ -27,6 +27,8 @@ export const categorySummarySchema = categorySchema.pick({
   slug: true,
 });
 
-export const categoryQuerySchema = z.object({
-  sort: createSortSchema(["name", "recipeCount"]).default("name"),
-});
+export const categoryQuerySchema = z
+  .object({
+    sort: createSortSchema(["name", "recipeCount"]).default("name"),
+  })
+  .extend(paginationQuerySchema.shape);

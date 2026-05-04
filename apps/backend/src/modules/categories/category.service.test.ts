@@ -1,4 +1,3 @@
-import type { CategoryQuery } from "@recipes/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCategoryDoc,
@@ -38,7 +37,7 @@ describe("categoryService", () => {
   });
 
   describe("findAll", () => {
-    it("should return all categories sorted by name with recipe count", async () => {
+    it("should return paginated categories sorted by name with recipe count", async () => {
       const docs = [
         {
           ...createCategoryDoc({ name: "Desserts", slug: "desserts" }),
@@ -49,32 +48,34 @@ describe("categoryService", () => {
           recipeCount: 0,
         },
       ];
-      categoryRepository.findMany.mockResolvedValue(docs);
+      categoryRepository.findMany.mockResolvedValue([docs, 2]);
 
-      const query = { sort: "name" } satisfies CategoryQuery;
+      const query = { sort: "name" as const, page: 1, limit: 10 };
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
       });
 
       expect(categoryRepository.findMany).toHaveBeenCalledWith(query);
-      expect(result).toHaveLength(2);
-      expect(result[0]?.name).toBe("Desserts");
-      expect(result[0]?.recipeCount).toBe(5);
-      expect(result[1]?.recipeCount).toBe(0);
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0]?.name).toBe("Desserts");
+      expect(result.items[0]?.recipeCount).toBe(5);
+      expect(result.items[1]?.recipeCount).toBe(0);
+      expect(result.pagination.total).toBe(2);
       expect(cache.get).toHaveBeenCalledWith(categoryCache.keys.list(query));
     });
 
-    it("should return empty array when no categories exist", async () => {
-      categoryRepository.findMany.mockResolvedValue([]);
+    it("should return empty paginated result when no categories exist", async () => {
+      categoryRepository.findMany.mockResolvedValue([[], 0]);
 
-      const query = { sort: "name" } satisfies CategoryQuery;
+      const query = { sort: "name" as const, page: 1, limit: 10 };
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
       });
 
-      expect(result).toEqual([]);
+      expect(result.items).toEqual([]);
+      expect(result.pagination.total).toBe(0);
     });
 
     it("should return cached result on second call", async () => {
@@ -84,9 +85,9 @@ describe("categoryService", () => {
           recipeCount: 3,
         },
       ];
-      categoryRepository.findMany.mockResolvedValue(docs);
+      categoryRepository.findMany.mockResolvedValue([docs, 1]);
 
-      const query = { sort: "name" } satisfies CategoryQuery;
+      const query = { sort: "name" as const, page: 1, limit: 10 };
       await service.findAll({
         query,
         initiator: noInitiator(),
@@ -100,7 +101,8 @@ describe("categoryService", () => {
       });
 
       expect(categoryRepository.findMany).not.toHaveBeenCalled();
-      expect(result).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.total).toBe(1);
       expect(cache.get).toHaveBeenCalledWith(categoryCache.keys.list(query));
     });
   });

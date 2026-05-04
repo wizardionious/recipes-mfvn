@@ -3,7 +3,9 @@ import type {
   CategoryQuery,
   CategoryWithComputed,
   CreateCategoryBody,
+  Paginated,
 } from "@recipes/shared";
+import { withPagination } from "@recipes/shared";
 import type { CacheService } from "@/common/cache/cache.service.js";
 import { ConflictError, NotFoundError } from "@/common/errors.js";
 import type { TypedEmitter } from "@/common/events.js";
@@ -20,7 +22,7 @@ import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 export interface CategoryService {
   findAll(
     params: QueryMethodParams<CategoryQuery>,
-  ): Promise<CategoryWithComputed[]>;
+  ): Promise<Paginated<CategoryWithComputed>>;
   create(params: CreateMethodParams<CreateCategoryBody>): Promise<Category>;
   deleteById(id: string, params: DeleteMethodParams): Promise<void>;
 }
@@ -35,13 +37,18 @@ export function createCategoryService(
     findAll: async ({ query }) => {
       const cacheKey = categoryCache.keys.list(query);
 
-      const cached = await cache.get<CategoryWithComputed[]>(cacheKey);
+      const cached = await cache.get<Paginated<CategoryWithComputed>>(cacheKey);
       if (cached !== undefined) {
         return cached;
       }
 
-      const categories = await repository.findMany(query);
-      const result = categories.map(toCategory);
+      const [categories, total] = await repository.findMany(query);
+      const result = withPagination(
+        categories.map(toCategory),
+        total,
+        query.page,
+        query.limit,
+      );
 
       await cache.set(cacheKey, result, categoryCache.ttl.list);
 

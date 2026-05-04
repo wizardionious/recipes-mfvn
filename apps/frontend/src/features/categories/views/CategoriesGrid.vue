@@ -27,7 +27,7 @@ const props = defineProps<{
 
     <template v-else-if="categories">
       <Category
-        v-for="(category, index) in categories.slice(0, 6)"
+        v-for="(category, index) in categories"
         :key="category.id"
         :category
         :style="{ animationDelay: `${index * 80}ms` }"

@@ -20,11 +20,12 @@ onMounted(() => {
   });
 });
 
+const CATEGORIES_LIMIT = 6;
 const {
   data: categories,
   isLoading: isCategoriesLoading,
   error: categoriesError,
-} = useCategories({ sort: "-recipeCount" });
+} = useCategories({ sort: "-recipeCount", limit: CATEGORIES_LIMIT });
 
 const { data: testimonials, isLoading: isTestimonialsLoading } =
   useTestimonials();
@@ -93,7 +94,7 @@ const featuredRecipes = [
         />
 
         <CategoriesGrid
-          :categories
+          :categories="categories?.items"
           :isLoading="isCategoriesLoading"
           :error="categoriesError"
         />
