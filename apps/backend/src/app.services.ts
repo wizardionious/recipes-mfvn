@@ -25,6 +25,10 @@ import { RecipeModel } from "@/modules/recipes/recipe.model.js";
 import { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 import type { RecipeService } from "@/modules/recipes/recipe.service.js";
 import { createRecipeService } from "@/modules/recipes/recipe.service.js";
+import { ReviewModel } from "@/modules/reviews/review.model.js";
+import { ReviewRepository } from "@/modules/reviews/review.repository.js";
+import type { ReviewService } from "@/modules/reviews/review.service.js";
+import { createReviewService } from "@/modules/reviews/review.service.js";
 import { UserModel } from "@/modules/users/user.model.js";
 import { UserRepository } from "@/modules/users/user.repository.js";
 import type { UserService } from "@/modules/users/user.service.js";
@@ -38,6 +42,7 @@ export interface Services {
   favorite: FavoriteService;
   recipeRating: RecipeRatingService;
   category: CategoryService;
+  review: ReviewService;
 }
 
 export function createServices(
@@ -52,6 +57,7 @@ export function createServices(
   const recipeRatingRepository = new RecipeRatingRepository(RecipeRatingModel);
   const userRepository = new UserRepository(UserModel);
   const recipeRepository = new RecipeRepository(RecipeModel);
+  const reviewRepository = new ReviewRepository(ReviewModel);
 
   const passwordService = createBcryptPasswordService(env.BCRYPT_SALT_ROUNDS);
 
@@ -90,6 +96,7 @@ export function createServices(
     recipeCache,
     bus,
   );
+  const reviewService = createReviewService(reviewRepository, userRepository);
   const authService = createAuthService(userRepository, passwordService, log);
 
   return {
@@ -100,5 +107,6 @@ export function createServices(
     favorite: favoriteService,
     recipeRating: recipeRatingService,
     category: categoryService,
+    review: reviewService,
   };
 }

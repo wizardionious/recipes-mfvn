@@ -22,6 +22,7 @@ import { categoryRoutes } from "@/modules/categories/category.routes.js";
 import { favoriteRoutes } from "@/modules/favorites/favorite.routes.js";
 import { recipeRatingRoutes } from "@/modules/recipe-ratings/recipe-rating.routes.js";
 import { recipeRoutes } from "@/modules/recipes/recipe.routes.js";
+import { reviewRoutes } from "@/modules/reviews/review.routes.js";
 import { userRoutes } from "@/modules/users/user.routes.js";
 import { createServices } from "./app.services.js";
 
@@ -97,6 +98,10 @@ export async function buildApp(log: Logger) {
   app.register(categoryRoutes, {
     service: services.category,
     prefix: "/api/categories",
+  });
+  app.register(reviewRoutes, {
+    service: services.review,
+    prefix: "/api/reviews",
   });
 
   app.addHook("onClose", async () => {

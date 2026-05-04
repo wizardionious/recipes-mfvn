@@ -9,6 +9,7 @@ import type {
   RecipeSummary,
   RecipeWithComputed,
   Replace,
+  Review,
   User,
   UserSummary,
 } from "@recipes/shared";
@@ -16,6 +17,7 @@ import { Types } from "mongoose";
 import type { CategoryDocument } from "@/modules/categories/category.model.js";
 import type { CommentDocument } from "@/modules/comments/comment.model.js";
 import type { RecipeDocument } from "@/modules/recipes/recipe.model.js";
+import type { ReviewDocument } from "@/modules/reviews/review.model.js";
 import type { UserDocument } from "@/modules/users/user.model.js";
 
 export function toObjectId(id: string): Types.ObjectId {
@@ -107,6 +109,29 @@ export function toUser(doc: UserDocument): User {
     id: doc._id.toString(),
     email: doc.email,
     name: doc.name,
+    createdAt: doc.createdAt.toISOString(),
+    updatedAt: doc.updatedAt.toISOString(),
+  };
+}
+
+export function toReview(
+  doc: Replace<
+    ReviewDocument,
+    {
+      author: Pick<UserDocument, "_id" | "name" | "email">;
+    }
+  >,
+): Review {
+  return {
+    id: doc._id.toString(),
+    text: doc.text,
+    rating: doc.rating,
+    author: {
+      id: doc.author._id.toString(),
+      email: doc.author.email,
+      name: doc.author.name,
+    } satisfies UserSummary,
+    isFeatured: doc.isFeatured,
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };

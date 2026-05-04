@@ -14,6 +14,7 @@ import type {
   RecipeDocument,
   RecipeDocumentPopulated,
 } from "@/modules/recipes/recipe.model.js";
+import type { ReviewDocument } from "@/modules/reviews/review.model.js";
 import type { UserDocument } from "@/modules/users/user.model.js";
 
 type LocalProcedure = (...args: unknown[]) => unknown;
@@ -179,16 +180,35 @@ export function createCommentDoc(
   };
 }
 
+export function createReviewDoc(
+  overrides: Partial<ReviewDocument> = {},
+): ReviewDocument {
+  const _id = createObjectId();
+  return {
+    _id,
+    text: "Amazing platform!",
+    author: createObjectId(),
+    rating: 5,
+    isFeatured: false,
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
+    ...overrides,
+  };
+}
+
 // ── Mongoose model mock factories ──
 
 export function createMockRepository(overrides: Record<string, Mock> = {}) {
   return {
     findById: viFn(),
+    findDocumentById: viFn(),
     findOne: viFn(),
     exists: viFn(),
     create: viFn(),
     update: viFn(),
     delete: viFn(),
+    save: viFn(),
+    deleteDocument: viFn(),
     aggregate: viFn(),
     ...overrides,
   };
@@ -351,6 +371,18 @@ export function createMockRecipeRatingRepository(
   return {
     ...createMockRepository(overrides),
     upsert: viFn(),
+    ...overrides,
+  };
+}
+
+export function createMockReviewRepository(
+  overrides: Record<string, Mock> = {},
+) {
+  return {
+    ...createMockRepository(overrides),
+    findFeatured: viFn(),
+    findAll: viFn(),
+    aggregateStats: viFn(),
     ...overrides,
   };
 }
