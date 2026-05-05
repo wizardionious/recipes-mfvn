@@ -34,10 +34,17 @@ export interface FavoriteService {
   ): Promise<boolean>;
 }
 
+type FavoriteRepositoryPort = Pick<
+  FavoriteRepository,
+  "findByUser" | "create" | "delete" | "exists"
+>;
+type RecipeRepositoryPort = Pick<RecipeRepository, "exists" | "modelName">;
+type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
+
 export function createFavoriteService(
-  repository: FavoriteRepository,
-  recipeRepository: RecipeRepository,
-  userRepository: UserRepository,
+  repository: FavoriteRepositoryPort,
+  recipeRepository: RecipeRepositoryPort,
+  userRepository: UserRepositoryPort,
 ): FavoriteService {
   async function validateUser(id: string): Promise<void> {
     assertValidId(id, "User");

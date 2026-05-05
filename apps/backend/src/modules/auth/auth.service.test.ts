@@ -1,13 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createMockLogger,
-  createMockPasswordService,
-  createMockRepository,
-  createUserDoc,
-} from "@/__tests__/helpers.js";
+import { createUserDoc } from "@/__tests__/helpers.js";
 import { ConflictError, UnauthorizedError } from "@/common/errors.js";
-import type { PasswordService } from "@/common/passwords/password.service.js";
-import type { UserRepository } from "@/modules/users/user.repository.js";
 import { createAuthService } from "./auth.service.js";
 
 const { signToken } = vi.hoisted(() => ({
@@ -17,13 +10,24 @@ const { signToken } = vi.hoisted(() => ({
 vi.mock("@/common/utils/jwt.js", () => ({ signToken }));
 
 describe("authService", () => {
-  const userRepository = createMockRepository();
-  const passwordService = createMockPasswordService();
-  const log = createMockLogger();
+  const mockUserRepository = {
+    findOne: vi.fn(),
+    exists: vi.fn(),
+    create: vi.fn(),
+  };
+  const mockPasswordService = {
+    hash: vi.fn().mockResolvedValue("hashed-password"),
+    verify: vi.fn().mockResolvedValue(true),
+  };
+  const mockLogger = {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  };
   const service = createAuthService(
-    userRepository as unknown as UserRepository,
-    passwordService as unknown as PasswordService,
-    log,
+    mockUserRepository,
+    mockPasswordService,
+    mockLogger,
   );
 
   beforeEach(() => {
@@ -32,9 +36,9 @@ describe("authService", () => {
 
   describe("register", () => {
     it("should register user and return auth response", async () => {
-      userRepository.exists.mockResolvedValue(false);
+      mockUserRepository.exists.mockResolvedValue(false);
       const doc = createUserDoc({ email: "new@test.com", name: "New User" });
-      userRepository.create.mockResolvedValue(doc);
+      mockUserRepository.create.mockResolvedValue(doc);
 
       const result = await service.register({
         email: "new@test.com",
@@ -42,11 +46,11 @@ describe("authService", () => {
         name: "New User",
       });
 
-      expect(userRepository.exists).toHaveBeenCalledWith({
+      expect(mockUserRepository.exists).toHaveBeenCalledWith({
         email: "new@test.com",
       });
-      expect(passwordService.hash).toHaveBeenCalledWith("Password123!");
-      expect(userRepository.create).toHaveBeenCalledWith({
+      expect(mockPasswordService.hash).toHaveBeenCalledWith("Password123!");
+      expect(mockUserRepository.create).toHaveBeenCalledWith({
         email: "new@test.com",
         password: "hashed-password",
         name: "New User",
@@ -57,7 +61,7 @@ describe("authService", () => {
     });
 
     it("should throw ConflictError when email already in use", async () => {
-      userRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
 
       await expect(
         service.register({
@@ -79,18 +83,18 @@ describe("authService", () => {
   describe("login", () => {
     it("should login and return auth response", async () => {
       const doc = createUserDoc({ email: "user@test.com" });
-      userRepository.findOne.mockResolvedValue(doc);
+      mockUserRepository.findOne.mockResolvedValue(doc);
 
       const result = await service.login({
         email: "user@test.com",
         password: "correct-password",
       });
 
-      expect(userRepository.findOne).toHaveBeenCalledWith(
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith(
         { email: "user@test.com" },
         { select: "+password" },
       );
-      expect(passwordService.verify).toHaveBeenCalledWith(
+      expect(mockPasswordService.verify).toHaveBeenCalledWith(
         "correct-password",
         "hashedPassword",
       );
@@ -99,7 +103,7 @@ describe("authService", () => {
     });
 
     it("should throw UnauthorizedError when user not found", async () => {
-      userRepository.findOne.mockResolvedValue(null);
+      mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(
         service.login({ email: "nobody@test.com", password: "pass" }),
@@ -111,8 +115,8 @@ describe("authService", () => {
 
     it("should throw UnauthorizedError when password is wrong", async () => {
       const doc = createUserDoc({ email: "user@test.com" });
-      userRepository.findOne.mockResolvedValue(doc);
-      passwordService.verify.mockResolvedValue(false);
+      mockUserRepository.findOne.mockResolvedValue(doc);
+      mockPasswordService.verify.mockResolvedValue(false);
 
       await expect(
         service.login({ email: "user@test.com", password: "wrong" }),

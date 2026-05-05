@@ -1,9 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCommentDoc,
-  createMockCommentRepository,
-  createMockRecipeRepository,
-  createMockUserRepository,
   createObjectId,
   initiator,
   queryParams,
@@ -13,33 +10,38 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/common/errors.js";
-import type { CommentRepository } from "@/modules/comments/comment.repository.js";
 import { createCommentService } from "@/modules/comments/comment.service.js";
-import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
-import type { UserRepository } from "@/modules/users/user.repository.js";
 
 describe("commentService", () => {
-  const commentRepository = createMockCommentRepository();
-  const recipeRepository = createMockRecipeRepository();
-  const userRepository = createMockUserRepository();
+  const mockCommentRepository = {
+    findByRecipe: vi.fn(),
+    findByAuthor: vi.fn(),
+    findById: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+  };
+  const mockRecipeRepository = {
+    exists: vi.fn(),
+    modelName: "Recipe",
+  };
+  const mockUserRepository = {
+    exists: vi.fn(),
+    modelName: "User",
+  };
 
   const service = createCommentService(
-    commentRepository as unknown as CommentRepository,
-    recipeRepository as unknown as RecipeRepository,
-    userRepository as unknown as UserRepository,
+    mockCommentRepository,
+    mockRecipeRepository,
+    mockUserRepository,
   );
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
-
   describe("findByRecipe", () => {
     it("should return paginated comments for recipe", async () => {
-      recipeRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
       const authorId = createObjectId();
       const recipeId = createObjectId();
       const populatedComment = {
@@ -50,7 +52,10 @@ describe("commentService", () => {
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-01"),
       };
-      commentRepository.findByRecipe.mockResolvedValue([[populatedComment], 1]);
+      mockCommentRepository.findByRecipe.mockResolvedValue([
+        [populatedComment],
+        1,
+      ]);
 
       const result = await service.findByRecipe(
         recipeId.toString(),
@@ -69,7 +74,7 @@ describe("commentService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeRepository.exists.mockResolvedValue(null);
+      mockRecipeRepository.exists.mockResolvedValue(null);
 
       await expect(
         service.findByRecipe(createObjectId().toString(), queryParams()),
@@ -77,8 +82,8 @@ describe("commentService", () => {
     });
 
     it("should return empty result when no comments found", async () => {
-      recipeRepository.exists.mockResolvedValue(true);
-      commentRepository.findByRecipe.mockResolvedValue([[], 0]);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockCommentRepository.findByRecipe.mockResolvedValue([[], 0]);
 
       const result = await service.findByRecipe(
         createObjectId().toString(),
@@ -91,7 +96,7 @@ describe("commentService", () => {
 
   describe("findByAuthor", () => {
     it("should return paginated comments by author", async () => {
-      userRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
       const authorId = createObjectId();
       const populatedComment = {
         _id: createObjectId(),
@@ -101,7 +106,10 @@ describe("commentService", () => {
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-01"),
       };
-      commentRepository.findByAuthor.mockResolvedValue([[populatedComment], 1]);
+      mockCommentRepository.findByAuthor.mockResolvedValue([
+        [populatedComment],
+        1,
+      ]);
 
       const result = await service.findByAuthor(
         authorId.toString(),
@@ -121,15 +129,15 @@ describe("commentService", () => {
 
   describe("create", () => {
     it("should create a comment and return populated DTO", async () => {
-      recipeRepository.exists.mockResolvedValue(true);
-      userRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
 
       const authorId = createObjectId();
       const populated = {
         ...createCommentDoc({ text: "Great recipe!" }),
         author: { _id: authorId, name: "User", email: "user@test.com" },
       };
-      commentRepository.create.mockResolvedValue(populated);
+      mockCommentRepository.create.mockResolvedValue(populated);
 
       const recipeId = createObjectId().toString();
       const init = initiator(authorId.toString());
@@ -138,7 +146,7 @@ describe("commentService", () => {
         initiator: init,
       });
 
-      expect(commentRepository.create).toHaveBeenCalledWith({
+      expect(mockCommentRepository.create).toHaveBeenCalledWith({
         text: "Great recipe!",
         recipe: recipeId,
         author: init.id,
@@ -165,7 +173,7 @@ describe("commentService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeRepository.exists.mockResolvedValue(null);
+      mockRecipeRepository.exists.mockResolvedValue(null);
 
       await expect(
         service.create(createObjectId().toString(), {
@@ -176,8 +184,8 @@ describe("commentService", () => {
     });
 
     it("should throw NotFoundError when author not found", async () => {
-      recipeRepository.exists.mockResolvedValue(true);
-      userRepository.exists.mockResolvedValue(null);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(null);
 
       await expect(
         service.create(createObjectId().toString(), {
@@ -192,25 +200,25 @@ describe("commentService", () => {
     it("should delete comment when author matches", async () => {
       const authorId = createObjectId();
       const comment = createCommentDoc({ author: authorId });
-      commentRepository.findById.mockResolvedValue(comment);
+      mockCommentRepository.findById.mockResolvedValue(comment);
 
       await service.delete(createObjectId().toString(), {
         initiator: initiator(authorId.toString()),
       });
 
-      expect(commentRepository.findById).toHaveBeenCalled();
-      expect(commentRepository.delete).toHaveBeenCalled();
+      expect(mockCommentRepository.findById).toHaveBeenCalled();
+      expect(mockCommentRepository.delete).toHaveBeenCalled();
     });
 
     it("should delete comment when user is admin", async () => {
       const comment = createCommentDoc();
-      commentRepository.findById.mockResolvedValue(comment);
+      mockCommentRepository.findById.mockResolvedValue(comment);
 
       await service.delete(createObjectId().toString(), {
         initiator: initiator(createObjectId().toString(), "admin"),
       });
 
-      expect(commentRepository.delete).toHaveBeenCalled();
+      expect(mockCommentRepository.delete).toHaveBeenCalled();
     });
 
     it("should throw BadRequestError for invalid comment ID", async () => {
@@ -220,7 +228,7 @@ describe("commentService", () => {
     });
 
     it("should throw NotFoundError when comment not found", async () => {
-      commentRepository.findById.mockResolvedValue(null);
+      mockCommentRepository.findById.mockResolvedValue(null);
 
       await expect(
         service.delete(createObjectId().toString(), {
@@ -231,7 +239,7 @@ describe("commentService", () => {
 
     it("should throw ForbiddenError when not author and not admin", async () => {
       const comment = createCommentDoc();
-      commentRepository.findById.mockResolvedValue(comment);
+      mockCommentRepository.findById.mockResolvedValue(comment);
 
       await expect(
         service.delete(createObjectId().toString(), {

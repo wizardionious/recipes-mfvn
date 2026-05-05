@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createMockFavoriteRepository,
-  createMockRecipeRepository,
-  createMockUserRepository,
   createObjectId,
   createRecipeDoc,
   initiator,
@@ -10,20 +7,28 @@ import {
   queryParams,
 } from "@/__tests__/helpers.js";
 import { BadRequestError, NotFoundError } from "@/common/errors.js";
-import type { FavoriteRepository } from "@/modules/favorites/favorite.repository.js";
 import { createFavoriteService } from "@/modules/favorites/favorite.service.js";
-import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
-import type { UserRepository } from "@/modules/users/user.repository.js";
 
 describe("favoriteService", () => {
-  const favoriteRepository = createMockFavoriteRepository();
-  const recipeRepository = createMockRecipeRepository();
-  const userRepository = createMockUserRepository();
+  const mockFavoriteRepository = {
+    create: vi.fn(),
+    delete: vi.fn(),
+    exists: vi.fn(),
+    findByUser: vi.fn(),
+  };
+  const mockRecipeRepository = {
+    exists: vi.fn(),
+    modelName: "Recipe",
+  };
+  const mockUserRepository = {
+    exists: vi.fn(),
+    modelName: "User",
+  };
 
   const service = createFavoriteService(
-    favoriteRepository as unknown as FavoriteRepository,
-    recipeRepository as unknown as RecipeRepository,
-    userRepository as unknown as UserRepository,
+    mockFavoriteRepository,
+    mockRecipeRepository,
+    mockUserRepository,
   );
 
   beforeEach(() => {
@@ -32,15 +37,15 @@ describe("favoriteService", () => {
 
   describe("add", () => {
     it("should add a favorite and return favorited: true", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
 
       const init = initiator();
       const recipeId = createObjectId().toString();
       const result = await service.add(recipeId, { initiator: init });
 
       expect(result).toEqual({ favorited: true });
-      expect(favoriteRepository.create).toHaveBeenCalledWith({
+      expect(mockFavoriteRepository.create).toHaveBeenCalledWith({
         user: init.id,
         recipe: recipeId,
       });
@@ -55,7 +60,7 @@ describe("favoriteService", () => {
     });
 
     it("should throw BadRequestError for invalid recipe ID", async () => {
-      userRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
 
       await expect(
         service.add("invalid-id", { initiator: initiator() }),
@@ -63,8 +68,8 @@ describe("favoriteService", () => {
     });
 
     it("should throw NotFoundError when user does not exist", async () => {
-      userRepository.exists.mockResolvedValue(false);
-      recipeRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(false);
+      mockRecipeRepository.exists.mockResolvedValue(true);
 
       await expect(
         service.add(createObjectId().toString(), { initiator: initiator() }),
@@ -72,8 +77,8 @@ describe("favoriteService", () => {
     });
 
     it("should throw NotFoundError when recipe does not exist", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(false);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(false);
 
       await expect(
         service.add(createObjectId().toString(), { initiator: initiator() }),
@@ -83,15 +88,15 @@ describe("favoriteService", () => {
 
   describe("remove", () => {
     it("should remove a favorite and return favorited: false", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
 
       const init = initiator();
       const recipeId = createObjectId().toString();
       const result = await service.remove(recipeId, { initiator: init });
 
       expect(result).toEqual({ favorited: false });
-      expect(favoriteRepository.delete).toHaveBeenCalledWith({
+      expect(mockFavoriteRepository.delete).toHaveBeenCalledWith({
         user: init.id,
         recipe: recipeId,
       });
@@ -100,7 +105,7 @@ describe("favoriteService", () => {
 
   describe("isFavorited", () => {
     it("should return true when favorite exists", async () => {
-      favoriteRepository.exists.mockResolvedValue(true);
+      mockFavoriteRepository.exists.mockResolvedValue(true);
 
       const result = await service.isFavorited(createObjectId().toString(), {
         initiator: initiator(),
@@ -110,7 +115,7 @@ describe("favoriteService", () => {
     });
 
     it("should return false when favorite does not exist", async () => {
-      favoriteRepository.exists.mockResolvedValue(false);
+      mockFavoriteRepository.exists.mockResolvedValue(false);
 
       const result = await service.isFavorited(createObjectId().toString(), {
         initiator: initiator(),
@@ -122,11 +127,11 @@ describe("favoriteService", () => {
 
   describe("findByUser", () => {
     it("should return paginated recipes from favorites", async () => {
-      userRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
       const recipe = populateRecipeDoc(createRecipeDoc(), {
         isFavorited: true,
       });
-      favoriteRepository.findByUser.mockResolvedValue([[recipe], 1]);
+      mockFavoriteRepository.findByUser.mockResolvedValue([[recipe], 1]);
 
       const result = await service.findByUser(
         createObjectId().toString(),
@@ -138,8 +143,8 @@ describe("favoriteService", () => {
     });
 
     it("should return empty paginated result when no favorites", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      favoriteRepository.findByUser.mockResolvedValue([[], 0]);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockFavoriteRepository.findByUser.mockResolvedValue([[], 0]);
 
       const result = await service.findByUser(
         createObjectId().toString(),

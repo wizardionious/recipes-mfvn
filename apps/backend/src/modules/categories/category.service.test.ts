@@ -1,39 +1,41 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { withPagination } from "@recipes/shared";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createCategoryDoc,
-  createMockBus,
-  createMockCache,
-  createMockCategoryRepository,
-  createMockRecipeRepository,
   createObjectId,
   initiator,
   noInitiator,
 } from "@/__tests__/helpers.js";
 import { ConflictError, NotFoundError } from "@/common/errors.js";
 import { categoryCache } from "@/modules/categories/category.cache.js";
-import type { CategoryRepository } from "@/modules/categories/category.repository.js";
 import { createCategoryService } from "@/modules/categories/category.service.js";
-import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 
 describe("categoryService", () => {
-  const categoryRepository = createMockCategoryRepository();
-  const recipeRepository = createMockRecipeRepository();
-  const cache = createMockCache();
-  const bus = createMockBus();
+  const mockCategoryRepository = {
+    findMany: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+  };
+  const mockRecipeRepository = {
+    count: vi.fn(),
+  };
+  const mockCache = {
+    get: vi.fn(),
+    set: vi.fn(),
+    deletePattern: vi.fn(),
+  };
+  const mockBus = {
+    emit: vi.fn(),
+  };
   const service = createCategoryService(
-    categoryRepository as unknown as CategoryRepository,
-    recipeRepository as unknown as RecipeRepository,
-    cache,
-    bus,
+    mockCategoryRepository,
+    mockRecipeRepository,
+    mockCache,
+    mockBus,
   );
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
-    await cache.flush();
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
   });
 
   describe("findAll", () => {
@@ -48,7 +50,7 @@ describe("categoryService", () => {
           recipeCount: 0,
         },
       ];
-      categoryRepository.findMany.mockResolvedValue([docs, 2]);
+      mockCategoryRepository.findMany.mockResolvedValue([docs, 2]);
 
       const query = { sort: "name" as const, page: 1, limit: 10 };
       const result = await service.findAll({
@@ -56,17 +58,19 @@ describe("categoryService", () => {
         initiator: noInitiator(),
       });
 
-      expect(categoryRepository.findMany).toHaveBeenCalledWith(query);
+      expect(mockCategoryRepository.findMany).toHaveBeenCalledWith(query);
       expect(result.items).toHaveLength(2);
       expect(result.items[0]?.name).toBe("Desserts");
       expect(result.items[0]?.recipeCount).toBe(5);
       expect(result.items[1]?.recipeCount).toBe(0);
       expect(result.pagination.total).toBe(2);
-      expect(cache.get).toHaveBeenCalledWith(categoryCache.keys.list(query));
+      expect(mockCache.get).toHaveBeenCalledWith(
+        categoryCache.keys.list(query),
+      );
     });
 
     it("should return empty paginated result when no categories exist", async () => {
-      categoryRepository.findMany.mockResolvedValue([[], 0]);
+      mockCategoryRepository.findMany.mockResolvedValue([[], 0]);
 
       const query = { sort: "name" as const, page: 1, limit: 10 };
       const result = await service.findAll({
@@ -85,25 +89,30 @@ describe("categoryService", () => {
           recipeCount: 3,
         },
       ];
-      categoryRepository.findMany.mockResolvedValue([docs, 1]);
+      mockCategoryRepository.findMany.mockResolvedValue([docs, 1]);
 
       const query = { sort: "name" as const, page: 1, limit: 10 };
       await service.findAll({
         query,
         initiator: noInitiator(),
       });
-      expect(cache.get).toHaveBeenCalledWith(categoryCache.keys.list(query));
+      expect(mockCache.get).toHaveBeenCalledWith(
+        categoryCache.keys.list(query),
+      );
       vi.clearAllMocks();
+      mockCache.get.mockResolvedValue(withPagination(docs, 1, 1, 10));
 
       const result = await service.findAll({
         query,
         initiator: noInitiator(),
       });
 
-      expect(categoryRepository.findMany).not.toHaveBeenCalled();
+      expect(mockCategoryRepository.findMany).not.toHaveBeenCalled();
       expect(result.items).toHaveLength(1);
       expect(result.pagination.total).toBe(1);
-      expect(cache.get).toHaveBeenCalledWith(categoryCache.keys.list(query));
+      expect(mockCache.get).toHaveBeenCalledWith(
+        categoryCache.keys.list(query),
+      );
     });
   });
 
@@ -113,45 +122,45 @@ describe("categoryService", () => {
         name: "New Category",
         slug: "new-category",
       });
-      categoryRepository.create.mockResolvedValue(doc);
+      mockCategoryRepository.create.mockResolvedValue(doc);
 
       const result = await service.create({
         data: { name: "New Category" },
         initiator: initiator(),
       });
 
-      expect(categoryRepository.create).toHaveBeenCalledWith({
+      expect(mockCategoryRepository.create).toHaveBeenCalledWith({
         name: "New Category",
       });
       expect(result.name).toBe("New Category");
       expect(result.slug).toBe("new-category");
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         categoryCache.keys.allPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("category:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("category:changed");
     });
   });
 
   describe("deleteById", () => {
     it("should delete category when no recipes exist", async () => {
-      recipeRepository.count.mockResolvedValue(0);
-      categoryRepository.delete.mockResolvedValue(createCategoryDoc());
+      mockRecipeRepository.count.mockResolvedValue(0);
+      mockCategoryRepository.delete.mockResolvedValue(createCategoryDoc());
 
       const id = createObjectId().toString();
       await service.deleteById(id, { initiator: initiator() });
 
-      expect(recipeRepository.count).toHaveBeenCalledWith({
+      expect(mockRecipeRepository.count).toHaveBeenCalledWith({
         category: id,
       });
-      expect(categoryRepository.delete).toHaveBeenCalledWith(id);
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockCategoryRepository.delete).toHaveBeenCalledWith(id);
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         categoryCache.keys.allPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("category:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("category:changed");
     });
 
     it("should throw ConflictError when recipes exist", async () => {
-      recipeRepository.count.mockResolvedValue(3);
+      mockRecipeRepository.count.mockResolvedValue(3);
 
       await expect(
         service.deleteById(createObjectId().toString(), {
@@ -161,8 +170,8 @@ describe("categoryService", () => {
     });
 
     it("should throw NotFoundError when category not found", async () => {
-      recipeRepository.count.mockResolvedValue(0);
-      categoryRepository.delete.mockResolvedValue(null);
+      mockRecipeRepository.count.mockResolvedValue(0);
+      mockCategoryRepository.delete.mockResolvedValue(null);
 
       await expect(
         service.deleteById(createObjectId().toString(), {

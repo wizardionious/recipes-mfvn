@@ -11,10 +11,13 @@ export interface AuthService {
   login(data: LoginBody): Promise<AuthResponse>;
 }
 
+type UserRepositoryPort = Pick<UserRepository, "findOne" | "exists" | "create">;
+type LoggerPort = Pick<Logger, "error" | "warn" | "info">;
+
 export function createAuthService(
-  userRepository: UserRepository,
+  userRepository: UserRepositoryPort,
   passwordService: PasswordService,
-  log: Logger,
+  log: LoggerPort,
 ): AuthService {
   return {
     register: async (data) => {

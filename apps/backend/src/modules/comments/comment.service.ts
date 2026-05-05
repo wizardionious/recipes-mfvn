@@ -28,10 +28,17 @@ export interface CommentService {
   delete(commentId: string, params: DeleteMethodParams): Promise<void>;
 }
 
+type CommentRepositoryPort = Pick<
+  CommentRepository,
+  "findByRecipe" | "findByAuthor" | "findById" | "create" | "delete"
+>;
+type RecipeRepositoryPort = Pick<RecipeRepository, "exists" | "modelName">;
+type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
+
 export function createCommentService(
-  repository: CommentRepository,
-  recipeRepository: RecipeRepository,
-  userRepository: UserRepository,
+  repository: CommentRepositoryPort,
+  recipeRepository: RecipeRepositoryPort,
+  userRepository: UserRepositoryPort,
 ): CommentService {
   return {
     findByRecipe: async (recipeId, { query, initiator }) => {

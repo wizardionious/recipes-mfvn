@@ -27,10 +27,14 @@ export interface UserService {
   ): Promise<Paginated<Comment>>;
 }
 
+type UserRepositoryPort = Pick<UserRepository, "findById">;
+type CommentServicePort = Pick<CommentService, "findByAuthor">;
+type FavoriteServicePort = Pick<FavoriteService, "findByUser">;
+
 export function createUserService(
-  repository: UserRepository,
-  commentService: CommentService,
-  favoriteService: FavoriteService,
+  repository: UserRepositoryPort,
+  commentService: CommentServicePort,
+  favoriteService: FavoriteServicePort,
 ): UserService {
   return {
     getCurrentUser: async (userId) => {

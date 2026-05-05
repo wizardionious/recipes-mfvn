@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createMockReviewRepository,
-  createMockUserRepository,
   createObjectId,
   createReviewDoc,
   initiator,
@@ -12,18 +10,25 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/common/errors.js";
-import type { ReviewRepository } from "@/modules/reviews/review.repository.js";
 import { createReviewService } from "@/modules/reviews/review.service.js";
-import type { UserRepository } from "@/modules/users/user.repository.js";
 
 describe("reviewService", () => {
-  const reviewRepository = createMockReviewRepository();
-  const userRepository = createMockUserRepository();
+  const mockReviewRepository = {
+    findFeatured: vi.fn(),
+    findAll: vi.fn(),
+    findOne: vi.fn(),
+    findDocumentById: vi.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    deleteDocument: vi.fn(),
+    aggregateStats: vi.fn(),
+  };
+  const mockUserRepository = {
+    exists: vi.fn(),
+    modelName: "User",
+  };
 
-  const service = createReviewService(
-    reviewRepository as unknown as ReviewRepository,
-    userRepository as unknown as UserRepository,
-  );
+  const service = createReviewService(mockReviewRepository, mockUserRepository);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,15 +40,15 @@ describe("reviewService", () => {
 
   describe("create", () => {
     it("should create a review when user has none", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      reviewRepository.findOne.mockResolvedValue(null);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockReviewRepository.findOne.mockResolvedValue(null);
 
       const authorId = createObjectId();
       const populatedReview = {
         ...createReviewDoc({ author: authorId, text: "Love it!", rating: 5 }),
         author: { _id: authorId, name: "Alice", email: "alice@test.com" },
       };
-      reviewRepository.create.mockResolvedValue(populatedReview);
+      mockReviewRepository.create.mockResolvedValue(populatedReview);
 
       const init = initiator(authorId.toString());
       const result = await service.create({
@@ -51,7 +56,7 @@ describe("reviewService", () => {
         initiator: init,
       });
 
-      expect(reviewRepository.create).toHaveBeenCalledWith({
+      expect(mockReviewRepository.create).toHaveBeenCalledWith({
         author: init.id,
         text: "Love it!",
         rating: 5,
@@ -61,8 +66,8 @@ describe("reviewService", () => {
     });
 
     it("should throw ConflictError when user already has a review", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      reviewRepository.findOne.mockResolvedValue(createReviewDoc());
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockReviewRepository.findOne.mockResolvedValue(createReviewDoc());
 
       await expect(
         service.create({
@@ -82,7 +87,7 @@ describe("reviewService", () => {
     });
 
     it("should throw NotFoundError when user does not exist", async () => {
-      userRepository.exists.mockResolvedValue(false);
+      mockUserRepository.exists.mockResolvedValue(false);
 
       await expect(
         service.create({
@@ -102,17 +107,17 @@ describe("reviewService", () => {
           author: { _id: authorId, name: "Bob", email: "bob@test.com" },
         },
       ];
-      reviewRepository.findFeatured.mockResolvedValue(reviews);
+      mockReviewRepository.findFeatured.mockResolvedValue(reviews);
 
       const result = await service.findFeatured();
 
-      expect(reviewRepository.findFeatured).toHaveBeenCalledWith(6);
+      expect(mockReviewRepository.findFeatured).toHaveBeenCalledWith(6);
       expect(result).toHaveLength(1);
       expect(result[0]?.author.name).toBe("Bob");
     });
 
     it("should return empty array when no featured reviews", async () => {
-      reviewRepository.findFeatured.mockResolvedValue([]);
+      mockReviewRepository.findFeatured.mockResolvedValue([]);
 
       const result = await service.findFeatured();
 
@@ -127,7 +132,7 @@ describe("reviewService", () => {
         ...createReviewDoc({ author: authorId }),
         author: { _id: authorId, name: "Carol", email: "carol@test.com" },
       };
-      reviewRepository.findAll.mockResolvedValue([[review], 1]);
+      mockReviewRepository.findAll.mockResolvedValue([[review], 1]);
 
       const result = await service.findAll({
         query: { page: 1, limit: 10, sort: "-createdAt" },
@@ -143,21 +148,21 @@ describe("reviewService", () => {
     it("should update own review", async () => {
       const authorId = createObjectId();
       const review = createReviewDoc({ author: authorId });
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       const updated = {
         ...review,
         text: "Updated text",
         author: { _id: authorId, name: "Dave", email: "dave@test.com" },
       };
-      reviewRepository.save.mockResolvedValue(updated);
+      mockReviewRepository.save.mockResolvedValue(updated);
 
       const result = await service.update(review._id.toString(), {
         data: { text: "Updated text" },
         initiator: initiator(authorId.toString()),
       });
 
-      expect(reviewRepository.save).toHaveBeenCalledWith(review, {
+      expect(mockReviewRepository.save).toHaveBeenCalledWith(review, {
         text: "Updated text",
       });
       expect(result.text).toBe("Updated text");
@@ -165,14 +170,14 @@ describe("reviewService", () => {
 
     it("should allow admin to update any review", async () => {
       const review = createReviewDoc();
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       const updated = {
         ...review,
         text: "Admin update",
         author: { _id: review.author, name: "Eve", email: "eve@test.com" },
       };
-      reviewRepository.save.mockResolvedValue(updated);
+      mockReviewRepository.save.mockResolvedValue(updated);
 
       const result = await service.update(review._id.toString(), {
         data: { text: "Admin update" },
@@ -192,7 +197,7 @@ describe("reviewService", () => {
     });
 
     it("should throw NotFoundError when review not found", async () => {
-      reviewRepository.findDocumentById.mockResolvedValue(null);
+      mockReviewRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.update(createObjectId().toString(), {
@@ -204,7 +209,7 @@ describe("reviewService", () => {
 
     it("should throw ForbiddenError when not author and not admin", async () => {
       const review = createReviewDoc();
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       await expect(
         service.update(review._id.toString(), {
@@ -218,14 +223,14 @@ describe("reviewService", () => {
   describe("feature", () => {
     it("should feature a review when admin", async () => {
       const review = createReviewDoc();
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       const updated = {
         ...review,
         isFeatured: true,
         author: { _id: review.author, name: "Frank", email: "frank@test.com" },
       };
-      reviewRepository.save.mockResolvedValue(updated);
+      mockReviewRepository.save.mockResolvedValue(updated);
 
       const result = await service.feature(
         review._id.toString(),
@@ -233,7 +238,7 @@ describe("reviewService", () => {
         true,
       );
 
-      expect(reviewRepository.save).toHaveBeenCalledWith(review, {
+      expect(mockReviewRepository.save).toHaveBeenCalledWith(review, {
         isFeatured: true,
       });
       expect(result.isFeatured).toBe(true);
@@ -250,7 +255,7 @@ describe("reviewService", () => {
     });
 
     it("should throw NotFoundError when review not found", async () => {
-      reviewRepository.findDocumentById.mockResolvedValue(null);
+      mockReviewRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.feature(
@@ -266,24 +271,24 @@ describe("reviewService", () => {
     it("should delete own review", async () => {
       const authorId = createObjectId();
       const review = createReviewDoc({ author: authorId });
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       await service.delete(review._id.toString(), {
         initiator: initiator(authorId.toString()),
       });
 
-      expect(reviewRepository.deleteDocument).toHaveBeenCalledWith(review);
+      expect(mockReviewRepository.deleteDocument).toHaveBeenCalledWith(review);
     });
 
     it("should allow admin to delete any review", async () => {
       const review = createReviewDoc();
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       await service.delete(review._id.toString(), {
         initiator: initiator(createObjectId().toString(), "admin"),
       });
 
-      expect(reviewRepository.deleteDocument).toHaveBeenCalledWith(review);
+      expect(mockReviewRepository.deleteDocument).toHaveBeenCalledWith(review);
     });
 
     it("should throw BadRequestError for invalid review ID", async () => {
@@ -293,7 +298,7 @@ describe("reviewService", () => {
     });
 
     it("should throw NotFoundError when review not found", async () => {
-      reviewRepository.findDocumentById.mockResolvedValue(null);
+      mockReviewRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.delete(createObjectId().toString(), {
@@ -304,7 +309,7 @@ describe("reviewService", () => {
 
     it("should throw ForbiddenError when not author and not admin", async () => {
       const review = createReviewDoc();
-      reviewRepository.findDocumentById.mockResolvedValue(review);
+      mockReviewRepository.findDocumentById.mockResolvedValue(review);
 
       await expect(
         service.delete(review._id.toString(), {
@@ -321,7 +326,7 @@ describe("reviewService", () => {
         averageRating: 4.5,
         happyCooksCount: 38,
       };
-      reviewRepository.aggregateStats.mockResolvedValue(stats);
+      mockReviewRepository.aggregateStats.mockResolvedValue(stats);
 
       const result = await service.getStats();
 

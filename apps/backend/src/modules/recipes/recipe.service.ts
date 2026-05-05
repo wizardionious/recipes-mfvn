@@ -44,13 +44,31 @@ export interface RecipeService {
   delete(id: string, params: DeleteMethodParams): Promise<void>;
 }
 
+type RecipeRepositoryPort = Pick<
+  RecipeRepository,
+  | "findDocumentById"
+  | "create"
+  | "save"
+  | "deleteDocument"
+  | "aggregateSearch"
+  | "aggregateById"
+>;
+type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
+type FavoriteRepositoryPort = Pick<FavoriteRepository, "exists">;
+type CategoryRepositoryPort = Pick<CategoryRepository, "exists" | "modelName">;
+type CacheServicePort = Pick<
+  CacheService,
+  "get" | "set" | "delete" | "deletePattern"
+>;
+type TypedEmitterPort = Pick<TypedEmitter, "emit">;
+
 export function createRecipeService(
-  repository: RecipeRepository,
-  userRepository: UserRepository,
-  favoriteRepository: FavoriteRepository,
-  categoryRepository: CategoryRepository,
-  cache: CacheService,
-  bus: TypedEmitter,
+  repository: RecipeRepositoryPort,
+  userRepository: UserRepositoryPort,
+  favoriteRepository: FavoriteRepositoryPort,
+  categoryRepository: CategoryRepositoryPort,
+  cache: CacheServicePort,
+  bus: TypedEmitterPort,
 ): RecipeService {
   return {
     findAll: async ({ query, initiator }) => {

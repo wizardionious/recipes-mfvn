@@ -2,12 +2,6 @@ import type { Minutes, RecipeQuery } from "@recipes/shared";
 import type { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createMockBus,
-  createMockCache,
-  createMockCategoryRepository,
-  createMockFavoriteRepository,
-  createMockRecipeRepository,
-  createMockUserRepository,
   createObjectId,
   createRecipeDoc,
   initiator,
@@ -19,12 +13,8 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/common/errors.js";
-import type { CategoryRepository } from "@/modules/categories/category.repository.js";
-import type { FavoriteRepository } from "@/modules/favorites/favorite.repository.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
-import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 import { createRecipeService } from "@/modules/recipes/recipe.service.js";
-import type { UserRepository } from "@/modules/users/user.repository.js";
 
 function createMockRecipe(authorId?: Types.ObjectId) {
   const author = authorId ?? createObjectId();
@@ -41,30 +31,56 @@ function createMockRecipe(authorId?: Types.ObjectId) {
 }
 
 describe("recipeService", () => {
-  const recipeRepository = createMockRecipeRepository();
-  const userRepository = createMockUserRepository();
-  const favoriteRepository = createMockFavoriteRepository();
-  const categoryRepository = createMockCategoryRepository();
-  const cache = createMockCache();
-  const bus = createMockBus();
+  const mockRecipeRepository = {
+    findDocumentById: vi.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    deleteDocument: vi.fn(),
+    aggregateSearch: vi.fn(),
+    aggregateById: vi.fn(),
+  };
+  const mockUserRepository = {
+    exists: vi.fn(),
+    modelName: "User",
+  };
+  const mockFavoriteRepository = {
+    exists: vi.fn(),
+    findByUser: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+    isFavorited: vi.fn(),
+  };
+  const mockCategoryRepository = {
+    exists: vi.fn(),
+    modelName: "Category",
+  };
+  const mockCache = {
+    get: vi.fn(),
+    set: vi.fn(),
+    delete: vi.fn(),
+    deletePattern: vi.fn(),
+  };
+  const mockBus = {
+    emit: vi.fn(),
+  };
+
   const service = createRecipeService(
-    recipeRepository as unknown as RecipeRepository,
-    userRepository as unknown as UserRepository,
-    favoriteRepository as unknown as FavoriteRepository,
-    categoryRepository as unknown as CategoryRepository,
-    cache,
-    bus,
+    mockRecipeRepository,
+    mockUserRepository,
+    mockFavoriteRepository,
+    mockCategoryRepository,
+    mockCache,
+    mockBus,
   );
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
-    await cache.flush();
   });
 
   describe("findAll", () => {
     it("should return paginated recipes", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
+      mockRecipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
 
       const query = {
         page: 1,
@@ -79,11 +95,11 @@ describe("recipeService", () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0]?.title).toBe("Test Recipe");
       expect(result.pagination.total).toBe(1);
-      expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.list(query));
+      expect(mockCache.get).toHaveBeenCalledWith(recipeCache.keys.list(query));
     });
 
     it("should return empty when aggregate returns empty result", async () => {
-      recipeRepository.aggregateSearch.mockResolvedValue([[], 0]);
+      mockRecipeRepository.aggregateSearch.mockResolvedValue([[], 0]);
 
       const query = {
         page: 1,
@@ -112,8 +128,8 @@ describe("recipeService", () => {
       });
 
       expect(result.items).toEqual([]);
-      expect(recipeRepository.aggregateSearch).not.toHaveBeenCalled();
-      expect(cache.get).not.toHaveBeenCalled();
+      expect(mockRecipeRepository.aggregateSearch).not.toHaveBeenCalled();
+      expect(mockCache.get).not.toHaveBeenCalled();
     });
 
     it("should return rating data from aggregation", async () => {
@@ -122,7 +138,7 @@ describe("recipeService", () => {
         averageRating: 4.2,
         ratingCount: 15,
       });
-      recipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
+      mockRecipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
 
       const query = {
         page: 1,
@@ -141,7 +157,7 @@ describe("recipeService", () => {
 
     it("should return null ratings when recipe has no ratings", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
+      mockRecipeRepository.aggregateSearch.mockResolvedValue([[populated], 1]);
 
       const query = {
         page: 1,
@@ -162,7 +178,7 @@ describe("recipeService", () => {
   describe("findById", () => {
     it("should return recipe by ID", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeRepository.aggregateById.mockResolvedValue(populated);
+      mockRecipeRepository.aggregateById.mockResolvedValue(populated);
 
       const id = createObjectId().toString();
       const result = await service.findById(id, {
@@ -170,25 +186,27 @@ describe("recipeService", () => {
       });
 
       expect(result.title).toBe("Test Recipe");
-      expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
     });
 
     it("should return cached recipe on second call for unauthenticated user", async () => {
       const populated = populateRecipeDoc(createRecipeDoc());
-      recipeRepository.aggregateById.mockResolvedValue(populated);
+      mockRecipeRepository.aggregateById.mockResolvedValue(populated);
 
       const id = createObjectId().toString();
       await service.findById(id, { initiator: noInitiator() });
+      expect(mockCache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
 
       vi.clearAllMocks();
+      mockCache.get.mockResolvedValue(populated);
 
       const result = await service.findById(id, {
         initiator: noInitiator(),
       });
 
-      expect(recipeRepository.aggregateById).not.toHaveBeenCalled();
+      expect(mockRecipeRepository.aggregateById).not.toHaveBeenCalled();
       expect(result.title).toBe("Test Recipe");
-      expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
     });
 
     it("should throw BadRequestError for invalid ID", async () => {
@@ -200,7 +218,8 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeRepository.aggregateById.mockResolvedValue(undefined);
+      mockRecipeRepository.aggregateById.mockResolvedValue(undefined);
+      mockCache.get.mockResolvedValue(undefined);
 
       const id = createObjectId().toString();
       await expect(
@@ -208,7 +227,7 @@ describe("recipeService", () => {
           initiator: noInitiator(),
         }),
       ).rejects.toThrow(NotFoundError);
-      expect(cache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.get).toHaveBeenCalledWith(recipeCache.keys.byId(id));
     });
 
     it("should return rating data from aggregation", async () => {
@@ -217,7 +236,7 @@ describe("recipeService", () => {
         averageRating: 3.8,
         ratingCount: 42,
       });
-      recipeRepository.aggregateById.mockResolvedValue(populated);
+      mockRecipeRepository.aggregateById.mockResolvedValue(populated);
 
       const id = createObjectId().toString();
       const result = await service.findById(id, {
@@ -243,8 +262,8 @@ describe("recipeService", () => {
     };
 
     it("should create and return a recipe", async () => {
-      categoryRepository.exists.mockResolvedValue(true);
-      userRepository.exists.mockResolvedValue(true);
+      mockCategoryRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
 
       const authorId = createObjectId();
       const categoryId = createObjectId();
@@ -256,14 +275,14 @@ describe("recipeService", () => {
         },
       );
 
-      recipeRepository.create.mockResolvedValue(populated);
+      mockRecipeRepository.create.mockResolvedValue(populated);
 
       const result = await service.create({
         data: { ...createData, category: categoryId.toString() },
         initiator: initiator(authorId.toString()),
       });
 
-      expect(recipeRepository.create).toHaveBeenCalledWith({
+      expect(mockRecipeRepository.create).toHaveBeenCalledWith({
         ...createData,
         category: categoryId.toString(),
         author: authorId.toString(),
@@ -272,10 +291,10 @@ describe("recipeService", () => {
       expect(result.userRating).toBeNull();
       expect(result.averageRating).toBeNull();
       expect(result.ratingCount).toBe(0);
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should throw BadRequestError for invalid author ID", async () => {
@@ -297,7 +316,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when category not found", async () => {
-      categoryRepository.exists.mockResolvedValue(null);
+      mockCategoryRepository.exists.mockResolvedValue(null);
 
       await expect(
         service.create({
@@ -308,8 +327,8 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when author not found", async () => {
-      categoryRepository.exists.mockResolvedValue(true);
-      userRepository.exists.mockResolvedValue(null);
+      mockCategoryRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(null);
 
       await expect(
         service.create({
@@ -324,9 +343,9 @@ describe("recipeService", () => {
     it("should update recipe when author matches", async () => {
       const authorId = createObjectId();
       const recipe = createMockRecipe(authorId);
-      recipeRepository.findDocumentById.mockResolvedValue(recipe);
-      favoriteRepository.exists.mockResolvedValue(false);
-      recipeRepository.save.mockResolvedValue(
+      mockRecipeRepository.findDocumentById.mockResolvedValue(recipe);
+      mockFavoriteRepository.exists.mockResolvedValue(false);
+      mockRecipeRepository.save.mockResolvedValue(
         populateRecipeDoc(createRecipeDoc({ author: authorId }), {
           title: "Updated",
         }),
@@ -338,29 +357,29 @@ describe("recipeService", () => {
         initiator: initiator(authorId.toString()),
       });
 
-      expect(recipeRepository.findDocumentById).toHaveBeenCalledWith(id, {
+      expect(mockRecipeRepository.findDocumentById).toHaveBeenCalledWith(id, {
         populate: false,
       });
-      expect(recipeRepository.save).toHaveBeenCalledWith(recipe, {
+      expect(mockRecipeRepository.save).toHaveBeenCalledWith(recipe, {
         title: "Updated",
       });
       expect(result.title).toBe("Updated");
       expect(result.userRating).toBeNull();
       expect(result.averageRating).toBeNull();
       expect(result.ratingCount).toBe(0);
-      expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockCache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should update recipe when user is admin", async () => {
       const authorId = createObjectId();
       const recipe = createMockRecipe(authorId);
-      recipeRepository.findDocumentById.mockResolvedValue(recipe);
-      favoriteRepository.exists.mockResolvedValue(false);
-      recipeRepository.save.mockResolvedValue(
+      mockRecipeRepository.findDocumentById.mockResolvedValue(recipe);
+      mockFavoriteRepository.exists.mockResolvedValue(false);
+      mockRecipeRepository.save.mockResolvedValue(
         populateRecipeDoc(createRecipeDoc({ author: authorId }), {
           title: "Updated",
         }),
@@ -373,11 +392,11 @@ describe("recipeService", () => {
           initiator: initiator(createObjectId().toString(), "admin"),
         }),
       ).resolves.toBeDefined();
-      expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockCache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should throw BadRequestError for invalid ID", async () => {
@@ -390,7 +409,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeRepository.findDocumentById.mockResolvedValue(null);
+      mockRecipeRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.update(createObjectId().toString(), {
@@ -402,7 +421,7 @@ describe("recipeService", () => {
 
     it("should throw ForbiddenError when not author and not admin", async () => {
       const recipe = createMockRecipe();
-      recipeRepository.findDocumentById.mockResolvedValue(recipe);
+      mockRecipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       await expect(
         service.update(recipe._id.toString(), {
@@ -417,7 +436,7 @@ describe("recipeService", () => {
     it("should delete recipe when author matches", async () => {
       const authorId = createObjectId();
       const recipe = createMockRecipe(authorId);
-      recipeRepository.findDocumentById.mockResolvedValue(recipe);
+      mockRecipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       const id = createObjectId().toString();
       await expect(
@@ -425,17 +444,17 @@ describe("recipeService", () => {
           initiator: initiator(authorId.toString()),
         }),
       ).resolves.toBeUndefined();
-      expect(recipeRepository.deleteDocument).toHaveBeenCalledWith(recipe);
-      expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockRecipeRepository.deleteDocument).toHaveBeenCalledWith(recipe);
+      expect(mockCache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should delete recipe when user is admin", async () => {
       const recipe = createMockRecipe();
-      recipeRepository.findDocumentById.mockResolvedValue(recipe);
+      mockRecipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       const id = createObjectId().toString();
       await expect(
@@ -443,12 +462,12 @@ describe("recipeService", () => {
           initiator: initiator(createObjectId().toString(), "admin"),
         }),
       ).resolves.toBeUndefined();
-      expect(recipeRepository.deleteDocument).toHaveBeenCalledWith(recipe);
-      expect(cache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
-      expect(cache.deletePattern).toHaveBeenCalledWith(
+      expect(mockRecipeRepository.deleteDocument).toHaveBeenCalledWith(recipe);
+      expect(mockCache.delete).toHaveBeenCalledWith(recipeCache.keys.byId(id));
+      expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(bus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
     });
 
     it("should throw BadRequestError for invalid ID", async () => {
@@ -458,7 +477,7 @@ describe("recipeService", () => {
     });
 
     it("should throw NotFoundError when recipe not found", async () => {
-      recipeRepository.findDocumentById.mockResolvedValue(null);
+      mockRecipeRepository.findDocumentById.mockResolvedValue(null);
 
       await expect(
         service.delete(createObjectId().toString(), {
@@ -469,7 +488,7 @@ describe("recipeService", () => {
 
     it("should throw ForbiddenError when not author and not admin", async () => {
       const recipe = createMockRecipe();
-      recipeRepository.findDocumentById.mockResolvedValue(recipe);
+      mockRecipeRepository.findDocumentById.mockResolvedValue(recipe);
 
       await expect(
         service.delete(createObjectId().toString(), {

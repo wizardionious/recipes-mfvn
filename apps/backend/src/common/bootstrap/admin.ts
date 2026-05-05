@@ -2,7 +2,9 @@ import type { Logger } from "@/common/logger.js";
 import { env } from "@/config/env.js";
 import { UserModel } from "@/modules/users/user.model.js";
 
-export async function ensureRootAdmin(log: Logger): Promise<void> {
+type LoggerPort = Pick<Logger, "error" | "warn" | "info">;
+
+export async function ensureRootAdmin(log: LoggerPort): Promise<void> {
   const existing = await UserModel.findOne({ role: "admin" });
   if (existing) {
     log.info({ email: env.ROOT_ADMIN_EMAIL }, "Root admin already exists");

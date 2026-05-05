@@ -1,34 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createMockUserRepository,
   createObjectId,
   createUserDoc,
   queryParams,
 } from "@/__tests__/helpers.js";
 import { NotFoundError } from "@/common/errors.js";
-import type { CommentService } from "@/modules/comments/comment.service.js";
-import type { FavoriteService } from "@/modules/favorites/favorite.service.js";
 import { createUserService } from "@/modules/users/user.service.js";
-import type { UserRepository } from "./user.repository.js";
 
 describe("userService", () => {
-  const userRepository = createMockUserRepository();
-  const commentService = {
+  const mockUserRepository = {
+    findById: vi.fn(),
+  };
+  const mockCommentService = {
     findByAuthor: vi.fn(),
     findByRecipe: vi.fn(),
     create: vi.fn(),
     delete: vi.fn(),
   };
-  const favoriteService = {
+  const mockFavoriteService = {
     findByUser: vi.fn(),
     add: vi.fn(),
     remove: vi.fn(),
     isFavorited: vi.fn(),
   };
   const service = createUserService(
-    userRepository as unknown as UserRepository,
-    commentService as unknown as CommentService,
-    favoriteService as unknown as FavoriteService,
+    mockUserRepository,
+    mockCommentService,
+    mockFavoriteService,
   );
 
   beforeEach(() => {
@@ -38,7 +36,7 @@ describe("userService", () => {
   describe("getCurrentUser", () => {
     it("should return user by ID", async () => {
       const doc = createUserDoc({ email: "user@test.com", name: "Test" });
-      userRepository.findById.mockReturnValue(doc);
+      mockUserRepository.findById.mockReturnValue(doc);
 
       const result = await service.getCurrentUser(createObjectId().toString());
 
@@ -48,7 +46,7 @@ describe("userService", () => {
     });
 
     it("should throw NotFoundError when user not found", async () => {
-      userRepository.findById.mockReturnValue(null);
+      mockUserRepository.findById.mockReturnValue(null);
 
       await expect(
         service.getCurrentUser(createObjectId().toString()),
@@ -69,14 +67,14 @@ describe("userService", () => {
           hasPrev: false,
         },
       };
-      favoriteService.findByUser.mockResolvedValue(expected);
+      mockFavoriteService.findByUser.mockResolvedValue(expected);
 
       const result = await service.getFavorites(
         createObjectId().toString(),
         queryParams(),
       );
 
-      expect(favoriteService.findByUser).toHaveBeenCalled();
+      expect(mockFavoriteService.findByUser).toHaveBeenCalled();
       expect(result).toBe(expected);
     });
   });
@@ -94,14 +92,14 @@ describe("userService", () => {
           hasPrev: false,
         },
       };
-      commentService.findByAuthor.mockResolvedValue(expected);
+      mockCommentService.findByAuthor.mockResolvedValue(expected);
 
       const result = await service.getComments(
         createObjectId().toString(),
         queryParams(),
       );
 
-      expect(commentService.findByAuthor).toHaveBeenCalled();
+      expect(mockCommentService.findByAuthor).toHaveBeenCalled();
       expect(result).toBe(expected);
     });
   });

@@ -32,7 +32,7 @@ export function assertValidId<const T extends string>(
  * @throws {NotFoundError} if the ID does not exist in the model
  */
 export async function assertExists<T extends { _id: Types.ObjectId }>(
-  model: Model<unknown> | BaseRepository<T>,
+  model: Model<unknown> | Pick<BaseRepository<T>, "exists" | "modelName">,
   id: string,
 ): Promise<void> {
   const exists = await model.exists({ _id: id });

@@ -27,11 +27,19 @@ export interface CategoryService {
   deleteById(id: string, params: DeleteMethodParams): Promise<void>;
 }
 
+type CategoryRepositoryPort = Pick<
+  CategoryRepository,
+  "findMany" | "create" | "delete"
+>;
+type RecipeRepositoryPort = Pick<RecipeRepository, "count">;
+type CacheServicePort = Pick<CacheService, "get" | "set" | "deletePattern">;
+type TypedEmitterPort = Pick<TypedEmitter, "emit">;
+
 export function createCategoryService(
-  repository: CategoryRepository,
-  recipeRepository: RecipeRepository,
-  cache: CacheService,
-  bus: TypedEmitter,
+  repository: CategoryRepositoryPort,
+  recipeRepository: RecipeRepositoryPort,
+  cache: CacheServicePort,
+  bus: TypedEmitterPort,
 ): CategoryService {
   return {
     findAll: async ({ query }) => {

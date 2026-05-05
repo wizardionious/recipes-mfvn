@@ -18,11 +18,19 @@ export interface RecipeRatingService {
   remove(recipeId: string, params: DeleteMethodParams): Promise<void>;
 }
 
+type RecipeRatingRepositoryPort = Pick<
+  RecipeRatingRepository,
+  "upsert" | "delete"
+>;
+type RecipeRepositoryPort = Pick<RecipeRepository, "exists" | "modelName">;
+type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
+type TypedEmitterPort = Pick<TypedEmitter, "emit">;
+
 export function createRecipeRatingService(
-  repository: RecipeRatingRepository,
-  recipeRepository: RecipeRepository,
-  userRepository: UserRepository,
-  bus: TypedEmitter,
+  repository: RecipeRatingRepositoryPort,
+  recipeRepository: RecipeRepositoryPort,
+  userRepository: UserRepositoryPort,
+  bus: TypedEmitterPort,
 ): RecipeRatingService {
   async function validateUser(userId: string): Promise<void> {
     assertValidId(userId, "User");

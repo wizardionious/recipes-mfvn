@@ -42,9 +42,22 @@ export interface ReviewService {
   getStats(): Promise<ReviewStats>;
 }
 
+type ReviewRepositoryPort = Pick<
+  ReviewRepository,
+  | "findFeatured"
+  | "findAll"
+  | "findOne"
+  | "findDocumentById"
+  | "create"
+  | "save"
+  | "deleteDocument"
+  | "aggregateStats"
+>;
+type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
+
 export function createReviewService(
-  repository: ReviewRepository,
-  userRepository: UserRepository,
+  repository: ReviewRepositoryPort,
+  userRepository: UserRepositoryPort,
 ): ReviewService {
   return {
     create: async ({ data, initiator }) => {

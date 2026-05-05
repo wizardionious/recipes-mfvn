@@ -1,29 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createMockBus,
-  createMockRecipeRatingRepository,
-  createMockRecipeRepository,
-  createMockUserRepository,
-  createObjectId,
-  initiator,
-} from "@/__tests__/helpers.js";
+import { createObjectId, initiator } from "@/__tests__/helpers.js";
 import { BadRequestError, NotFoundError } from "@/common/errors.js";
-import type { RecipeRatingRepository } from "@/modules/recipe-ratings/recipe-rating.repository.js";
 import { createRecipeRatingService } from "@/modules/recipe-ratings/recipe-rating.service.js";
-import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
-import type { UserRepository } from "@/modules/users/user.repository.js";
 
 describe("recipeRatingService", () => {
-  const repository = createMockRecipeRatingRepository();
-  const recipeRepository = createMockRecipeRepository();
-  const userRepository = createMockUserRepository();
-  const bus = createMockBus();
+  const mockRecipeRatingRepository = {
+    upsert: vi.fn(),
+    delete: vi.fn(),
+  };
+  const mockRecipeRepository = {
+    exists: vi.fn(),
+    modelName: "Recipe",
+  };
+  const mockUserRepository = {
+    exists: vi.fn(),
+    modelName: "User",
+  };
+  const mockBus = {
+    emit: vi.fn(),
+  };
 
   const service = createRecipeRatingService(
-    repository as unknown as RecipeRatingRepository,
-    recipeRepository as unknown as RecipeRepository,
-    userRepository as unknown as UserRepository,
-    bus,
+    mockRecipeRatingRepository,
+    mockRecipeRepository,
+    mockUserRepository,
+    mockBus,
   );
 
   beforeEach(() => {
@@ -32,9 +33,9 @@ describe("recipeRatingService", () => {
 
   describe("rate", () => {
     it("should create a new rating", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(true);
-      repository.upsert.mockResolvedValue({
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockRecipeRatingRepository.upsert.mockResolvedValue({
         _id: createObjectId(),
         user: createObjectId(),
         recipe: createObjectId(),
@@ -50,17 +51,17 @@ describe("recipeRatingService", () => {
       });
 
       expect(result).toEqual({ value: 4 });
-      expect(repository.upsert).toHaveBeenCalledWith(
+      expect(mockRecipeRatingRepository.upsert).toHaveBeenCalledWith(
         { user: init.id, recipe: recipeId },
         4,
       );
-      expect(bus.emit).toHaveBeenCalledWith("recipe:rated", recipeId);
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:rated", recipeId);
     });
 
     it("should update an existing rating", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(true);
-      repository.upsert.mockResolvedValue({
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockRecipeRatingRepository.upsert.mockResolvedValue({
         _id: createObjectId(),
         user: createObjectId(),
         recipe: createObjectId(),
@@ -88,7 +89,7 @@ describe("recipeRatingService", () => {
     });
 
     it("should throw BadRequestError for invalid recipe ID", async () => {
-      userRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(true);
 
       await expect(
         service.rate("invalid-id", {
@@ -99,8 +100,8 @@ describe("recipeRatingService", () => {
     });
 
     it("should throw NotFoundError when user does not exist", async () => {
-      userRepository.exists.mockResolvedValue(false);
-      recipeRepository.exists.mockResolvedValue(true);
+      mockUserRepository.exists.mockResolvedValue(false);
+      mockRecipeRepository.exists.mockResolvedValue(true);
 
       await expect(
         service.rate(createObjectId().toString(), {
@@ -111,8 +112,8 @@ describe("recipeRatingService", () => {
     });
 
     it("should throw NotFoundError when recipe does not exist", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(false);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(false);
 
       await expect(
         service.rate(createObjectId().toString(), {
@@ -125,9 +126,9 @@ describe("recipeRatingService", () => {
 
   describe("remove", () => {
     it("should remove an existing rating", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(true);
-      repository.delete.mockResolvedValue({
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockRecipeRatingRepository.delete.mockResolvedValue({
         _id: createObjectId(),
         user: createObjectId(),
         recipe: createObjectId(),
@@ -139,17 +140,17 @@ describe("recipeRatingService", () => {
       const recipeId = createObjectId().toString();
       await service.remove(recipeId, { initiator: init });
 
-      expect(repository.delete).toHaveBeenCalledWith({
+      expect(mockRecipeRatingRepository.delete).toHaveBeenCalledWith({
         user: init.id,
         recipe: recipeId,
       });
-      expect(bus.emit).toHaveBeenCalledWith("recipe:rated", recipeId);
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:rated", recipeId);
     });
 
     it("should throw NotFoundError when rating does not exist", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(true);
-      repository.delete.mockResolvedValue(null);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(true);
+      mockRecipeRatingRepository.delete.mockResolvedValue(null);
 
       await expect(
         service.remove(createObjectId().toString(), {
@@ -167,8 +168,8 @@ describe("recipeRatingService", () => {
     });
 
     it("should throw NotFoundError when recipe does not exist", async () => {
-      userRepository.exists.mockResolvedValue(true);
-      recipeRepository.exists.mockResolvedValue(false);
+      mockUserRepository.exists.mockResolvedValue(true);
+      mockRecipeRepository.exists.mockResolvedValue(false);
 
       await expect(
         service.remove(createObjectId().toString(), {
