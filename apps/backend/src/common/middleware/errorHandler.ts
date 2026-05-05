@@ -45,6 +45,26 @@ function isFastifyBodyError(error: unknown): boolean {
   );
 }
 
+export type FastifyValidationError = FastifyError & {
+  validation: {
+    keyword: string;
+    instancePath: string;
+    message: string;
+  }[];
+};
+
+function isFastifyValidationError(
+  error: unknown,
+): error is FastifyValidationError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof (error as { code: string }).code === "string" &&
+    (error as { code: string }).code.startsWith("FST_ERR_VALIDATION")
+  );
+}
+
 interface ErrorResponse {
   error: string;
   code: string;
@@ -99,6 +119,21 @@ export function errorHandler(
           error.code ?? "INTERNAL_SERVER",
         ),
       );
+    return;
+  }
+
+  if (isFastifyValidationError(error)) {
+    reply.status(400).send(
+      buildErrorResponse(
+        400,
+        "Validation error",
+        "VALIDATION_ERROR",
+        error.validation.map(({ message, instancePath }) => ({
+          message,
+          field: instancePath.split("/").pop(),
+        })),
+      ),
+    );
     return;
   }
 
