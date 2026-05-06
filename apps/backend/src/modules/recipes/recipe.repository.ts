@@ -99,7 +99,7 @@ export function buildSearchPipeline({
       $match: {
         ...byVisibility(initiator),
         ...(search && { $text: { $search: search } }),
-        ...(categoryId && { category: categoryId }),
+        ...(categoryId && { category: toObjectId(categoryId) }),
         ...(difficulty && { difficulty }),
       },
     },
