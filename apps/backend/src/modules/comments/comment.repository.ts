@@ -1,5 +1,4 @@
 import type { RequireKeys } from "@recipes/shared";
-import type { PipelineStage } from "mongoose";
 import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
 import { BaseRepository } from "@/common/base.repository.js";
 import type {
@@ -7,13 +6,8 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toObjectId } from "@/common/utils/mongo.js";
-import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
-import {
-  extractTotalCountResult,
-  withPagination,
-  withSort,
-  withTotalCount,
-} from "@/common/utils/mongoose.aggregation.js";
+import type { PaginatedStageResult } from "@/common/utils/stages.js";
+import stages, { extractPaginatedResult } from "@/common/utils/stages.js";
 import {
   byVisibility,
   withAuthor,
@@ -46,48 +40,52 @@ export class CommentRepository extends BaseRepository<
     recipeId: string,
     { query, initiator }: QueryMethodParams,
   ): Promise<[CommentDocumentPopulated[], number]> {
-    const result = await this.aggregate<
-      WithTotalCountResult<CommentDocumentPopulated>
-    >([
-      {
-        $match: {
-          recipe: toObjectId(recipeId),
-        },
-      },
-      { $unset: "__v" },
-      ...withAuthor(),
-      ...withRecipe(initiator),
-      ...withTotalCount(
-        ...withSort("-createdAt"),
-        ...withPagination(query.page, query.limit),
-      ),
-    ]);
+    const pipeline = [
+      stages.match<CommentDocument>({
+        recipe: toObjectId(recipeId),
+      }),
+      stages.unset<CommentDocument>("__v"),
+      withAuthor(),
+      withRecipe(initiator),
+      stages.paginated({
+        sort: "-createdAt",
+        page: query.page,
+        limit: query.limit,
+      }),
+    ].flat();
 
-    return extractTotalCountResult(result);
+    const result =
+      await this.aggregate<PaginatedStageResult<CommentDocumentPopulated>>(
+        pipeline,
+      );
+
+    return extractPaginatedResult(result);
   }
 
   async findByAuthor(
     authorId: string,
     { query, initiator }: QueryMethodParams,
   ): Promise<[CommentDocumentPopulated[], number]> {
-    const result = await this.aggregate<
-      WithTotalCountResult<CommentDocumentPopulated>
-    >([
-      {
-        $match: {
-          author: toObjectId(authorId),
-        },
-      },
-      { $unset: "__v" },
-      ...withAuthor(),
-      ...withRecipe(initiator),
-      ...withTotalCount(
-        ...withSort("-createdAt"),
-        ...withPagination(query.page, query.limit),
-      ),
-    ]);
+    const pipeline = [
+      stages.match<CommentDocument>({
+        author: toObjectId(authorId),
+      }),
+      stages.unset<CommentDocument>("__v"),
+      withAuthor(),
+      withRecipe(initiator),
+      stages.paginated({
+        sort: "-createdAt",
+        page: query.page,
+        limit: query.limit,
+      }),
+    ].flat();
 
-    return extractTotalCountResult(result);
+    const result =
+      await this.aggregate<PaginatedStageResult<CommentDocumentPopulated>>(
+        pipeline,
+      );
+
+    return extractPaginatedResult(result);
   }
 
   protected override getDefaultPopulate() {
@@ -98,31 +96,23 @@ export class CommentRepository extends BaseRepository<
   }
 }
 
-function withRecipe(
-  initiator: OptionalInitiator,
-): PipelineStage.FacetPipelineStage[] {
-  return [
+function withRecipe(initiator: OptionalInitiator) {
+  return stages.lookup(
     {
-      $lookup: {
-        from: recipesCollectionName,
-        localField: "recipe",
-        foreignField: "_id",
-        pipeline: [
-          {
-            $match: {
-              ...byVisibility(initiator),
-            },
-          },
-          {
-            $project: {
-              _id: 1,
-              title: 1,
-            },
-          },
-        ],
-        as: "recipe",
-      },
+      from: recipesCollectionName,
+      localField: "recipe",
+      foreignField: "_id",
+      pipeline: [
+        stages.match<RecipeDocument>({
+          ...byVisibility(initiator),
+        }),
+        stages.project({
+          _id: 1,
+          title: 1,
+        }),
+      ],
+      as: "recipe",
     },
-    { $unwind: { path: "$recipe" } },
-  ];
+    { required: true },
+  );
 }

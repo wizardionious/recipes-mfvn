@@ -1,15 +1,10 @@
 import type { RequireKeys, ReviewQuery } from "@recipes/shared";
-import type { PipelineStage, QueryFilter } from "mongoose";
+import type { QueryFilter } from "mongoose";
 import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
 import { BaseRepository } from "@/common/base.repository.js";
 import type { QueryMethodParams } from "@/common/types/methods.js";
-import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
-import {
-  extractTotalCountResult,
-  withPagination,
-  withSort,
-  withTotalCount,
-} from "@/common/utils/mongoose.aggregation.js";
+import type { PaginatedStageResult } from "@/common/utils/stages.js";
+import stages, { extractPaginatedResult } from "@/common/utils/stages.js";
 import type { UserDocument } from "@/modules/users/user.model.js";
 import { usersCollectionName } from "@/modules/users/user.model.js";
 import type {
@@ -40,15 +35,15 @@ export class ReviewRepository extends BaseRepository<
   ReviewDefaultPopulate
 > {
   async findFeatured(limit: number): Promise<ReviewDocumentPopulated[]> {
-    const result = await this.aggregate<ReviewDocumentPopulated>([
-      {
-        $match: { isFeatured: true },
-      },
-      { $unset: "__v" },
-      ...withAuthor(),
-      ...withSort("-createdAt"),
-      { $limit: limit },
-    ]);
+    const pipeline = [
+      stages.match<ReviewDocument>({ isFeatured: true }),
+      stages.unset<ReviewDocument>("__v"),
+      withAuthor(),
+      stages.sort("-createdAt"),
+      stages.limit(limit),
+    ].flat();
+
+    const result = await this.aggregate<ReviewDocumentPopulated>(pipeline);
 
     return result;
   }
@@ -63,35 +58,35 @@ export class ReviewRepository extends BaseRepository<
       match.isFeatured = query.isFeatured;
     }
 
-    const result = await this.aggregate<
-      WithTotalCountResult<ReviewDocumentPopulated>
-    >([
-      { $match: match },
-      { $unset: "__v" },
-      ...withAuthor(),
-      ...withTotalCount(
-        ...withSort(query.sort),
-        ...withPagination(query.page, query.limit),
-      ),
-    ]);
+    const pipeline = [
+      stages.match(match),
+      stages.unset<ReviewDocument>("__v"),
+      withAuthor(),
+      stages.paginated({
+        sort: query.sort,
+        page: query.page,
+        limit: query.limit,
+      }),
+    ].flat();
 
-    return extractTotalCountResult(result);
+    const result =
+      await this.aggregate<PaginatedStageResult<ReviewDocumentPopulated>>(
+        pipeline,
+      );
+
+    return extractPaginatedResult(result);
   }
 
   async aggregateStats(): Promise<ReviewStats> {
     const result = await this.aggregate<ReviewStats>([
-      {
-        $group: {
-          _id: null,
-          totalReviews: { $sum: 1 },
-          averageRating: { $avg: "$rating" },
-          happyCooksCount: {
-            $sum: {
-              $cond: [{ $gte: ["$rating", 4] }, 1, 0],
-            },
-          },
+      stages.group({
+        _id: null,
+        totalReviews: { $sum: 1 },
+        averageRating: { $avg: "$rating" },
+        happyCooksCount: {
+          $sum: stages.cond({ $gte: ["$rating", 4] }, 1, 0),
         },
-      },
+      }),
     ]);
 
     const [stats] = result;
@@ -111,25 +106,23 @@ export class ReviewRepository extends BaseRepository<
   }
 }
 
-function withAuthor(): PipelineStage.FacetPipelineStage[] {
-  return [
+function withAuthor() {
+  return stages.lookup(
     {
-      $lookup: {
-        from: usersCollectionName,
-        localField: "author",
-        foreignField: "_id",
-        pipeline: [
-          {
-            $project: {
-              _id: 1,
-              name: 1,
-              email: 1,
-            },
-          },
-        ],
-        as: "author",
-      },
+      from: usersCollectionName,
+      localField: "author",
+      foreignField: "_id",
+      pipeline: [
+        stages.project({
+          _id: 1,
+          name: 1,
+          email: 1,
+        }),
+      ],
+      as: "author",
     },
-    { $unwind: { path: "$author" } },
-  ];
+    {
+      required: true,
+    },
+  );
 }

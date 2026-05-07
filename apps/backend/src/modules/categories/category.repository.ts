@@ -5,13 +5,8 @@ import type {
 } from "@recipes/shared";
 import type { CreateInput, UpdateInput } from "@/common/base.repository.js";
 import { BaseRepository } from "@/common/base.repository.js";
-import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
-import {
-  extractTotalCountResult,
-  withPagination,
-  withSort,
-  withTotalCount,
-} from "@/common/utils/mongoose.aggregation.js";
+import type { PaginatedStageResult } from "@/common/utils/stages.js";
+import stages, { extractPaginatedResult } from "@/common/utils/stages.js";
 import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
 import type { CategoryDocument } from "./category.model.js";
 
@@ -29,25 +24,27 @@ export class CategoryRepository extends BaseRepository<
   async findMany(
     query: CategoryQuery,
   ): Promise<[Array<CategoryDocument & CategoryComputed>, number]> {
-    const result = await this.aggregate<
-      WithTotalCountResult<CategoryDocument & CategoryComputed>
-    >([
-      {
-        $lookup: {
-          from: recipesCollectionName,
-          localField: "_id",
-          foreignField: "category",
-          as: "recipes",
-        },
-      },
-      { $addFields: { recipeCount: { $size: "$recipes" } } },
-      { $project: { recipes: 0 } },
-      ...withTotalCount(
-        ...withSort(query.sort),
-        ...withPagination(query.page, query.limit),
-      ),
-    ]);
+    const pipeline = [
+      stages.lookup({
+        from: recipesCollectionName,
+        localField: "_id",
+        foreignField: "category",
+        as: "recipes",
+      }),
+      stages.addFields({ recipeCount: { $size: "$recipes" } }),
+      stages.project({ recipes: 0 }),
+      stages.paginated({
+        sort: query.sort,
+        page: query.page,
+        limit: query.limit,
+      }),
+    ].flat();
 
-    return extractTotalCountResult(result);
+    const result =
+      await this.aggregate<
+        PaginatedStageResult<CategoryDocument & CategoryComputed>
+      >(pipeline);
+
+    return extractPaginatedResult(result);
   }
 }

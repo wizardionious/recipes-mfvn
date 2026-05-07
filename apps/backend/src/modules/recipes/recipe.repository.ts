@@ -8,13 +8,8 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toObjectId } from "@/common/utils/mongo.js";
-import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
-import {
-  extractTotalCountResult,
-  withPagination,
-  withSort,
-  withTotalCount,
-} from "@/common/utils/mongoose.aggregation.js";
+import type { PaginatedStageResult } from "@/common/utils/stages.js";
+import stages, { extractPaginatedResult } from "@/common/utils/stages.js";
 import type { CategoryDocument } from "@/modules/categories/category.model.js";
 import type { UserDocument } from "@/modules/users/user.model.js";
 import {
@@ -62,10 +57,10 @@ export class RecipeRepository extends BaseRepository<
     [Array<RecipeDocumentPopulated & RecipeComputed>, number]
   > {
     const result = await this.aggregate<
-      WithTotalCountResult<RecipeDocumentPopulated & RecipeComputed>
+      PaginatedStageResult<RecipeDocumentPopulated & RecipeComputed>
     >(buildSearchPipeline({ query, initiator }));
 
-    return extractTotalCountResult(result);
+    return extractPaginatedResult(result);
   }
 
   async aggregateById(
@@ -90,37 +85,36 @@ export class RecipeRepository extends BaseRepository<
 export function buildSearchPipeline({
   query,
   initiator,
-}: QueryMethodParams<RecipeQuery>): PipelineStage[] {
+}: QueryMethodParams<RecipeQuery>) {
   const { page, limit, sort, isFavorited, search, categoryId, difficulty } =
     query;
 
   return [
-    {
-      $match: {
-        ...byVisibility(initiator),
-        ...(search && { $text: { $search: search } }),
-        ...(categoryId && { category: toObjectId(categoryId) }),
-        ...(difficulty && { difficulty }),
-      },
-    },
-    { $unset: "__v" },
+    stages.match<RecipeDocument>({
+      ...byVisibility(initiator),
+      ...(search && { $text: { $search: search } }),
+      ...(categoryId && { category: toObjectId(categoryId) }),
+      ...(difficulty && { difficulty }),
+    }),
+    stages.unset<RecipeDocument>("__v"),
 
-    ...withFavorited(initiator.id),
-    ...withUserRating(initiator.id),
-    ...withAverageRating(),
-    {
-      $match: {
-        ...(isFavorited !== undefined && { isFavorited }),
-      },
-    },
+    withFavorited(initiator.id),
+    withUserRating(initiator.id),
+    withAverageRating(),
+    stages.match<RecipeDocument>({
+      ...(isFavorited !== undefined && { isFavorited }),
+    }),
 
-    ...withTotalCount(
-      ...withSort(sort),
-      ...withPagination(page, limit),
+    stages.paginated(
+      {
+        sort,
+        page,
+        limit,
+      },
       ...withCategories(),
       ...withAuthor(),
     ),
-  ];
+  ].flat();
 }
 
 export function buildFindByIdPipeline(
@@ -128,17 +122,15 @@ export function buildFindByIdPipeline(
   { initiator }: InitiatedMethodParams<OptionalInitiator>,
 ): PipelineStage[] {
   return [
-    {
-      $match: {
-        _id: toObjectId(id),
-        ...byVisibility(initiator),
-      },
-    },
+    stages.match<RecipeDocument>({
+      _id: toObjectId(id),
+      ...byVisibility(initiator),
+    }),
     { $unset: "__v" },
-    ...withCategories(),
-    ...withAuthor(),
-    ...withFavorited(initiator.id),
-    ...withUserRating(initiator.id),
-    ...withAverageRating(),
-  ];
+    withCategories(),
+    withAuthor(),
+    withFavorited(initiator.id),
+    withUserRating(initiator.id),
+    withAverageRating(),
+  ].flat();
 }

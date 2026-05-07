@@ -7,13 +7,8 @@ import type {
   QueryMethodParams,
 } from "@/common/types/methods.js";
 import { toObjectId } from "@/common/utils/mongo.js";
-import type { WithTotalCountResult } from "@/common/utils/mongoose.aggregation.js";
-import {
-  extractTotalCountResult,
-  withPagination,
-  withSort,
-  withTotalCount,
-} from "@/common/utils/mongoose.aggregation.js";
+import type { PaginatedStageResult } from "@/common/utils/stages.js";
+import stages, { extractPaginatedResult } from "@/common/utils/stages.js";
 import {
   byVisibility,
   withAuthor,
@@ -21,7 +16,10 @@ import {
   withCategories,
   withUserRating,
 } from "@/modules/recipes/recipe.aggregation.js";
-import type { RecipeDocumentPopulated } from "@/modules/recipes/recipe.model.js";
+import type {
+  RecipeDocument,
+  RecipeDocumentPopulated,
+} from "@/modules/recipes/recipe.model.js";
 import { recipesCollectionName } from "@/modules/recipes/recipe.model.js";
 import type { FavoriteDocument } from "./favorite.model.js";
 
@@ -40,24 +38,27 @@ export class FavoriteRepository extends BaseRepository<
     userId: string,
     { query, initiator }: QueryMethodParams,
   ): Promise<[Array<RecipeDocumentPopulated & RecipeComputed>, number]> {
-    const result = await this.aggregate<
-      WithTotalCountResult<{ recipe: RecipeDocumentPopulated & RecipeComputed }>
-    >([
-      {
-        $match: {
-          user: toObjectId(userId),
-        },
-      },
-      { $unset: ["__v", "user"] },
+    const pipeline = [
+      stages.match<FavoriteDocument>({
+        user: toObjectId(userId),
+      }),
+      stages.unset<FavoriteDocument>("__v", "user"),
+      withRecipe(initiator),
+      stages.paginated({
+        sort: "-createdAt",
+        page: query.page,
+        limit: query.limit,
+      }),
+    ].flat();
 
-      ...withRecipe(initiator),
-      ...withTotalCount(
-        ...withSort("-createdAt"),
-        ...withPagination(query.page, query.limit),
-      ),
-    ]);
+    const result =
+      await this.aggregate<
+        PaginatedStageResult<{
+          recipe: RecipeDocumentPopulated & RecipeComputed;
+        }>
+      >(pipeline);
 
-    const [favorites, total] = extractTotalCountResult(result);
+    const [favorites, total] = extractPaginatedResult(result);
     const recipes = favorites
       .map((fav) => fav.recipe)
       .filter((recipe) => recipe != null);
@@ -69,27 +70,23 @@ export class FavoriteRepository extends BaseRepository<
 function withRecipe(
   initiator: OptionalInitiator,
 ): PipelineStage.FacetPipelineStage[] {
-  return [
+  return stages.lookup(
     {
-      $lookup: {
-        from: recipesCollectionName,
-        localField: "recipe",
-        foreignField: "_id",
-        pipeline: [
-          {
-            $match: {
-              ...byVisibility(initiator),
-            },
-          },
-          { $unset: "__v" },
-          ...withCategories(),
-          ...withAuthor(),
-          ...withUserRating(initiator.id),
-          ...withAverageRating(),
-        ],
-        as: "recipe",
-      },
+      from: recipesCollectionName,
+      localField: "recipe",
+      foreignField: "_id",
+      pipeline: [
+        stages.match<RecipeDocument>({
+          ...byVisibility(initiator),
+        }),
+        stages.unset<RecipeDocument>("__v"),
+        withCategories(),
+        withAuthor(),
+        withUserRating(initiator.id),
+        withAverageRating(),
+      ].flat(),
+      as: "recipe",
     },
-    { $unwind: { path: "$recipe" } },
-  ];
+    { required: true },
+  );
 }

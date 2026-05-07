@@ -23,5 +23,8 @@
     "test:watch": "vitest watch",
     "test:ui": "vitest --ui --coverage",
     "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
   }
 }
