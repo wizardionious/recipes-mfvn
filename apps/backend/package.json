@@ -16,7 +16,9 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest watch",
-    "test:ui": "vitest --ui --coverage"
+    "test:ui": "vitest --ui --coverage",
+    "seed": "tsx src/seed/index.ts",
+    "seed:clear": "tsx src/seed/index.ts --clear"
   },
   "keywords": [],
   "author": "Artem Levchenko",
