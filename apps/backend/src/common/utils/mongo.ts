@@ -55,6 +55,10 @@ export function toRecipe<T extends RecipeDocument>(
     cookingTime: doc.cookingTime,
     servings: doc.servings,
     isPublic: doc.isPublic,
+    image: {
+      ...doc.image,
+      alt: doc.image.alt ?? doc.title,
+    },
     isFavorited,
     userRating: doc.userRating ?? null,
     averageRating: doc.averageRating ?? null,

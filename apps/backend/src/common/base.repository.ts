@@ -1,4 +1,4 @@
-import type { Prettify } from "@recipes/shared";
+import type { DeepPartialObject, Prettify } from "@recipes/shared";
 import type {
   HydratedDocument,
   Model,
@@ -43,7 +43,7 @@ export type RefsForInput<T> = Prettify<
 export type CreateInput<T extends { _id: Types.ObjectId }> = Partial<
   RefsForInput<T>
 >;
-export type UpdateInput<T extends { _id: Types.ObjectId }> = Partial<
+export type UpdateInput<T extends { _id: Types.ObjectId }> = DeepPartialObject<
   Omit<RefsForInput<T>, "_id">
 >;
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { categorySummarySchema } from "../categories/category.schema.js";
+import { imageSchema } from "../common/image.schema.js";
 import {
   createSortSchema,
   paginationQuerySchema,
@@ -22,6 +23,7 @@ export const createRecipeSchema = z.object({
   cookingTime: minutesSchema,
   servings: z.number().int().min(1),
   isPublic: z.boolean().default(true),
+  image: imageSchema,
 });
 
 export const updateRecipeSchema = createRecipeSchema.partial();

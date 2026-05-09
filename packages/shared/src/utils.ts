@@ -39,3 +39,9 @@ export type OptionalKeys<T, K extends keyof T> = Prettify<
 export type RequireKeys<T, K extends keyof T> = Prettify<
   Omit<T, K> & Required<Pick<T, K>>
 >;
+
+export type DeepPartialObject<T> = {
+  [P in keyof T]?: T[P] extends Record<string, unknown>
+    ? DeepPartialObject<T[P]>
+    : T[P];
+};

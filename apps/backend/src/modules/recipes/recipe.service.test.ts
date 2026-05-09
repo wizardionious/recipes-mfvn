@@ -259,6 +259,7 @@ describe("recipeService", () => {
       cookingTime: 20 as Minutes,
       servings: 2,
       isPublic: true,
+      image: { url: "https://example.com/image.jpg" },
     };
 
     it("should create and return a recipe", async () => {

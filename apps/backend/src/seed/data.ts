@@ -21,6 +21,7 @@ export interface SeedRecipe {
   cookingTime: number;
   servings: number;
   isPublic: boolean;
+  image: { url: string };
   ingredients: { name: string; quantity: number; unit: string }[];
   instructions: string[];
 }
@@ -136,6 +137,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 25,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "all-purpose flour", quantity: 200, unit: "g" },
       { name: "granulated sugar", quantity: 2, unit: "tbsp" },
@@ -166,6 +170,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 15,
     servings: 2,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "sourdough bread slices", quantity: 2, unit: "pcs" },
       { name: "ripe avocado", quantity: 1, unit: "pcs" },
@@ -194,6 +201,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 35,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1608039829572-78524f79c4c7?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "English muffins", quantity: 2, unit: "pcs" },
       { name: "Canadian bacon slices", quantity: 4, unit: "pcs" },
@@ -224,6 +234,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 10,
     servings: 1,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1510693206972-df098062cb71?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "large eggs", quantity: 3, unit: "pcs" },
       { name: "unsalted butter", quantity: 1, unit: "tbsp" },
@@ -251,6 +264,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 20,
     servings: 2,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "chicken breasts", quantity: 2, unit: "pcs" },
       { name: "romaine lettuce hearts", quantity: 2, unit: "pcs" },
@@ -280,6 +296,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 35,
     servings: 2,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1547592166-23acbe346499?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "sourdough bread slices", quantity: 4, unit: "pcs" },
       { name: "sharp cheddar cheese, sliced", quantity: 100, unit: "g" },
@@ -314,6 +333,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 15,
     servings: 1,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1553909489-cd47e3b4430f?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "white bread slices, toasted", quantity: 3, unit: "pcs" },
       { name: "roasted turkey breast, sliced", quantity: 150, unit: "g" },
@@ -344,6 +366,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 25,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1612874742237-6526221588e3?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "spaghetti", quantity: 400, unit: "g" },
       { name: "pancetta, diced", quantity: 200, unit: "g" },
@@ -372,6 +397,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 25,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "salmon fillets, skin-on", quantity: 4, unit: "pcs" },
       { name: "unsalted butter", quantity: 100, unit: "g" },
@@ -400,6 +428,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 30,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "ground beef", quantity: 500, unit: "g" },
       { name: "taco shells", quantity: 12, unit: "pcs" },
@@ -434,6 +465,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 20,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "chicken breast, sliced", quantity: 500, unit: "g" },
       { name: "red bell pepper, sliced", quantity: 1, unit: "pcs" },
@@ -468,6 +502,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 35,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "ground beef, 80/20", quantity: 600, unit: "g" },
       { name: "brioche buns", quantity: 4, unit: "pcs" },
@@ -503,6 +540,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 60,
     servings: 2,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "pizza dough", quantity: 500, unit: "g" },
       { name: "fresh mozzarella, torn", quantity: 200, unit: "g" },
@@ -532,6 +572,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 50,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "chicken thighs, cubed", quantity: 800, unit: "g" },
       { name: "plain yogurt", quantity: 200, unit: "g" },
@@ -570,6 +613,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 90,
     servings: 6,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "beef tenderloin", quantity: 1, unit: "kg" },
       { name: "puff pastry", quantity: 500, unit: "g" },
@@ -603,6 +649,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 30,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "dark chocolate, 70%", quantity: 200, unit: "g" },
       { name: "unsalted butter", quantity: 100, unit: "g" },
@@ -635,6 +684,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 40,
     servings: 8,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "mascarpone cheese", quantity: 500, unit: "g" },
       { name: "large eggs, separated", quantity: 6, unit: "pcs" },
@@ -665,6 +717,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 90,
     servings: 8,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "Granny Smith apples", quantity: 6, unit: "pcs" },
       { name: "all-purpose flour", quantity: 300, unit: "g" },
@@ -699,6 +754,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 25,
     servings: 24,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1499636138143-bd649043ea52?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "all-purpose flour", quantity: 280, unit: "g" },
       { name: "unsalted butter, softened", quantity: 225, unit: "g" },
@@ -730,6 +788,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 10,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "ripe avocados", quantity: 3, unit: "pcs" },
       { name: "lime, juiced", quantity: 1, unit: "pcs" },
@@ -760,6 +821,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 15,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1572695157363-bc31c5dd3c8b?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "baguette, sliced", quantity: 1, unit: "pcs" },
       { name: "ripe tomatoes, diced", quantity: 4, unit: "pcs" },
@@ -788,6 +852,9 @@ export const seedRecipes: SeedRecipe[] = [
     cookingTime: 5,
     servings: 1,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=800&h=600&fit=crop",
+    },
     ingredients: [
       { name: "fresh mint leaves", quantity: 10, unit: "pcs" },
       { name: "lime, cut into wedges", quantity: 0.5, unit: "pcs" },

@@ -319,6 +319,7 @@ describe("RecipeRepository", () => {
         cookingTime: 30 as never,
         servings: 2,
         isPublic: true,
+        image: { url: "https://example.com/image.jpg" },
       });
 
       const found = await repository.findById(created._id.toString());
@@ -342,6 +343,7 @@ describe("RecipeRepository", () => {
         cookingTime: 30 as never,
         servings: 2,
         isPublic: true,
+        image: { url: "https://example.com/image.jpg" },
       });
 
       const deleted = await repository.delete(created._id.toString());

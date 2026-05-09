@@ -49,6 +49,10 @@ describe("recipeRoutes", () => {
     isPublic: true,
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
+    image: {
+      url: "https://example.com/image.jpg",
+      alt: "Test Recipe",
+    },
     isFavorited: false,
     userRating: null,
     averageRating: null,
@@ -190,6 +194,9 @@ describe("recipeRoutes", () => {
         ingredients: [{ name: "Flour", quantity: 100, unit: "g" }],
         instructions: ["Mix all ingredients together"],
         category: "507f1f77bcf86cd799439055",
+        image: {
+          url: "https://example.com/image.jpg",
+        },
         difficulty: "easy",
         cookingTime: 20,
         servings: 2,

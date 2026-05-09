@@ -111,6 +111,7 @@ async function seed(): Promise<void> {
       cookingTime: recipe.cookingTime as Minutes,
       servings: recipe.servings,
       isPublic: recipe.isPublic,
+      image: recipe.image,
     });
     recipeMap.set(recipe.title, created._id.toString());
     logger.info({ title: recipe.title }, "Recipe created");

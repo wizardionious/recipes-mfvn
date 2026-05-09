@@ -60,6 +60,7 @@ export async function createDbRecipe(
     cookingTime: Minutes;
     servings: number;
     isPublic: boolean;
+    image: { url: string; alt?: string };
   }> = {},
 ) {
   return RecipeModel.create({
@@ -73,6 +74,9 @@ export async function createDbRecipe(
     cookingTime: 30 as Minutes,
     servings: 4,
     isPublic: true,
+    image: {
+      url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop",
+    },
     ...overrides,
   });
 }

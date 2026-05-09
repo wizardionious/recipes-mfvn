@@ -109,6 +109,7 @@ export function createRecipeDoc(
     cookingTime: 30 as Minutes,
     servings: 4,
     isPublic: true,
+    image: { url: "https://example.com/image.jpg" },
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     ...overrides,
