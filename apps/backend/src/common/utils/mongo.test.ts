@@ -46,7 +46,7 @@ describe("toCategory", () => {
       name: "Desserts",
       slug: "desserts",
       description: "Sweet dishes",
-      image: { url: "https://example.com/category.jpg" },
+      image: { url: "https://example.com/category.jpg", alt: "Desserts" },
       recipeCount: 0,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
