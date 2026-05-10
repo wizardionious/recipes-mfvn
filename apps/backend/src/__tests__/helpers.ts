@@ -71,6 +71,7 @@ export function createCategoryDoc(
     name: "Test Category",
     slug: "test-category",
     description: "A test category",
+    image: { url: "https://example.com/category.jpg" },
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     ...overrides,
@@ -122,7 +123,12 @@ export function populateRecipeDoc(
 ): RecipeDocumentPopulated & RecipeComputed {
   return {
     ...recipe,
-    category: { _id: createObjectId(), name: "Italian", slug: "italian" },
+    category: {
+      _id: createObjectId(),
+      name: "Italian",
+      slug: "italian",
+      image: { url: "https://example.com/italian.jpg" },
+    },
     author: { _id: createObjectId(), name: "Chef", email: "chef@test.com" },
     isFavorited: false,
     userRating: null,

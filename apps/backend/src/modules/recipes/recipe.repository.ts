@@ -42,7 +42,7 @@ export type RecipeCreateInput = RequireKeys<
 export type RecipeUpdateInput = UpdateInput<Omit<RecipeDocument, "author">>;
 export type RecipeDefaultPopulate = {
   author: Pick<UserDocument, "_id" | "name" | "email">;
-  category: Pick<CategoryDocument, "_id" | "name" | "slug">;
+  category: Pick<CategoryDocument, "_id" | "name" | "slug" | "image">;
 };
 
 export class RecipeRepository extends BaseRepository<
@@ -78,7 +78,7 @@ export class RecipeRepository extends BaseRepository<
   protected override getDefaultPopulate() {
     return [
       { path: "author", select: "name email" },
-      { path: "category", select: "name slug" },
+      { path: "category", select: "name slug image" },
     ];
   }
 }

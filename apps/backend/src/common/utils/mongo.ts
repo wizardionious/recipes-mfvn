@@ -28,7 +28,7 @@ export function toRecipe<T extends RecipeDocument>(
   doc: Replace<
     T,
     {
-      category: Pick<CategoryDocument, "_id" | "name" | "slug">;
+      category: Pick<CategoryDocument, "_id" | "name" | "slug" | "image">;
       author: Pick<UserDocument, "_id" | "name" | "email">;
     }
   > &
@@ -45,6 +45,7 @@ export function toRecipe<T extends RecipeDocument>(
       id: doc.category._id.toString(),
       name: doc.category.name,
       slug: doc.category.slug,
+      image: doc.category.image,
     } satisfies CategorySummary,
     author: {
       id: doc.author._id.toString(),
@@ -76,6 +77,10 @@ export function toCategory(
     name: doc.name,
     slug: doc.slug,
     description: doc.description,
+    image: {
+      ...doc.image,
+      alt: doc.image.alt ?? doc.name,
+    },
     recipeCount: doc.recipeCount ?? 0,
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),

@@ -41,6 +41,9 @@ describe("recipeRoutes", () => {
       id: "507f1f77bcf86cd799439055",
       name: "Desserts",
       slug: "desserts",
+      image: {
+        url: "https://example.com/desserts.jpg",
+      },
     },
     author: { id: userId, email: "chef@test.com", name: "Chef" },
     difficulty: "easy" as const,

@@ -272,7 +272,12 @@ describe("recipeService", () => {
         createRecipeDoc({ title: "New Recipe" }),
         {
           author: { _id: authorId, name: "Chef", email: "chef@test.com" },
-          category: { _id: categoryId, name: "Italian", slug: "italian" },
+          category: {
+            _id: categoryId,
+            name: "Italian",
+            slug: "italian",
+            image: { url: "https://example.com/italian.jpg" },
+          },
         },
       );
 

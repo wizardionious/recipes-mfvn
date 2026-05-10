@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import type { CategoryWithComputed } from "@recipes/shared";
 import { RouterLink } from "vue-router";
-import { getCategoryPresentation } from "../category.presentation";
 
 const props = defineProps<{
-  category: Pick<CategoryWithComputed, "name" | "recipeCount" | "slug">;
+  category: Pick<CategoryWithComputed, "name" | "recipeCount" | "image">;
 }>();
 </script>
 
@@ -14,8 +13,8 @@ const props = defineProps<{
     class="group relative block overflow-hidden rounded-2xl shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-stone-900/15"
   >
     <img
-      :src="getCategoryPresentation(category.slug).image"
-      :alt="category.name"
+      :src="category.image.url"
+      :alt="category.image.alt ?? category.name"
       class="aspect-3/4 w-full object-cover transition-transform duration-500 group-hover:scale-105"
     />
     <div

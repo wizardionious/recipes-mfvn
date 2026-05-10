@@ -98,6 +98,7 @@ describe("CategoryRepository", () => {
         name: "Test Category",
         slug: "test-category",
         description: "Desc",
+        image: { url: "https://example.com/cat.jpg" },
       });
 
       const found = await repository.findById(created._id.toString());
@@ -111,6 +112,7 @@ describe("CategoryRepository", () => {
       const created = await repository.create({
         name: "Old Name",
         slug: "old-name",
+        image: { url: "https://example.com/old.jpg" },
       });
 
       const updated = await repository.update(created._id.toString(), {
@@ -125,6 +127,7 @@ describe("CategoryRepository", () => {
       const created = await repository.create({
         name: "To Delete",
         slug: "to-delete",
+        image: { url: "https://example.com/del.jpg" },
       });
 
       const deleted = await repository.delete(created._id.toString());

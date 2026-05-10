@@ -10,6 +10,7 @@ export interface SeedUser {
 export interface SeedCategory {
   name: string;
   description: string;
+  image: { url: string };
 }
 
 export interface SeedRecipe {
@@ -55,41 +56,105 @@ export const seedCategories: SeedCategory[] = [
     name: "American",
     description:
       "Classic American comfort food and iconic dishes from coast to coast",
+    image: {
+      url: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=520&fit=crop",
+    },
   },
   {
     name: "Italian",
     description:
       "Traditional and modern Italian cuisine from pasta to pizza and beyond",
+    image: {
+      url: "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?w=400&h=520&fit=crop",
+    },
   },
   {
     name: "Mexican",
     description:
       "Vibrant Mexican flavors with fresh ingredients, bold spices, and time-honored traditions",
+    image: {
+      url: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&h=520&fit=crop",
+    },
   },
   {
     name: "Asian",
     description:
       "Diverse Asian cuisines from fragrant stir-fries to rich, aromatic curries",
+    image: {
+      url: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=400&h=520&fit=crop",
+    },
   },
   {
     name: "French",
     description:
       "Elegant French cooking techniques and timeless classic recipes",
+    image: {
+      url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=520&fit=crop",
+    },
   },
   {
     name: "Desserts",
     description:
       "Sweet treats, baked goods, and indulgent finales to complete any meal",
+    image: {
+      url: "https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1364&fit=crop",
+    },
   },
   {
     name: "Appetizers",
     description:
       "Small plates, starters, and snacks to whet the appetite before the main event",
+    image: {
+      url: "https://images.unsplash.com/photo-1541014741259-de529411b96a?w=400&h=520&fit=crop",
+    },
   },
   {
     name: "Beverages",
     description:
       "Refreshing drinks, cocktails, smoothies, and hot beverages for every mood",
+    image: {
+      url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=520&fit=crop",
+    },
+  },
+  {
+    name: "Soups",
+    description:
+      "Hearty broths, creamy bisques, and nourishing bowls to warm the soul",
+    image: {
+      url: "https://images.unsplash.com/photo-1604152135912-04a022e23696?w=400&h=520&fit=crop",
+    },
+  },
+  {
+    name: "Salads",
+    description:
+      "Fresh, crisp, and vibrant salads from simple greens to loaded grain bowls",
+    image: {
+      url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=520&fit=crop",
+    },
+  },
+  {
+    name: "Pasta",
+    description:
+      "All things pasta — from classic spaghetti to inventive modern creations",
+    image: {
+      url: "https://images.unsplash.com/photo-1556761223-4c4282c73f77?w=420&h=520&fit=crop",
+    },
+  },
+  {
+    name: "Snacks",
+    description:
+      "Bite-sized treats, finger foods, and quick nibbles for any time of day",
+    image: {
+      url: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&h=520&fit=crop",
+    },
+  },
+  {
+    name: "Meat",
+    description:
+      "From tender steaks to slow-cooked roasts, the best of meat and poultry",
+    image: {
+      url: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=400&h=520&fit=crop",
+    },
   },
 ];
 

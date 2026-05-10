@@ -125,12 +125,16 @@ describe("categoryService", () => {
       mockCategoryRepository.create.mockResolvedValue(doc);
 
       const result = await service.create({
-        data: { name: "New Category" },
+        data: {
+          name: "New Category",
+          image: { url: "https://example.com/cat.jpg" },
+        },
         initiator: initiator(),
       });
 
       expect(mockCategoryRepository.create).toHaveBeenCalledWith({
         name: "New Category",
+        image: { url: "https://example.com/cat.jpg" },
       });
       expect(result.name).toBe("New Category");
       expect(result.slug).toBe("new-category");

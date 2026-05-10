@@ -37,7 +37,7 @@ export interface RecipeDocumentPopulated
   extends Replace<
     RecipeDocument,
     {
-      category: Pick<CategoryDocument, "_id" | "name" | "slug">;
+      category: Pick<CategoryDocument, "_id" | "name" | "slug" | "image">;
       author: Pick<UserDocument, "_id" | "name" | "email">;
     }
   > {}

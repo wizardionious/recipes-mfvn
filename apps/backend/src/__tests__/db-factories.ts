@@ -37,6 +37,7 @@ export async function createDbCategory(
     name: string;
     slug: string;
     description: string;
+    image: { url: string };
   }> = {},
 ) {
   const name = overrides.name ?? unique("category");
@@ -44,6 +45,7 @@ export async function createDbCategory(
     name,
     slug: overrides.slug ?? name.toLowerCase().replace(/\s+/g, "-"),
     description: "A test category",
+    image: { url: "https://example.com/category.jpg" },
     ...overrides,
   });
 }

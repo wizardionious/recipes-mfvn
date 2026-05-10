@@ -25,6 +25,9 @@ describe("categoryRoutes", () => {
     name: "Desserts",
     slug: "desserts",
     description: "Sweet dishes",
+    image: {
+      url: "https://example.com/desserts.jpg",
+    },
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
   };
@@ -95,13 +98,19 @@ describe("categoryRoutes", () => {
       const response = await app.inject({
         method: "POST",
         url: "/api/categories",
-        payload: { name: "Desserts" },
+        payload: {
+          name: "Desserts",
+          image: { url: "https://example.com/desserts.jpg" },
+        },
         headers: authHeader(testAdminJwtPayload),
       });
 
       expect(response.statusCode).toBe(201);
       expect(mockCategoryService.create).toHaveBeenCalledWith({
-        data: { name: "Desserts" },
+        data: {
+          name: "Desserts",
+          image: { url: "https://example.com/desserts.jpg" },
+        },
         initiator: {
           id: testAdminJwtPayload.userId,
           role: testAdminJwtPayload.role,
