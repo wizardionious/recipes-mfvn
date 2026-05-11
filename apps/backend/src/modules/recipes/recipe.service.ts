@@ -18,12 +18,12 @@ import type {
   QueryMethodParams,
   UpdateMethodParams,
 } from "@/common/types/methods.js";
-import { toRecipe } from "@/common/utils/mongo.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type { CategoryRepository } from "@/modules/categories/category.repository.js";
 import type { FavoriteRepository } from "@/modules/favorites/favorite.repository.js";
 import { recipeCache } from "@/modules/recipes/recipe.cache.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
+import { toRecipe } from "./recipe.mapper.js";
 import type { RecipeRepository } from "./recipe.repository.js";
 
 export interface RecipeService {

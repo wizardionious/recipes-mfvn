@@ -10,9 +10,9 @@ import type {
   DefaultInitiator,
   QueryMethodParams,
 } from "@/common/types/methods.js";
-import { toUser } from "@/common/utils/mongo.js";
 import type { CommentService } from "@/modules/comments/comment.service.js";
 import type { FavoriteService } from "@/modules/favorites/favorite.service.js";
+import { toUser } from "./user.mapper.js";
 import type { UserRepository } from "./user.repository.js";
 
 export interface UserService {

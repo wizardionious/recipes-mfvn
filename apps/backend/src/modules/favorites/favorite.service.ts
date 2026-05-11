@@ -9,8 +9,8 @@ import type {
   InitiatedMethodParams,
   QueryMethodParams,
 } from "@/common/types/methods.js";
-import { toRecipe } from "@/common/utils/mongo.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
+import { toRecipe } from "@/modules/recipes/recipe.mapper.js";
 import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
 import type { FavoriteRepository } from "./favorite.repository.js";

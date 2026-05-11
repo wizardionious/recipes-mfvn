@@ -14,10 +14,10 @@ import type {
   DeleteMethodParams,
   QueryMethodParams,
 } from "@/common/types/methods.js";
-import { toCategory } from "@/common/utils/mongo.js";
 import { categoryCache } from "@/modules/categories/category.cache.js";
 import type { CategoryRepository } from "@/modules/categories/category.repository.js";
 import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
+import { toCategory } from "./category.mapper.js";
 
 export interface CategoryService {
   findAll(

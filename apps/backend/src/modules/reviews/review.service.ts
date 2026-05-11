@@ -20,9 +20,9 @@ import type {
   QueryMethodParams,
   UpdateMethodParams,
 } from "@/common/types/methods.js";
-import { toReview } from "@/common/utils/mongo.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
+import { toReview } from "./review.mapper.js";
 import type { ReviewRepository } from "./review.repository.js";
 
 export interface ReviewService {

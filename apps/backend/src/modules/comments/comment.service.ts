@@ -6,10 +6,10 @@ import type {
   DeleteMethodParams,
   QueryMethodParams,
 } from "@/common/types/methods.js";
-import { toComment } from "@/common/utils/mongo.js";
 import { assertExists, assertValidId } from "@/common/utils/validation.js";
 import type { RecipeRepository } from "@/modules/recipes/recipe.repository.js";
 import type { UserRepository } from "@/modules/users/user.repository.js";
+import { toComment } from "./comment.mapper.js";
 import type { CommentRepository } from "./comment.repository.js";
 
 export interface CommentService {
@@ -51,7 +51,7 @@ export function createCommentService(
       });
 
       return withPagination(
-        comments.map((item) => toComment(item)),
+        comments.map(toComment),
         total,
         query.page,
         query.limit,
