@@ -34,7 +34,7 @@ describe("RecipeRatingRepository", () => {
 
       expect(updated.document.value).toBe(5);
       expect(updated.oldDoc).not.toBeNull();
-      expect(updated.oldDoc!.value).toBe(3);
+      expect(updated.oldDoc?.value).toBe(3);
     });
   });
 

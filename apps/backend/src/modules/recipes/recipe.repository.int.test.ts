@@ -15,7 +15,12 @@ describe("RecipeRepository", () => {
   describe("aggregateSearch", () => {
     it("should return public recipes with populated data", async () => {
       const author = await createDbUser({ name: "Chef" });
-      const category = await createDbCategory({ name: "Italian" });
+      const category = await createDbCategory({
+        name: "Italian",
+        image: {
+          url: "https://example.com/italian.jpg",
+        },
+      });
       await createDbRecipe({
         author: author._id,
         category: category._id,
@@ -33,6 +38,9 @@ describe("RecipeRepository", () => {
       expect(recipes[0]?.title).toBe("Pasta");
       expect(recipes[0]?.author.name).toBe("Chef");
       expect(recipes[0]?.category.name).toBe("Italian");
+      expect(recipes[0]?.category.image.url).toBe(
+        "https://example.com/italian.jpg",
+      );
     });
 
     it("should NOT show private recipes when unauthenticated", async () => {

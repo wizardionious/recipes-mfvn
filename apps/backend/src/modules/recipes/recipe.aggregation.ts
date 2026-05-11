@@ -32,6 +32,7 @@ export function withCategories() {
             _id: 1,
             name: 1,
             slug: 1,
+            image: 1,
           },
         },
       ],
