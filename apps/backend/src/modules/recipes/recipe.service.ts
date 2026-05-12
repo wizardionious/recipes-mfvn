@@ -152,7 +152,7 @@ export function createRecipeService(
       });
 
       await cache.deletePattern(recipeCache.keys.listPattern());
-      bus.emit("recipe:changed");
+      bus.emit("recipe:created", { recipeId: recipe._id.toHexString() });
 
       return toRecipe(recipe, false);
     },
@@ -181,7 +181,7 @@ export function createRecipeService(
         cache.delete(recipeCache.keys.byId(id)),
         cache.deletePattern(recipeCache.keys.listPattern()),
       ]);
-      bus.emit("recipe:changed");
+      bus.emit("recipe:updated", { recipeId: id });
 
       return toRecipe(updated, isFavorited);
     },
@@ -203,7 +203,7 @@ export function createRecipeService(
 
       await cache.delete(recipeCache.keys.byId(id));
       await cache.deletePattern(recipeCache.keys.listPattern());
-      bus.emit("recipe:changed");
+      bus.emit("recipe:deleted", { recipeId: id });
     },
   };
 }

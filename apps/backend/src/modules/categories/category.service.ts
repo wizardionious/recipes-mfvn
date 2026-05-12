@@ -67,7 +67,7 @@ export function createCategoryService(
       const category = await repository.create(data);
 
       await cache.deletePattern(categoryCache.keys.allPattern());
-      bus.emit("category:changed");
+      bus.emit("category:created", { categoryId: category._id.toHexString() });
 
       return toCategory(category);
     },
@@ -86,7 +86,7 @@ export function createCategoryService(
       }
 
       await cache.deletePattern(categoryCache.keys.allPattern());
-      bus.emit("category:changed");
+      bus.emit("category:deleted", { categoryId: id });
     },
   };
 }

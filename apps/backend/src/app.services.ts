@@ -1,4 +1,5 @@
 import type { CacheService } from "@/common/cache/cache.service.js";
+import { createNamespacedCache } from "@/common/cache/namespaced-cache.js";
 import type { TypedEmitter } from "@/common/events.js";
 import type { Logger } from "@/common/logger.js";
 import { createBcryptPasswordService } from "@/common/passwords/bcrypt.service.js";
@@ -34,7 +35,7 @@ import { UserRepository } from "@/modules/users/user.repository.js";
 import type { UserService } from "@/modules/users/user.service.js";
 import { createUserService } from "@/modules/users/user.service.js";
 
-export interface Services {
+export interface AppServices {
   auth: AuthService;
   user: UserService;
   recipe: RecipeService;
@@ -43,14 +44,18 @@ export interface Services {
   recipeRating: RecipeRatingService;
   category: CategoryService;
   review: ReviewService;
+
+  recipeCache: CacheService;
+  categoryCache: CacheService;
+
+  log: Logger;
 }
 
 export function createServices(
-  recipeCache: CacheService,
-  categoryCache: CacheService,
+  cache: CacheService,
   bus: TypedEmitter,
   log: Logger,
-): Services {
+): AppServices {
   const commentRepository = new CommentRepository(CommentModel);
   const categoryRepository = new CategoryRepository(CategoryModel);
   const favoriteRepository = new FavoriteRepository(FavoriteModel);
@@ -59,17 +64,22 @@ export function createServices(
   const recipeRepository = new RecipeRepository(RecipeModel);
   const reviewRepository = new ReviewRepository(ReviewModel);
 
+  const recipeCache = createNamespacedCache("recipes", cache);
+  const categoryCache = createNamespacedCache("categories", cache);
+
   const passwordService = createBcryptPasswordService(env.BCRYPT_SALT_ROUNDS);
 
   const commentService = createCommentService(
     commentRepository,
     recipeRepository,
     userRepository,
+    bus,
   );
   const favoriteService = createFavoriteService(
     favoriteRepository,
     recipeRepository,
     userRepository,
+    bus,
   );
   const userService = createUserService(
     userRepository,
@@ -108,5 +118,10 @@ export function createServices(
     recipeRating: recipeRatingService,
     category: categoryService,
     review: reviewService,
+
+    recipeCache,
+    categoryCache,
+
+    log,
   };
 }

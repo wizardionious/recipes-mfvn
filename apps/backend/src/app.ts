@@ -10,7 +10,6 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import { createCacheService } from "@/common/cache/create-cache.service.js";
-import { createNamespacedCache } from "@/common/cache/namespaced-cache.js";
 import { createEventBus } from "@/common/events.js";
 import type { Logger } from "@/common/logger.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
@@ -21,6 +20,7 @@ import { authRoutes } from "@/modules/auth/auth.routes.js";
 import { categoryRoutes } from "@/modules/categories/category.routes.js";
 import { favoriteRoutes } from "@/modules/favorites/favorite.routes.js";
 import { recipeRatingRoutes } from "@/modules/recipe-ratings/recipe-rating.routes.js";
+import { registerRecipeEventHandlers } from "@/modules/recipes/recipe.events.js";
 import { recipeRoutes } from "@/modules/recipes/recipe.routes.js";
 import { reviewRoutes } from "@/modules/reviews/review.routes.js";
 import { userRoutes } from "@/modules/users/user.routes.js";
@@ -65,13 +65,9 @@ export async function buildApp(log: Logger) {
   app.get("/health", async () => ({ status: "ok" }));
 
   const bus = createEventBus();
-  const recipeCache = createNamespacedCache("recipes", cache);
-  const categoryCache = createNamespacedCache("categories", cache);
-  const services = createServices(recipeCache, categoryCache, bus, log);
+  const services = createServices(cache, bus, log);
 
-  // Cross-service cache invalidation via events
-  bus.on("category:changed", () => recipeCache.deletePattern("*"));
-  bus.on("recipe:rated", () => recipeCache.deletePattern("*"));
+  registerRecipeEventHandlers(bus, services);
 
   // Routes
   app.register(authRoutes, {

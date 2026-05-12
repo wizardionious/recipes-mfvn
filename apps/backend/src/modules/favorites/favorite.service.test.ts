@@ -24,11 +24,15 @@ describe("favoriteService", () => {
     exists: vi.fn(),
     modelName: "User",
   };
+  const mockBus = {
+    emit: vi.fn(),
+  };
 
   const service = createFavoriteService(
     mockFavoriteRepository,
     mockRecipeRepository,
     mockUserRepository,
+    mockBus,
   );
 
   beforeEach(() => {
@@ -48,6 +52,10 @@ describe("favoriteService", () => {
       expect(mockFavoriteRepository.create).toHaveBeenCalledWith({
         user: init.id,
         recipe: recipeId,
+      });
+      expect(mockBus.emit).toHaveBeenCalledWith("favorite:created", {
+        recipeId,
+        userId: init.id,
       });
     });
 
@@ -99,6 +107,10 @@ describe("favoriteService", () => {
       expect(mockFavoriteRepository.delete).toHaveBeenCalledWith({
         user: init.id,
         recipe: recipeId,
+      });
+      expect(mockBus.emit).toHaveBeenCalledWith("favorite:deleted", {
+        recipeId,
+        userId: init.id,
       });
     });
   });

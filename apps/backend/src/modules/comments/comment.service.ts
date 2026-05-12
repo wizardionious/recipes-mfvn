@@ -1,6 +1,7 @@
 import type { Comment, CreateCommentBody, Paginated } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
 import { ForbiddenError, NotFoundError } from "@/common/errors.js";
+import type { TypedEmitter } from "@/common/events.js";
 import type {
   CreateMethodParams,
   DeleteMethodParams,
@@ -35,10 +36,13 @@ type CommentRepositoryPort = Pick<
 type RecipeRepositoryPort = Pick<RecipeRepository, "exists" | "modelName">;
 type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
 
+type TypedEmitterPort = Pick<TypedEmitter, "emit">;
+
 export function createCommentService(
   repository: CommentRepositoryPort,
   recipeRepository: RecipeRepositoryPort,
   userRepository: UserRepositoryPort,
+  bus: TypedEmitterPort,
 ): CommentService {
   return {
     findByRecipe: async (recipeId, { query, initiator }) => {
@@ -88,6 +92,11 @@ export function createCommentService(
         author: initiator.id,
       });
 
+      bus.emit("comment:created", {
+        recipeId: recipeId,
+        commentId: comment._id.toHexString(),
+      });
+
       return toComment(comment);
     },
 
@@ -107,6 +116,11 @@ export function createCommentService(
       }
 
       await repository.delete(id);
+
+      bus.emit("comment:deleted", {
+        recipeId: comment.recipe._id.toHexString(),
+        commentId: id,
+      });
     },
   };
 }

@@ -141,7 +141,9 @@ describe("categoryService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         categoryCache.keys.allPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("category:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("category:created", {
+        categoryId: doc._id.toHexString(),
+      });
     });
   });
 
@@ -160,7 +162,9 @@ describe("categoryService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         categoryCache.keys.allPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("category:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("category:deleted", {
+        categoryId: id,
+      });
     });
 
     it("should throw ConflictError when recipes exist", async () => {

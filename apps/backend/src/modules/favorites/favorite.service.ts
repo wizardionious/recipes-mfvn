@@ -4,6 +4,7 @@ import type {
   RecipeWithComputed,
 } from "@recipes/shared";
 import { withPagination } from "@recipes/shared";
+import type { TypedEmitter } from "@/common/events.js";
 import type {
   DefaultInitiator,
   InitiatedMethodParams,
@@ -41,10 +42,13 @@ type FavoriteRepositoryPort = Pick<
 type RecipeRepositoryPort = Pick<RecipeRepository, "exists" | "modelName">;
 type UserRepositoryPort = Pick<UserRepository, "exists" | "modelName">;
 
+type TypedEmitterPort = Pick<TypedEmitter, "emit">;
+
 export function createFavoriteService(
   repository: FavoriteRepositoryPort,
   recipeRepository: RecipeRepositoryPort,
   userRepository: UserRepositoryPort,
+  bus: TypedEmitterPort,
 ): FavoriteService {
   async function validateUser(id: string): Promise<void> {
     assertValidId(id, "User");
@@ -62,6 +66,11 @@ export function createFavoriteService(
       await validateRecipe(recipeId);
 
       await repository.create({ user: initiator.id, recipe: recipeId });
+      bus.emit("favorite:created", {
+        recipeId,
+        userId: initiator.id,
+      });
+
       return { favorited: true };
     },
 
@@ -70,6 +79,11 @@ export function createFavoriteService(
       await validateRecipe(recipeId);
 
       await repository.delete({ user: initiator.id, recipe: recipeId });
+      bus.emit("favorite:deleted", {
+        recipeId,
+        userId: initiator.id,
+      });
+
       return { favorited: false };
     },
 

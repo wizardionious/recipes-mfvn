@@ -300,7 +300,9 @@ describe("recipeService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:created", {
+        recipeId: populated._id.toHexString(),
+      });
     });
 
     it("should throw BadRequestError for invalid author ID", async () => {
@@ -377,7 +379,9 @@ describe("recipeService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:updated", {
+        recipeId: id,
+      });
     });
 
     it("should update recipe when user is admin", async () => {
@@ -402,7 +406,9 @@ describe("recipeService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:updated", {
+        recipeId: id,
+      });
     });
 
     it("should throw BadRequestError for invalid ID", async () => {
@@ -455,7 +461,9 @@ describe("recipeService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:deleted", {
+        recipeId: id,
+      });
     });
 
     it("should delete recipe when user is admin", async () => {
@@ -473,7 +481,9 @@ describe("recipeService", () => {
       expect(mockCache.deletePattern).toHaveBeenCalledWith(
         recipeCache.keys.listPattern(),
       );
-      expect(mockBus.emit).toHaveBeenCalledWith("recipe:changed");
+      expect(mockBus.emit).toHaveBeenCalledWith("recipe:deleted", {
+        recipeId: id,
+      });
     });
 
     it("should throw BadRequestError for invalid ID", async () => {

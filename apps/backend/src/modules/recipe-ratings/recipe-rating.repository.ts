@@ -18,7 +18,23 @@ export class RecipeRatingRepository extends BaseRepository<
   async upsert(
     filter: QueryFilter<RecipeRatingDocument>,
     value: number,
-  ): Promise<RecipeRatingDocument> {
-    return this.update(filter, { value }, { upsert: true });
+  ): Promise<{
+    document: RecipeRatingDocument;
+    oldDoc: RecipeRatingDocument | null;
+  }> {
+    const oldDoc = await this.findOne(filter);
+
+    const document = await this.model
+      .findOneAndUpdate(filter, this.castInput({ value }), {
+        upsert: true,
+        returnDocument: "after",
+        runValidators: true,
+      })
+      .lean();
+
+    return {
+      document,
+      oldDoc,
+    };
   }
 }

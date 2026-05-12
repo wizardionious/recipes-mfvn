@@ -28,11 +28,15 @@ describe("commentService", () => {
     exists: vi.fn(),
     modelName: "User",
   };
+  const mockBus = {
+    emit: vi.fn(),
+  };
 
   const service = createCommentService(
     mockCommentRepository,
     mockRecipeRepository,
     mockUserRepository,
+    mockBus,
   );
 
   beforeEach(() => {
@@ -152,6 +156,10 @@ describe("commentService", () => {
         author: init.id,
       });
       expect(result.text).toBe("Great recipe!");
+      expect(mockBus.emit).toHaveBeenCalledWith("comment:created", {
+        recipeId,
+        commentId: populated._id.toHexString(),
+      });
     });
 
     it("should throw BadRequestError for invalid recipe ID", async () => {
@@ -202,23 +210,31 @@ describe("commentService", () => {
       const comment = createCommentDoc({ author: authorId });
       mockCommentRepository.findById.mockResolvedValue(comment);
 
-      await service.delete(createObjectId().toString(), {
+      await service.delete(comment._id.toString(), {
         initiator: initiator(authorId.toString()),
       });
 
       expect(mockCommentRepository.findById).toHaveBeenCalled();
       expect(mockCommentRepository.delete).toHaveBeenCalled();
+      expect(mockBus.emit).toHaveBeenCalledWith("comment:deleted", {
+        recipeId: comment.recipe._id.toHexString(),
+        commentId: comment._id.toHexString(),
+      });
     });
 
     it("should delete comment when user is admin", async () => {
       const comment = createCommentDoc();
       mockCommentRepository.findById.mockResolvedValue(comment);
 
-      await service.delete(createObjectId().toString(), {
+      await service.delete(comment._id.toString(), {
         initiator: initiator(createObjectId().toString(), "admin"),
       });
 
       expect(mockCommentRepository.delete).toHaveBeenCalled();
+      expect(mockBus.emit).toHaveBeenCalledWith("comment:deleted", {
+        recipeId: comment.recipe._id.toHexString(),
+        commentId: comment._id.toHexString(),
+      });
     });
 
     it("should throw BadRequestError for invalid comment ID", async () => {
