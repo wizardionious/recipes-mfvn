@@ -41,9 +41,11 @@ onClickOutside(contentRef, close, { ignore: [triggerRef] });
     <slot name="trigger" />
   </AppButton>
 
-  <div v-if="isOpen" ref="contentRef" class="popover-content" :style="floatingStyles">
-    <slot :close :isOpen :toggle :open />
-  </div>
+  <Transition>
+    <div v-if="isOpen" ref="contentRef" class="popover-content" :style="floatingStyles">
+      <slot :close :isOpen :toggle :open />
+    </div>
+  </Transition>
 </template>
 
 <style lang="scss" scoped>
@@ -55,5 +57,15 @@ onClickOutside(contentRef, close, { ignore: [triggerRef] });
   border-radius: 12px;
   background-color: #ffffff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
 }
 </style>
