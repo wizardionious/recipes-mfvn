@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
 import { MenuIcon, SearchIcon, XIcon } from "@lucide/vue";
-import { nextTick, ref } from "vue";
+import { nextTick, ref, useTemplateRef } from "vue";
 import logoURL from "@/assets/Logo_MyRecipes.png";
+import AppButton from "@/components/ui/AppButton.vue";
 
 const navigationListItems = [
   {
@@ -25,8 +26,8 @@ const navigationListItems = [
 
 const isMenuOpen = ref(false);
 
-const menuButtonRef = ref<HTMLElement | null>(null);
-const menuRef = ref<HTMLElement | null>(null);
+const menuButtonRef = useTemplateRef<HTMLElement>('menuButtonRef');
+const menuRef = useTemplateRef<HTMLElement>('menuRef');
 
 const { floatingStyles } = useFloating(menuButtonRef, menuRef, {
   placement: "bottom-start",
@@ -42,7 +43,7 @@ function closeMenu() {
   isMenuOpen.value = false;
 }
 
-const searchInputRef = ref<HTMLInputElement | null>(null);
+const searchInputRef = useTemplateRef<HTMLInputElement>('searchInputRef');
 const isSearchOpen = ref(false);
 const searchQuery = ref("");
 
@@ -72,10 +73,9 @@ function submitSearch() {
 
 <template>
   <header class="app-header">
-    <button
+    <AppButton
       ref="menuButtonRef"
       type="button"
-      class="app-header__button app-header__button--menu"
       aria-label="Open menu"
       aria-haspopup="menu"
       :aria-expanded="isMenuOpen"
@@ -83,22 +83,20 @@ function submitSearch() {
       @click="toggleMenu"
     >
       <MenuIcon :size="20" aria-hidden="true" />
-    </button>
+    </AppButton>
 
     <RouterLink to="/" class="app-header__logo">
       <img class="app-header__logo-image" :src="logoURL" alt="My recipes" />
     </RouterLink>
 
-    <button
-      type="button"
-      class="app-header__button app-header__button--search"
+    <AppButton
       aria-label="Open search"
       :aria-expanded="isSearchOpen"
       aria-controls="app-header-search"
       @click="toggleSearch"
     >
       <SearchIcon :size="20" aria-hidden="true" />
-    </button>
+    </AppButton>
 
     <form
       v-if="isSearchOpen"
@@ -115,14 +113,9 @@ function submitSearch() {
         placeholder="Пошук рецепта..."
       />
 
-      <button
-        type="button"
-        class="app-header__search-close"
-        aria-label="Close search"
-        @click="closeSearch"
-      >
+      <AppButton type="button" aria-label="Close search" @click="closeSearch">
         <XIcon :size="20" aria-hidden="true" />
-      </button>
+      </AppButton>
     </form>
 
     <nav
@@ -154,36 +147,10 @@ function submitSearch() {
   height: 56px;
   display: grid;
   // Fixed side columns keep the logo visually centered between menu and search buttons.
-  grid-template-columns: 48px 1fr 48px;
+  grid-template-columns: 36px 1fr 36px;
   align-items: center;
   padding: 0 8px;
   background-color: #ffffff;
-
-  &__button {
-    width: 40px;
-    height: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background-color: transparent;
-    color: #555555;
-    cursor: pointer;
-    border-radius: 50%;
-    padding: 0;
-  }
-
-  &__button:hover {
-    background-color: #f2f2f2;
-  }
-
-  &__button--menu {
-    justify-self: start;
-  }
-
-  &__button--search {
-    justify-self: end;
-  }
 
   &__logo {
     display: flex;
@@ -245,22 +212,6 @@ function submitSearch() {
     border: 1px solid #dddddd;
     border-radius: 8px;
     font-size: 16px;
-  }
-
-  &__search-close {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 50%;
-    background-color: transparent;
-    color: #555555;
-    cursor: pointer;
-    font-size: 24px;
-    line-height: 1;
-  }
-
-  &__search-close:hover {
-    background-color: #f2f2f2;
   }
 }
 </style>
