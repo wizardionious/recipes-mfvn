@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
 import { MenuIcon, SearchIcon, XIcon } from "@lucide/vue";
 import { nextTick, ref, useTemplateRef } from "vue";
 import logoURL from "@/assets/Logo_MyRecipes.png";
 import AppButton from "@/components/ui/AppButton.vue";
+import AppPopover from "@/components/ui/AppPopover.vue";
 
 const navigationListItems = [
   {
@@ -24,26 +24,7 @@ const navigationListItems = [
   },
 ];
 
-const isMenuOpen = ref(false);
-
-const menuButtonRef = useTemplateRef<HTMLElement>('menuButtonRef');
-const menuRef = useTemplateRef<HTMLElement>('menuRef');
-
-const { floatingStyles } = useFloating(menuButtonRef, menuRef, {
-  placement: "bottom-start",
-  middleware: [offset(8), flip(), shift({ padding: 8 })],
-  whileElementsMounted: autoUpdate,
-});
-
-function toggleMenu() {
-  isMenuOpen.value = !isMenuOpen.value;
-}
-
-function closeMenu() {
-  isMenuOpen.value = false;
-}
-
-const searchInputRef = useTemplateRef<HTMLInputElement>('searchInputRef');
+const searchInputRef = useTemplateRef<HTMLInputElement>("searchInputRef");
 const isSearchOpen = ref(false);
 const searchQuery = ref("");
 
@@ -73,17 +54,25 @@ function submitSearch() {
 
 <template>
   <header class="app-header">
-    <AppButton
-      ref="menuButtonRef"
-      type="button"
-      aria-label="Open menu"
-      aria-haspopup="menu"
-      :aria-expanded="isMenuOpen"
-      aria-controls="app-header-menu"
-      @click="toggleMenu"
-    >
-      <MenuIcon :size="20" aria-hidden="true" />
-    </AppButton>
+    <AppPopover>
+      <template #trigger>
+        <MenuIcon :size="20" aria-hidden="true" />
+      </template>
+
+      <template #default="{ close }">
+        <nav aria-label="Main navigation" class="app-header__nav">
+          <RouterLink
+            v-for="item in navigationListItems"
+            :key="item.link"
+            class="app-header__menu-link"
+            :to="item.link"
+            @click="close"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </nav>
+      </template>
+    </AppPopover>
 
     <RouterLink to="/" class="app-header__logo">
       <img class="app-header__logo-image" :src="logoURL" alt="My recipes" />
@@ -117,25 +106,6 @@ function submitSearch() {
         <XIcon :size="20" aria-hidden="true" />
       </AppButton>
     </form>
-
-    <nav
-      v-if="isMenuOpen"
-      id="app-header-menu"
-      ref="menuRef"
-      class="app-header__menu"
-      :style="floatingStyles"
-      aria-label="Main navigation"
-    >
-      <RouterLink
-        v-for="item in navigationListItems"
-        :key="item.link"
-        class="app-header__menu-link"
-        :to="item.link"
-        @click="closeMenu"
-      >
-        {{ item.label }}
-      </RouterLink>
-    </nav>
   </header>
 </template>
 
@@ -152,6 +122,11 @@ function submitSearch() {
   padding: 0 8px;
   background-color: #ffffff;
 
+  &__nav {
+    display: flex;
+    flex-direction: column;
+  }
+
   &__logo {
     display: flex;
     align-items: center;
@@ -166,17 +141,6 @@ function submitSearch() {
     width: 100%;
     height: 100%;
     object-fit: contain;
-  }
-
-  &__menu {
-    z-index: 1000;
-    width: 220px;
-    display: flex;
-    flex-direction: column;
-    padding: 8px;
-    border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
   }
 
   &__menu-link {
