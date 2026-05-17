@@ -6,7 +6,7 @@ import { onClickOutside } from "@vueuse/core";
 
 const searchInputRef = useTemplateRef<HTMLInputElement>("searchInputRef");
 const searchBodyRef = useTemplateRef<HTMLFormElement>("searchBodyRef");
-const closeButtonRef = useTemplateRef<HTMLButtonElement>("closeButtonRef");
+const toggleButtonRef = useTemplateRef<HTMLButtonElement>("toggleButtonRef");
 const isOpen = ref(false);
 const query = ref("");
 
@@ -22,6 +22,8 @@ function close() {
   query.value = "";
 }
 
+const toggle = () => (isOpen.value ? close() : open());
+
 function submit() {
   const searchQuery = query.value.trim();
 
@@ -32,65 +34,75 @@ function submit() {
   console.log("Search:", searchQuery);
 }
 
-onClickOutside(searchBodyRef, close, { ignore: [closeButtonRef] });
+onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
 </script>
 
 <template>
   <AppButton
+    ref="toggleButtonRef"
     type="button"
     aria-label="Open search"
     :aria-expanded="isOpen"
     aria-controls="app-search"
-    @click="open"
+    @click="toggle"
   >
-    <SearchIcon :size="20" aria-hidden="true" />
+    <Transition mode="out-in">
+      <SearchIcon v-if="!isOpen" :size="20" aria-hidden="true" />
+      <XIcon v-else :size="20" aria-hidden="true" />
+    </Transition>
   </AppButton>
 
-  <form
-    v-if="isOpen"
-    ref="searchBodyRef"
-    id="app-search"
-    class="app-search"
-    role="search"
-    @submit.prevent="submit"
-    @keydown.esc="close"
-  >
-    <SearchIcon :size="20" aria-hidden="true" />
-    <input
-      ref="searchInputRef"
-      v-model="query"
-      class="app-search__input"
-      type="search"
-      placeholder="Пошук рецепта..."
-    />
-
-    <AppButton
-      ref="closeButtonRef"
-      type="button"
-      aria-label="Close search"
-      @click="close"
-    >
-      <XIcon :size="20" aria-hidden="true" />
-    </AppButton>
-  </form>
+  <div class="app-search">
+    <Transition name="expand-search">
+      <form
+        v-if="isOpen"
+        ref="searchBodyRef"
+        id="app-search"
+        class="app-search__form"
+        role="search"
+        @submit.prevent="submit"
+        @keydown.esc="close"
+      >
+        <SearchIcon :size="20" aria-hidden="true" />
+        <input
+          ref="searchInputRef"
+          v-model="query"
+          class="app-search__input"
+          type="search"
+          placeholder="Пошук рецепта..."
+        />
+      </form>
+    </Transition>
+  </div>
 </template>
 
 <style lang="scss" scoped>
 .app-search {
   position: absolute;
   inset: 0;
+
   z-index: 1000;
-
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
+  overflow: hidden;
   width: 100%;
   height: 100%;
-  padding: 0 12px;
+  padding-right: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  pointer-events: none;
 
-  background-color: var(--color-surface);
-  box-shadow: var(--shadow-soft);
+  &__form {
+    background-color: var(--color-surface);
+    gap: 12px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: all;
+    overflow: hidden;
+    padding: 0 8px;
+  }
 
   &__input {
     flex: 1;
@@ -100,7 +112,7 @@ onClickOutside(searchBodyRef, close, { ignore: [closeButtonRef] });
 
     border: none;
     outline: none;
-    background-color: transparent;
+    background-color: var(--color-border-soft);
 
     color: var(--color-text-body);
     font-size: 16px;
@@ -115,5 +127,25 @@ onClickOutside(searchBodyRef, close, { ignore: [closeButtonRef] });
     outline-offset: 0;
     border-radius: var(--radius-md);
   }
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: translate 0.15s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  translate: 0 -32px;
+}
+
+.expand-search-enter-active,
+.expand-search-leave-active {
+  transition: width 0.5s ease;
+}
+
+.expand-search-enter-from,
+.expand-search-leave-to {
+  width: 0px;
 }
 </style>
