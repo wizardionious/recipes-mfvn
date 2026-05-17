@@ -1,32 +1,37 @@
 <script lang="ts" setup></script>
 
 <template>
-  <button type="button" class="button">
+  <button type="button" class="app-button">
     <slot />
   </button>
 </template>
 
 <style lang="scss" scoped>
-.button {
+.app-button {
+  width: 36px;
+  height: 36px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: none;
-  background-color: transparent;
-  color: #555555;
-  cursor: pointer;
-  border-radius: 6px;
-  padding: 0.25rem 0.5rem;
-  gap: 8px;
 
-  &:has(> svg) {
-    padding: 0.5rem;
-    border-radius: 9999px;
-  }
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-round);
+
+  background-color: transparent;
+  color: var(--color-text-body);
+
+  cursor: pointer;
 
   &:hover {
-    background-color: #f2f2f2;
+    background-color: var(--color-border-soft);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
   }
 }
 </style>

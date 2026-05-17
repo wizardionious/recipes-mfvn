@@ -1,9 +1,13 @@
 <script lang="ts" setup>
-import { MenuIcon, SearchIcon, XIcon } from "@lucide/vue";
+import { MenuIcon, MoonIcon, SearchIcon, SunIcon, XIcon } from "@lucide/vue";
+import { useTheme } from "@/composables/useTheme";
+
 import { nextTick, ref, useTemplateRef } from "vue";
-import logoURL from "@/assets/Logo_MyRecipes.png";
+import logoURL from "@/assets/Logo_MyRecipes_transparent.png";
 import AppButton from "@/components/ui/AppButton.vue";
 import AppPopover from "@/components/ui/AppPopover.vue";
+
+const { isDarkTheme, toggleTheme } = useTheme();
 
 const navigationListItems = [
   {
@@ -28,17 +32,25 @@ const searchInputRef = useTemplateRef<HTMLInputElement>("searchInputRef");
 const isSearchOpen = ref(false);
 const searchQuery = ref("");
 
-async function toggleSearch() {
-  isSearchOpen.value = !isSearchOpen.value;
+// async function toggleSearch() {
+//   isSearchOpen.value = !isSearchOpen.value;
 
-  if (isSearchOpen.value) {
-    await nextTick();
-    searchInputRef.value?.focus();
-  }
+//   if (isSearchOpen.value) {
+//     await nextTick();
+//     searchInputRef.value?.focus();
+//   }
+// }
+
+async function openSearch() {
+  isSearchOpen.value = true;
+
+  await nextTick();
+  searchInputRef.value?.focus();
 }
 
 function closeSearch() {
   isSearchOpen.value = false;
+  searchQuery.value = "";
 }
 
 function submitSearch() {
@@ -74,18 +86,30 @@ function submitSearch() {
       </template>
     </AppPopover>
 
-    <RouterLink to="/" class="app-header__logo">
+    <RouterLink to="/" class="app-header__logo" aria-label="Go to home page">
       <img class="app-header__logo-image" :src="logoURL" alt="My recipes" />
     </RouterLink>
 
-    <AppButton
-      aria-label="Open search"
-      :aria-expanded="isSearchOpen"
-      aria-controls="app-header-search"
-      @click="toggleSearch"
-    >
-      <SearchIcon :size="20" aria-hidden="true" />
-    </AppButton>
+    <div class="app-header__actions">
+      <AppButton
+        type="button"
+        :aria-label="isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'"
+        @click="toggleTheme"
+      >
+        <SunIcon v-if="isDarkTheme" :size="20" aria-hidden="true" />
+        <MoonIcon v-else :size="20" aria-hidden="true" />
+      </AppButton>
+
+      <AppButton
+        type="button"
+        aria-label="Open search"
+        :aria-expanded="isSearchOpen"
+        aria-controls="app-header-search"
+        @click="openSearch"
+      >
+        <SearchIcon :size="20" aria-hidden="true" />
+      </AppButton>
+    </div>
 
     <form
       v-if="isSearchOpen"
@@ -93,7 +117,9 @@ function submitSearch() {
       class="app-header__search"
       role="search"
       @submit.prevent="submitSearch"
+      @keydown.esc="closeSearch"
     >
+      <SearchIcon :size="20" aria-hidden="true" />
       <input
         ref="searchInputRef"
         v-model="searchQuery"
@@ -117,10 +143,21 @@ function submitSearch() {
   height: 56px;
   display: grid;
   // Fixed side columns keep the logo visually centered between menu and search buttons.
-  grid-template-columns: 36px 1fr 36px;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
   padding: 0 8px;
-  background-color: #ffffff;
+
+  background-color: var(--color-surface);
+  color: var(--color-text-body);
+
+  border-bottom: 1px solid var(--color-border-soft);
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+  }
 
   &__nav {
     display: flex;
@@ -128,12 +165,21 @@ function submitSearch() {
   }
 
   &__logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+
     display: flex;
     align-items: center;
     justify-content: center;
-    justify-self: center;
-    height: 48px;
+
+    width: min(180px, 44vw);
+    height: 42px;
+
+    padding: 0;
+    background-color: transparent;
     text-decoration: none;
+    line-height: 0;
   }
 
   &__logo-image {
@@ -145,37 +191,54 @@ function submitSearch() {
 
   &__menu-link {
     padding: 10px 12px;
-    border-radius: 8px;
-    color: #333333;
+    border-radius: var(--radius-md);
+    color: var(--color-text-body);
     text-decoration: none;
   }
 
   &__menu-link:hover {
-    background-color: #f2f2f2;
+    background-color: var(--color-border-soft);
   }
 
   &__search {
     position: absolute;
-    top: 56px;
-    left: 8px;
-    right: 8px;
+    inset: 0;
     z-index: 1000;
+
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+    gap: 12px;
+
+    width: 100%;
+    height: 100%;
+    padding: 0 12px;
+
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
   }
 
   &__search-input {
     flex: 1;
+    min-width: 0;
     height: 40px;
-    padding: 0 12px;
-    border: 1px solid #dddddd;
-    border-radius: 8px;
+    padding: 0;
+
+    border: none;
+    outline: none;
+    background-color: transparent;
+
+    color: var(--color-text-body);
     font-size: 16px;
+  }
+
+  &__search-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &__search-input:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 0;
+    border-radius: var(--radius-md);
   }
 }
 </style>
