@@ -24,6 +24,7 @@
   color: var(--color-text-body);
 
   cursor: pointer;
+  overflow: hidden;
 
   &:hover {
     background-color: var(--color-border-soft);
