@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { MenuIcon, MoonIcon, SearchIcon, SunIcon, XIcon } from "@lucide/vue";
+import { MenuIcon, MoonIcon, SunIcon } from "@lucide/vue";
 import { useTheme } from "@/composables/useTheme";
-
-import { nextTick, ref, useTemplateRef } from "vue";
 import logoURL from "@/assets/Logo_MyRecipes_transparent.png";
 import AppButton from "@/components/ui/AppButton.vue";
 import AppPopover from "@/components/ui/AppPopover.vue";
+import AppSearch from "@/components/ui/AppSearch.vue";
 
 const { isDarkTheme, toggleTheme } = useTheme();
 
@@ -27,41 +26,6 @@ const navigationListItems = [
     link: "#dinner",
   },
 ];
-
-const searchInputRef = useTemplateRef<HTMLInputElement>("searchInputRef");
-const isSearchOpen = ref(false);
-const searchQuery = ref("");
-
-// async function toggleSearch() {
-//   isSearchOpen.value = !isSearchOpen.value;
-
-//   if (isSearchOpen.value) {
-//     await nextTick();
-//     searchInputRef.value?.focus();
-//   }
-// }
-
-async function openSearch() {
-  isSearchOpen.value = true;
-
-  await nextTick();
-  searchInputRef.value?.focus();
-}
-
-function closeSearch() {
-  isSearchOpen.value = false;
-  searchQuery.value = "";
-}
-
-function submitSearch() {
-  const query = searchQuery.value.trim();
-
-  if (!query) {
-    return;
-  }
-
-  console.log("Search:", query);
-}
 </script>
 
 <template>
@@ -100,38 +64,8 @@ function submitSearch() {
         <MoonIcon v-else :size="20" aria-hidden="true" />
       </AppButton>
 
-      <AppButton
-        type="button"
-        aria-label="Open search"
-        :aria-expanded="isSearchOpen"
-        aria-controls="app-header-search"
-        @click="openSearch"
-      >
-        <SearchIcon :size="20" aria-hidden="true" />
-      </AppButton>
+      <AppSearch />
     </div>
-
-    <form
-      v-if="isSearchOpen"
-      id="app-header-search"
-      class="app-header__search"
-      role="search"
-      @submit.prevent="submitSearch"
-      @keydown.esc="closeSearch"
-    >
-      <SearchIcon :size="20" aria-hidden="true" />
-      <input
-        ref="searchInputRef"
-        v-model="searchQuery"
-        class="app-header__search-input"
-        type="search"
-        placeholder="Пошук рецепта..."
-      />
-
-      <AppButton type="button" aria-label="Close search" @click="closeSearch">
-        <XIcon :size="20" aria-hidden="true" />
-      </AppButton>
-    </form>
   </header>
 </template>
 
@@ -198,47 +132,6 @@ function submitSearch() {
 
   &__menu-link:hover {
     background-color: var(--color-border-soft);
-  }
-
-  &__search {
-    position: absolute;
-    inset: 0;
-    z-index: 1000;
-
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    width: 100%;
-    height: 100%;
-    padding: 0 12px;
-
-    background-color: var(--color-surface);
-    box-shadow: var(--shadow-soft);
-  }
-
-  &__search-input {
-    flex: 1;
-    min-width: 0;
-    height: 40px;
-    padding: 0;
-
-    border: none;
-    outline: none;
-    background-color: transparent;
-
-    color: var(--color-text-body);
-    font-size: 16px;
-  }
-
-  &__search-input::placeholder {
-    color: var(--color-text-muted);
-  }
-
-  &__search-input:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 0;
-    border-radius: var(--radius-md);
   }
 }
 </style>
