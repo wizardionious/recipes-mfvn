@@ -80,25 +80,25 @@ onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
 .app-search {
   position: absolute;
   inset: 0;
-
   z-index: 1000;
   overflow: hidden;
   width: 100%;
   height: 100%;
-  padding-right: 48px;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: end;
   pointer-events: none;
 
   &__form {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 48px;
+
     background-color: var(--color-surface);
-    gap: 12px;
+    gap: 24px;
     display: flex;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 48px);
     pointer-events: all;
     overflow: hidden;
     padding: 0 8px;
@@ -113,6 +113,7 @@ onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
     border: none;
     outline: none;
     background-color: var(--color-border-soft);
+    border-radius: var(--radius-md);
 
     color: var(--color-text-body);
     font-size: 16px;
