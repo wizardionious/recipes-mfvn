@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
+import { recipes } from "@/data/recipes";
+import { RouterLink } from "vue-router";
 
 const featuredRecipe = {
+  ...recipes[0],
   title: "Хлеб, масло и идеальный кофе",
-  description: "Завтрак с ароматным кофе, свежим хлебом и нежным маслом для спокойного утра.",
+  description:
+    "Завтрак с ароматным кофе, свежим хлебом и нежным маслом для спокойного утра.",
   previews: [
     "/images/recipes/coffeWithButter_preview_01.jpg",
     "/images/recipes/coffeWithButter_preview_02.jpg",
     "/images/recipes/coffeWithButter_preview_03.jpg",
     "/images/recipes/coffeWithButter_preview_03.webp",
   ],
-  image: "/images/recipes/coffeWithButter.jpg",
+  heroImage: "/images/recipes/coffeWithButter.jpg",
 };
 
 const marketRecipes = [
@@ -18,25 +22,29 @@ const marketRecipes = [
     id: 1,
     category: "МОРАНГО",
     title: "Винегрет с клубникой",
-    image: "https://plus.unsplash.com/premium_photo-1663852296872-51c74244d487?q=80&w=687&fit=crop",
+    image:
+      "https://plus.unsplash.com/premium_photo-1663852296872-51c74244d487?q=80&w=687&fit=crop",
   },
   {
     id: 2,
     category: "ТОМАТЕ",
     title: "Тост с особенным томатным соусом",
-    image: "https://images.unsplash.com/photo-1620921575116-fb8902865f81?q=80&w=735&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1620921575116-fb8902865f81?q=80&w=735&fit=crop",
   },
   {
     id: 3,
     category: "АЛЬО ПОРО",
     title: "Тёплый салат с луком-пореем",
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&fit=crop",
   },
   {
     id: 4,
     category: "БЕТЕРРАБА",
     title: "Практичное ризотто со свёклой",
-    image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=800&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=800&fit=crop",
   },
 ];
 </script>
@@ -45,37 +53,52 @@ const marketRecipes = [
   <DefaultLayout>
     <main class="home-page">
       <section class="home-page__hero">
-        <img
-          :src="featuredRecipe.image"
-          :alt="featuredRecipe.title"
-          class="home-page__hero-image"
-        />
+        <RouterLink
+          :to="{
+            name: 'recipe-details',
+            params: {
+              slug: featuredRecipe.slug,
+            },
+          }"
+          class="home-page__hero-link"
+        >
+          <img
+            :src="featuredRecipe.heroImage"
+            :alt="featuredRecipe.title"
+            class="home-page__hero-image"
+          />
 
-        <div class="home-page__hero-body">
-          <div class="home-page__hero-text">
-            <h1 class="home-page__hero-title">
-              {{ featuredRecipe.title }}
-            </h1>
+          <div class="home-page__hero-body">
+            <div class="home-page__hero-text">
+              <h1 class="home-page__hero-title">
+                {{ featuredRecipe.title }}
+              </h1>
 
-            <p class="home-page__hero-description">
-              {{ featuredRecipe.description }}
-            </p>
+              <p class="home-page__hero-description">
+                {{ featuredRecipe.description }}
+              </p>
+            </div>
+
+            <div class="home-page__hero-previews" aria-label="Recipe previews">
+              <span
+                v-for="preview in featuredRecipe.previews"
+                :key="preview"
+                class="home-page__hero-preview"
+              >
+                <img
+                  :src="preview"
+                  alt=""
+                  class="home-page__hero-preview-image"
+                />
+              </span>
+            </div>
           </div>
-
-          <div class="home-page__hero-previews" aria-label="Recipe previews">
-            <button
-              v-for="preview in featuredRecipe.previews"
-              :key="preview"
-              type="button"
-              class="home-page__hero-preview"
-            >
-              <img :src="preview" alt="" class="home-page__hero-preview-image" />
-            </button>
-          </div>
-        </div>
+        </RouterLink>
 
         <div class="home-page__slider-dots" aria-hidden="true">
-          <span class="home-page__slider-dot home-page__slider-dot--active"></span>
+          <span
+            class="home-page__slider-dot home-page__slider-dot--active"
+          ></span>
           <span class="home-page__slider-dot"></span>
           <span class="home-page__slider-dot"></span>
           <span class="home-page__slider-dot"></span>
@@ -98,10 +121,18 @@ const marketRecipes = [
         </header>
 
         <div class="home-page__recipe-grid">
-          <article v-for="recipe in marketRecipes" :key="recipe.id" class="home-page__recipe-card">
+          <article
+            v-for="recipe in marketRecipes"
+            :key="recipe.id"
+            class="home-page__recipe-card"
+          >
             <a href="#" class="home-page__recipe-link" @click.prevent>
               <span class="home-page__recipe-image-wrapper">
-                <img :src="recipe.image" :alt="recipe.title" class="home-page__recipe-image" />
+                <img
+                  :src="recipe.image"
+                  :alt="recipe.title"
+                  class="home-page__recipe-image"
+                />
               </span>
 
               <p class="home-page__recipe-category">
@@ -148,6 +179,12 @@ const marketRecipes = [
     min-width: 0;
   }
 
+  &__hero-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
   &__hero-title {
     width: 100%;
     max-width: none;
@@ -173,6 +210,7 @@ const marketRecipes = [
   }
 
   &__hero-preview {
+    display: block;
     width: 52px;
     height: 40px;
     padding: 0;
