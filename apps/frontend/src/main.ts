@@ -1,4 +1,3 @@
-import "@/assets/theme.scss"
 import "./assets/main.css";
 
 import { createPinia } from "pinia";

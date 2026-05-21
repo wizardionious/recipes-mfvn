@@ -26,6 +26,7 @@
     text-wrap: balance;
     font-weight: bold;
     margin-block: 0;
+    line-height: 1.5;
   }
 
   :where(p) {

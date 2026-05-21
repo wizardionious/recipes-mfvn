@@ -1,6 +1,7 @@
 @import './reset.css';
-@import './theme.scss';
 @import './base.css';
+@import './theme.css';
+@import './utils.scss' layer(utilities);
 
 #app {
   min-height: 100vh;
@@ -8,6 +9,13 @@
   padding: 0;
   font-weight: normal;
   background-color: var(--color-page-bg);
+}
+
+@layer base {
+  :root {
+    --spacing: 0.25rem;
+    --line-height: 1.25rem;
+  }
 }
 
 @layer utilities {
@@ -29,5 +37,32 @@
     @media (width >= 96rem) {
       max-width: 96rem;
     }
+  }
+
+  .flex {
+    display: flex;
+  }
+  .inline-flex {
+    display: inline-flex;
+  }
+  .flex-row {
+    flex-direction: row;
+  }
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .block {
+    display: block;
+  }
+  .grid {
+    display: grid;
+  }
+  .none {
+    display: none;
+  }
+
+  .text-center {
+    text-align: center;
   }
 }
