@@ -1,0 +1,26 @@
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--color-page-bg);
+  color: var(--color-text-main);
+  font-family: system-ui, sans-serif;
+}
+
+#app {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  background-color: var(--color-page-bg);
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}

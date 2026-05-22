@@ -47,52 +47,52 @@ $font-sizes: (
     padding-bottom: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
   }
 
-  .m-#{i} {
-    margin: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .m-#{$i} {
+    margin: calc(var(--spacing) * $i / 2);
   }
-  .mr-#{i} {
-    margin-right: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .mr-#{$i} {
+    margin-right: calc(var(--spacing) * $i / 2);
   }
-  .ml-#{i} {
-    margin-left: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .ml-#{$i} {
+    margin-left: calc(var(--spacing) * $i / 2);
   }
-  .mt-#{i} {
-    margin-top: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .mt-#{$i} {
+    margin-top: calc(var(--spacing) * $i / 2);
   }
-  .mb-#{i} {
-    margin-bottom: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .mb-#{$i} {
+    margin-bottom: calc(var(--spacing) * $i / 2);
   }
-  .mx-#{i} {
-    margin-left: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
-    margin-right: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .mx-#{$i} {
+    margin-left: calc(var(--spacing) * $i / 2);
+    margin-right: calc(var(--spacing) * $i / 2);
   }
-  .my-#{i} {
-    margin-top: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
-    margin-bottom: calc(var(--spacing) * $i / 2); /* #{$i * 0.250 / 2}rem */
+  .my-#{$i} {
+    margin-top: calc(var(--spacing) * $i / 2);
+    margin-bottom: calc(var(--spacing) * $i / 2);
   }
-}
 
-.min-h-screen {
-  min-height: 100vh;
-}
-.min-w-screen {
-  min-width: 100vw;
-}
-.h-full {
-  height: 100%;
-}
-.w-full {
-  width: 100%;
-}
+  .min-h-screen {
+    min-height: 100vh;
+  }
+  .min-w-screen {
+    min-width: 100vw;
+  }
+  .h-full {
+    height: 100%;
+  }
+  .w-full {
+    width: 100%;
+  }
 
-@for $i from 1 through 11 {
-  @for $k from 1 through 12 {
-    @if $i < $k {
-      .h-#{$i}\/#{$k} {
-        height: calc($i / $k * 100%);
-      }
-      .w-#{$i}\/#{$k} {
-        width: calc($i / $k * 100%);
+  @for $i from 1 through 11 {
+    @for $k from 1 through 12 {
+      @if $i < $k {
+        .h-#{$i}\/#{$k} {
+          height: calc($i / $k * 100%);
+        }
+        .w-#{$i}\/#{$k} {
+          width: calc($i / $k * 100%);
+        }
       }
     }
   }

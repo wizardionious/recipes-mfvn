@@ -1,0 +1,229 @@
+@use 'sass:map';
+
+@layer utilities {
+  $font-sizes: (
+    3xs: 0.5625rem /* 9px */,
+    2xs: 0.5rem,
+    xs: 0.75rem,
+    sm: 0.875rem,
+    base: 1rem,
+    lg: 1.5rem,
+    xl: 2rem,
+  );
+
+  @each $size in map.keys($font-sizes) {
+    .text-#{$size} {
+      font-size: map.get($font-sizes, $size);
+    }
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .uppercase {
+    text-transform: uppercase;
+  }
+
+  .font-bold {
+    font-weight: 700;
+  }
+
+  .tracking-wide {
+    letter-spacing: 1px;
+  }
+
+  .whitespace-nowrap {
+    white-space: nowrap;
+  }
+
+  .block {
+    display: block;
+  }
+
+  .inline-block {
+    display: inline-block;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .inline-flex {
+    display: inline-flex;
+  }
+
+  .grid {
+    display: grid;
+  }
+
+  .none {
+    display: none;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .flex-row {
+    flex-direction: row;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+
+  .items-center {
+    align-items: center;
+  }
+
+  .items-start {
+    align-items: flex-start;
+  }
+
+  .items-end {
+    align-items: flex-end;
+  }
+
+  .justify-start {
+    justify-content: flex-start;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .justify-between {
+    justify-content: space-between;
+  }
+
+  .justify-end {
+    justify-content: flex-end;
+  }
+
+  .object-cover {
+    object-fit: cover;
+  }
+
+  .object-contain {
+    object-fit: contain;
+  }
+
+  .min-h-screen {
+    min-height: 100vh;
+  }
+
+  .min-w-screen {
+    min-width: 100vw;
+  }
+
+  .h-full {
+    height: 100%;
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  .m-0 {
+    margin: 0;
+  }
+
+  @for $i from 1 through 8 {
+    .gap-#{$i} {
+      gap: calc(var(--spacing) * $i);
+    }
+
+    .gap-x-#{$i} {
+      column-gap: calc(var(--spacing) * $i);
+    }
+
+    .gap-y-#{$i} {
+      row-gap: calc(var(--spacing) * $i);
+    }
+  }
+
+  .gap-10px {
+    gap: 10px;
+  }
+
+  @for $i from 1 through 32 {
+    .p-#{$i} {
+      padding: calc(var(--spacing) * $i / 2);
+    }
+
+    .pt-#{$i} {
+      padding-top: calc(var(--spacing) * $i / 2);
+    }
+
+    .pr-#{$i} {
+      padding-right: calc(var(--spacing) * $i / 2);
+    }
+
+    .pb-#{$i} {
+      padding-bottom: calc(var(--spacing) * $i / 2);
+    }
+
+    .pl-#{$i} {
+      padding-left: calc(var(--spacing) * $i / 2);
+    }
+
+    .px-#{$i} {
+      padding-left: calc(var(--spacing) * $i / 2);
+      padding-right: calc(var(--spacing) * $i / 2);
+    }
+
+    .py-#{$i} {
+      padding-top: calc(var(--spacing) * $i / 2);
+      padding-bottom: calc(var(--spacing) * $i / 2);
+    }
+
+    .m-#{$i} {
+      margin: calc(var(--spacing) * $i / 2);
+    }
+
+    .mt-#{$i} {
+      margin-top: calc(var(--spacing) * $i / 2);
+    }
+
+    .mr-#{$i} {
+      margin-right: calc(var(--spacing) * $i / 2);
+    }
+
+    .mb-#{$i} {
+      margin-bottom: calc(var(--spacing) * $i / 2);
+    }
+
+    .ml-#{$i} {
+      margin-left: calc(var(--spacing) * $i / 2);
+    }
+
+    .mx-#{$i} {
+      margin-left: calc(var(--spacing) * $i / 2);
+      margin-right: calc(var(--spacing) * $i / 2);
+    }
+
+    .my-#{$i} {
+      margin-top: calc(var(--spacing) * $i / 2);
+      margin-bottom: calc(var(--spacing) * $i / 2);
+    }
+  }
+
+  @for $i from 1 through 11 {
+    @for $k from 1 through 12 {
+      @if $i < $k {
+        .h-#{$i}\/#{$k} {
+          height: calc($i / $k * 100%);
+        }
+
+        .w-#{$i}\/#{$k} {
+          width: calc($i / $k * 100%);
+        }
+      }
+    }
+  }
+}
