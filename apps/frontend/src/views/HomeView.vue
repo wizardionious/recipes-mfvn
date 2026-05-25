@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
+import CarouselIndicators from "@/components/ui/CarouselIndicators.vue";
 import SectionHeader from "@/components/ui/SectionHeader.vue";
 import { recipes } from "@/data/recipes";
 import { computed, ref } from "vue";
@@ -106,19 +107,11 @@ function setActiveHeroImage(index: number) {
           </div>
         </div>
 
-        <div class="home-page__slider-dots flex justify-center gap-2">
-          <button
-            v-for="(_, index) in heroImages"
-            :key="index"
-            type="button"
-            class="home-page__slider-dot block"
-            :class="{
-              'home-page__slider-dot--active': activeHeroImageIndex === index,
-            }"
-            :aria-label="`Показать изображение ${index + 1}`"
-            @click="setActiveHeroImage(index)"
-          ></button>
-        </div>
+        <CarouselIndicators
+          :count="heroImages.length"
+          :active="activeHeroImageIndex"
+          @set-active="setActiveHeroImage"
+        />
       </section>
 
       <section class="home-page__seasonal" id="recipes">
@@ -249,24 +242,6 @@ function setActiveHeroImage(index: number) {
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  &__slider-dots {
-    padding: 8px 0 14px;
-  }
-
-  &__slider-dot {
-    width: 5px;
-    height: 5px;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-round);
-    background-color: var(--color-slider-dot);
-    cursor: pointer;
-  }
-
-  &__slider-dot--active {
-    background-color: var(--color-slider-dot-active);
   }
 
   &__seasonal {
