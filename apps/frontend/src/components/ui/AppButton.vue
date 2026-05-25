@@ -35,4 +35,11 @@
     outline-offset: 2px;
   }
 }
+
+@media (max-width: 480px) {
+  .app-button {
+    width: 32px;
+    height: 32px;
+  }
+}
 </style>

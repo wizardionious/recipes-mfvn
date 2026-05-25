@@ -40,6 +40,7 @@ onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
 <template>
   <AppButton
     ref="toggleButtonRef"
+    class="app-search__toggle"
     type="button"
     aria-label="Open search"
     :aria-expanded="isOpen"
@@ -88,17 +89,22 @@ onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
   align-items: center;
   pointer-events: none;
 
+  &__toggle {
+    position: relative;
+    z-index: 1001;
+  }
+
   &__form {
     position: absolute;
     top: 0;
     bottom: 0;
-    right: 48px;
+    right: 80px;
 
     background-color: var(--color-surface);
     gap: 24px;
     display: flex;
     align-items: center;
-    width: calc(100% - 48px);
+    width: calc(100% - 80px);
     pointer-events: all;
     overflow: hidden;
     padding: 0 8px;
@@ -138,6 +144,15 @@ onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
 .v-enter-from,
 .v-leave-to {
   translate: 0 -32px;
+}
+
+@media (max-width: 480px) {
+  .app-search {
+    &__form {
+      right: 76px;
+      width: calc(100% - 76px);
+    }
+  }
 }
 
 .expand-search-enter-active,

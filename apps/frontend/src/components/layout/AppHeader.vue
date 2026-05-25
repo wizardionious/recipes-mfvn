@@ -57,7 +57,9 @@ const navigationListItems = [
     <div class="app-header__actions">
       <AppButton
         type="button"
-        :aria-label="isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'"
+        :aria-label="
+          isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'
+        "
         @click="toggleTheme"
       >
         <SunIcon v-if="isDarkTheme" :size="20" aria-hidden="true" />
@@ -77,9 +79,10 @@ const navigationListItems = [
   height: 56px;
   display: grid;
   // Fixed side columns keep the logo visually centered between menu and search buttons.
-  grid-template-columns: 36px 1fr auto;
+  grid-template-columns: 76px minmax(0, 1fr) 76px;
   align-items: center;
   padding: 0 8px;
+  column-gap: 8px;
 
   background-color: var(--color-surface);
   color: var(--color-text-body);
@@ -87,6 +90,9 @@ const navigationListItems = [
   border-bottom: 1px solid var(--color-border-soft);
 
   &__actions {
+    justify-self: end;
+    min-width: 76px;
+
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -99,15 +105,13 @@ const navigationListItems = [
   }
 
   &__logo {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    justify-self: center;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    width: min(180px, 44vw);
+    width: min(160px, 100%);
     height: 42px;
 
     padding: 0;
@@ -132,6 +136,23 @@ const navigationListItems = [
 
   &__menu-link:hover {
     background-color: var(--color-border-soft);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    grid-template-columns: 88px minmax(0, 1fr) 88px;
+    padding: 0 12px 0 6px;
+    column-gap: 4px;
+
+    &__logo {
+      width: min(120px, 100%);
+    }
+
+    &__actions {
+      gap: 0;
+      min-width: auto;
+    }
   }
 }
 </style>
