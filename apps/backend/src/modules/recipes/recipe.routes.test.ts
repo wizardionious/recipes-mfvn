@@ -34,6 +34,7 @@ describe("recipeRoutes", () => {
   const validRecipe = {
     id: recipeId,
     title: "Test Recipe",
+    slug: "test-recipe",
     description: "A delicious test recipe",
     ingredients: [{ name: "Flour", quantity: 200, unit: "g" }],
     instructions: ["Mix ingredients", "Bake it well"],
@@ -370,7 +371,7 @@ describe("recipeRoutes", () => {
       mockCommentService.create.mockResolvedValue({
         id: commentId,
         text: "Great!",
-        recipe: { id: recipeId, title: "Test" },
+        recipe: { id: recipeId, title: "Test", slug: "test" },
         author: {
           id: testJwtPayload.userId,
           email: testJwtPayload.email,

@@ -19,11 +19,14 @@ export const createRecipeSchema = z.object({
   ingredients: z.array(ingredientSchema).min(1),
   instructions: z.array(z.string().trim().min(5)).min(1),
   category: z.string().length(24),
+  seasonalTag: z.string().trim().min(2).max(60).optional(),
   difficulty: difficultySchema,
   cookingTime: minutesSchema,
   servings: z.number().int().min(1),
   isPublic: z.boolean().default(true),
   image: imageSchema,
+  previewImages: z.array(z.string()).default([]),
+  slug: z.string().trim().min(3).max(200).optional(),
 });
 
 export const updateRecipeSchema = createRecipeSchema.partial();
@@ -42,6 +45,9 @@ export const recipeSchema = createRecipeSchema
   // rewrite fields
   .extend({
     category: categorySummarySchema,
+  })
+  .required({
+    slug: true,
   });
 
 export const recipeComputedSchema = z.object({
@@ -54,6 +60,7 @@ export const recipeComputedSchema = z.object({
 export const recipeSummarySchema = recipeSchema.pick({
   id: true,
   title: true,
+  slug: true,
 });
 
 export const recipeQuerySchema = z

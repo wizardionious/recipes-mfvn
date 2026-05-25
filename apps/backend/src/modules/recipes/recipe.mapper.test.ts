@@ -9,6 +9,7 @@ describe("toRecipeSummary", () => {
     const doc = {
       _id: createObjectId(),
       title: "Pasta Carbonara",
+      slug: "pasta-carbonara",
     };
 
     const result = toRecipeSummary(doc);
@@ -16,6 +17,7 @@ describe("toRecipeSummary", () => {
     expect(result).toEqual({
       id: doc._id.toString(),
       title: "Pasta Carbonara",
+      slug: "pasta-carbonara",
     });
   });
 });

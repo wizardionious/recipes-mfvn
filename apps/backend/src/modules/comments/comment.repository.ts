@@ -27,7 +27,7 @@ export type CommentCreateInput = RequireKeys<
 export type CommentUpdateInput = UpdateInput<CommentDocument>;
 export type CommentDefaultPopulate = {
   author: Pick<UserDocument, "_id" | "name" | "email">;
-  recipe: Pick<RecipeDocument, "_id" | "title">;
+  recipe: Pick<RecipeDocument, "_id" | "title" | "slug">;
 };
 
 export class CommentRepository extends BaseRepository<
@@ -91,7 +91,7 @@ export class CommentRepository extends BaseRepository<
   protected override getDefaultPopulate() {
     return [
       { path: "author", select: "_id name email" },
-      { path: "recipe", select: "_id title" },
+      { path: "recipe", select: "_id title slug" },
     ];
   }
 }
@@ -109,6 +109,7 @@ function withRecipe(initiator: OptionalInitiator) {
         stages.project({
           _id: 1,
           title: 1,
+          slug: 1,
         }),
       ],
       as: "recipe",

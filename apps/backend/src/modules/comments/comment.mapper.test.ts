@@ -9,7 +9,7 @@ describe("toComment", () => {
     const doc = {
       ...createCommentDoc({ text: "Nice!" }),
       author: { _id: authorId, name: "User", email: "user@test.com" },
-      recipe: { _id: recipeId, title: "Pasta" },
+      recipe: { _id: recipeId, title: "Pasta", slug: "pasta" },
     };
 
     const result = toComment(doc);
@@ -23,6 +23,7 @@ describe("toComment", () => {
     expect(result.recipe).toEqual({
       id: recipeId.toString(),
       title: "Pasta",
+      slug: "pasta",
     });
   });
 });

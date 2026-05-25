@@ -111,6 +111,7 @@ export function createRecipeDoc(
     servings: 4,
     isPublic: true,
     image: { url: "https://example.com/image.jpg" },
+    slug: "test-recipe",
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     ...overrides,

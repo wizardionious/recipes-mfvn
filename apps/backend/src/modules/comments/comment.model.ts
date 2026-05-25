@@ -16,7 +16,7 @@ export interface CommentDocumentPopulated
     CommentDocument,
     {
       author: Pick<UserDocument, "_id" | "name" | "email">;
-      recipe: Pick<RecipeDocument, "_id" | "title">;
+      recipe: Pick<RecipeDocument, "_id" | "title" | "slug">;
     }
   > {}
 

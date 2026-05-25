@@ -19,6 +19,7 @@ export type IngredientView = {
 export type RecipeSummaryView = {
   _id: string | { toString(): string };
   title: string;
+  slug: string;
 };
 
 export type RecipeView = RecipeSummaryView & {
@@ -43,6 +44,7 @@ export function toRecipeSummary(view: RecipeSummaryView): RecipeSummary {
   return {
     id: view._id.toString(),
     title: view.title,
+    slug: view.slug,
   };
 }
 
@@ -53,6 +55,7 @@ export function toRecipe(
   return {
     ...toRecipeSummary(view),
     description: view.description,
+    slug: view.slug,
     ingredients: view.ingredients,
     instructions: view.instructions,
     category: toCategorySummary(view.category),

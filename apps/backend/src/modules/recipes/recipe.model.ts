@@ -31,6 +31,7 @@ export interface RecipeDocument extends BaseDocument {
   servings: number;
   isPublic: boolean;
   image: RecipeImage;
+  slug: string;
 }
 
 export interface RecipeDocumentPopulated
@@ -100,11 +101,22 @@ const recipeSchema = new Schema<RecipeDocument>(
     servings: { type: Number, required: true, min: 1 },
     isPublic: { type: Boolean, default: true },
     image: { type: imageSchema, required: true },
+    slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
   },
   {
     timestamps: true,
   },
 );
+
+recipeSchema.pre("validate", function () {
+  if (this.isModified("title") && !this.slug) {
+    this.slug = this.title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .trim();
+  }
+});
 
 recipeSchema.index({ title: "text", description: "text" });
 recipeSchema.index({ category: 1, createdAt: -1 });
