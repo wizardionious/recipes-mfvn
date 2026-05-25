@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
+import SectionHeader from "@/components/ui/SectionHeader.vue";
 import { recipes } from "@/data/recipes";
 import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
@@ -84,10 +85,7 @@ function setActiveHeroImage(index: number) {
             </p>
           </RouterLink>
 
-          <div
-            class="home-page__hero-previews flex items-center gap-2"
-            aria-label="Recipe previews"
-          >
+          <div class="home-page__hero-previews flex items-center gap-2">
             <button
               v-for="(preview, index) in featuredRecipe.previewImages"
               :key="preview"
@@ -123,20 +121,11 @@ function setActiveHeroImage(index: number) {
         </div>
       </section>
 
-      <section class="home-page__seasonal">
-        <header class="home-page__section-header">
-          <div class="home-page__section-title-row grid items-center gap-10px">
-            <div class="home-page__section-line"></div>
-
-            <h2 class="home-page__section-title">Экономьте на рынке</h2>
-
-            <div class="home-page__section-line"></div>
-          </div>
-
-          <p class="home-page__section-subtitle">
-            Сезонные продукты дешевле и вкуснее
-          </p>
-        </header>
+      <section class="home-page__seasonal" id="recipes">
+        <SectionHeader
+          title="Экономьте на рынке"
+          subtitle="Сезонные продукты дешевле и вкуснее"
+        />
 
         <div class="home-page__recipe-grid grid gap-x-5 gap-y-8">
           <article
@@ -282,46 +271,6 @@ function setActiveHeroImage(index: number) {
 
   &__seasonal {
     padding: 28px 16px 40px;
-  }
-
-  &__section-header {
-    margin-bottom: 22px;
-    text-align: center;
-  }
-
-  &__section-title-row {
-    grid-template-columns: minmax(40px, 1fr) auto minmax(40px, 1fr);
-  }
-
-  &__section-line {
-    height: 1px;
-    background-color: var(--color-border-soft);
-  }
-
-  &__section-text {
-    text-align: center;
-  }
-
-  &__section-title {
-    margin: 0;
-    color: var(--color-text-main);
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  &__section-subtitle {
-    max-width: 250px;
-    margin: 8px auto 0;
-    color: var(--color-text-muted);
-    font-size: 9px;
-    font-weight: 700;
-    line-height: 1.35;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
   }
 
   &__recipe-grid {

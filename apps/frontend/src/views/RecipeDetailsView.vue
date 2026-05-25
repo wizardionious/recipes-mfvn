@@ -5,6 +5,7 @@ import { RouterLink, useRoute } from "vue-router";
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
 import { recipes } from "@/data/recipes";
 import { ArrowLeft } from "@lucide/vue";
+import SectionHeader from "@/components/ui/SectionHeader.vue";
 
 const route = useRoute();
 
@@ -58,13 +59,7 @@ const recipe = computed(() => {
         </section>
 
         <section class="recipe-details__section">
-          <div class="recipe-details__section-title-row">
-            <div class="recipe-details__section-line"></div>
-
-            <h2 class="recipe-details__section-title">Ингредиенты</h2>
-
-            <div class="recipe-details__section-line"></div>
-          </div>
+          <SectionHeader title="Ингредиенты" />
 
           <ul class="recipe-details__ingredients">
             <li
@@ -84,13 +79,7 @@ const recipe = computed(() => {
         </section>
 
         <section class="recipe-details__section">
-          <div class="recipe-details__section-title-row">
-            <div class="recipe-details__section-line"></div>
-
-            <h2 class="recipe-details__section-title">Приготовление</h2>
-
-            <div class="recipe-details__section-line"></div>
-          </div>
+          <SectionHeader title="Приготовление" />
 
           <ol class="recipe-details__instructions">
             <li
