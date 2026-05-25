@@ -4,41 +4,23 @@ import { recipes } from "@/data/recipes";
 import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
 
-function getRecipeBySlug(slug: string) {
-  const recipe = recipes.find((recipeItem) => recipeItem.slug === slug);
+const featuredRecipe = recipes.find(
+  (recipe) => recipe.previewImages.length > 0,
+);
 
-  if (!recipe) {
-    throw new Error(`Recipe with slug "${slug}" was not found`);
-  }
-
-  return recipe;
+if (!featuredRecipe) {
+  throw new Error("Featured recipe was not found");
 }
 
-const featuredRecipe = getRecipeBySlug("hleb-maslo-i-idealnyy-kofe");
-
-const seasonalRecipeSlugs = [
-  "vinegret-s-klubnikoy",
-  "tost-s-osobennym-tomatnym-sousom",
-  "teplyy-salat-s-lukom-poreem",
-  "praktichnoe-rizotto-so-svekloy",
-];
-
-const seasonalRecipes = seasonalRecipeSlugs.map((slug) => {
-  return getRecipeBySlug(slug);
-});
-
-const seasonalCategoryBySlug: Record<string, string> = {
-  "vinegret-s-klubnikoy": "Клубника",
-  "tost-s-osobennym-tomatnym-sousom": "Помидор",
-  "teplyy-salat-s-lukom-poreem": "Лук-порей",
-  "praktichnoe-rizotto-so-svekloy": "Свёкла",
-};
+const seasonalRecipes = recipes
+  .filter((recipe) => recipe.slug !== featuredRecipe.slug)
+  .slice(0, 4);
 
 const marketRecipes = seasonalRecipes.map((recipe) => {
   return {
     id: recipe.id,
     slug: recipe.slug,
-    category: seasonalCategoryBySlug[recipe.slug] ?? recipe.category.name,
+    category: recipe.category.name,
     title: recipe.title,
     image: recipe.image.url,
     imageAlt: recipe.image.alt ?? recipe.title,
