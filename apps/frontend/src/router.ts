@@ -1,21 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "@/views/HomeView.vue";
-import RecipeDetailsView from "@/views/RecipeDetailsView.vue";
+import { routes, handleHotUpdate } from 'vue-router/auto-routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: "/",
-      name: "home",
-      component: HomeView,
-    },
-    {
-      path: "/recipes/:slug",
-      name: "recipe-details",
-      component: RecipeDetailsView,
-    },
-  ],
+  routes,
   scrollBehavior(to, _from, savedPosition) {
     if (savedPosition) {
       return savedPosition;
@@ -34,5 +22,9 @@ const router = createRouter({
     };
   },
 });
+
+if (import.meta.hot) { 
+  handleHotUpdate(router) 
+} 
 
 export default router;

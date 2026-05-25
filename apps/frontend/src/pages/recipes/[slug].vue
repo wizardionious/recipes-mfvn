@@ -7,14 +7,10 @@ import { recipes } from "@/data/recipes";
 import { ArrowLeft } from "@lucide/vue";
 import SectionHeader from "@/components/ui/SectionHeader.vue";
 
-const route = useRoute();
-
-const recipeSlug = computed(() => {
-  return String(route.params.slug ?? "");
-});
+const route = useRoute("/recipes/[slug]");
 
 const recipe = computed(() => {
-  return recipes.find((recipeItem) => recipeItem.slug === recipeSlug.value);
+  return recipes.find((recipeItem) => recipeItem.slug === route.params.slug);
 });
 </script>
 
@@ -23,7 +19,7 @@ const recipe = computed(() => {
     <main class="recipe-details">
       <article v-if="recipe" class="recipe-details__article">
         <RouterLink
-          :to="{ name: 'home' }"
+          to="/"
           class="recipe-details__back inline-flex items-center gap-2 text-sm"
         >
           <ArrowLeft :size="16" />
@@ -98,11 +94,11 @@ const recipe = computed(() => {
 
         <p>
           Мы не нашли рецепт по адресу:
-          <strong>{{ recipeSlug }}</strong>
+          <strong>{{ route.params.slug }}</strong>
         </p>
 
         <RouterLink
-          :to="{ name: 'home' }"
+          to="/"
           class="recipe-details__back inline-flex items-center gap-2 text-sm"
         >
           <ArrowLeft :size="16" />

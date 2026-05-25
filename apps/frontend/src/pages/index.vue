@@ -52,12 +52,7 @@ function setActiveHeroImage(index: number) {
     <main class="home-page">
       <section class="home-page__hero">
         <RouterLink
-          :to="{
-            name: 'recipe-details',
-            params: {
-              slug: featuredRecipe.slug,
-            },
-          }"
+          :to="`/recipes/${featuredRecipe.slug}`"
           class="home-page__hero-link"
         >
           <img
@@ -69,12 +64,7 @@ function setActiveHeroImage(index: number) {
 
         <div class="home-page__hero-body">
           <RouterLink
-            :to="{
-              name: 'recipe-details',
-              params: {
-                slug: featuredRecipe.slug,
-              },
-            }"
+            :to="`/recipes/${featuredRecipe.slug}`"
             class="home-page__hero-link home-page__hero-text"
           >
             <h1 class="home-page__hero-title">
@@ -128,16 +118,7 @@ function setActiveHeroImage(index: number) {
           >
             <component
               :is="recipe.slug ? RouterLink : 'a'"
-              :to="
-                recipe.slug
-                  ? {
-                      name: 'recipe-details',
-                      params: {
-                        slug: recipe.slug,
-                      },
-                    }
-                  : undefined
-              "
+              :to="recipe.slug ? `/recipes/${recipe.slug}` : undefined"
               :href="recipe.slug ? undefined : '#'"
               class="home-page__recipe-link"
               @click="!recipe.slug && $event.preventDefault()"
