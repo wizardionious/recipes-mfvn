@@ -1,52 +1,66 @@
 <script setup lang="ts">
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
 import { recipes } from "@/data/recipes";
+import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
 
-const featuredRecipe = {
-  ...recipes[0],
-  title: "Хлеб, масло и идеальный кофе",
-  description:
-    "Завтрак с ароматным кофе, свежим хлебом и нежным маслом для спокойного утра.",
-  previews: [
-    "/images/recipes/coffeWithButter_preview_01.jpg",
-    "/images/recipes/coffeWithButter_preview_02.jpg",
-    "/images/recipes/coffeWithButter_preview_03.jpg",
-    "/images/recipes/coffeWithButter_preview_03.webp",
-  ],
-  heroImage: "/images/recipes/coffeWithButter.jpg",
+function getRecipeBySlug(slug: string) {
+  const recipe = recipes.find((recipeItem) => recipeItem.slug === slug);
+
+  if (!recipe) {
+    throw new Error(`Recipe with slug "${slug}" was not found`);
+  }
+
+  return recipe;
+}
+
+const featuredRecipe = getRecipeBySlug("hleb-maslo-i-idealnyy-kofe");
+
+const seasonalRecipeSlugs = [
+  "vinegret-s-klubnikoy",
+  "tost-s-osobennym-tomatnym-sousom",
+  "teplyy-salat-s-lukom-poreem",
+  "praktichnoe-rizotto-so-svekloy",
+];
+
+const seasonalRecipes = seasonalRecipeSlugs.map((slug) => {
+  return getRecipeBySlug(slug);
+});
+
+const seasonalCategoryBySlug: Record<string, string> = {
+  "vinegret-s-klubnikoy": "Клубника",
+  "tost-s-osobennym-tomatnym-sousom": "Помидор",
+  "teplyy-salat-s-lukom-poreem": "Лук-порей",
+  "praktichnoe-rizotto-so-svekloy": "Свёкла",
 };
 
-const marketRecipes = [
-  {
-    id: 1,
-    category: "МОРАНГО",
-    title: "Винегрет с клубникой",
-    image:
-      "https://plus.unsplash.com/premium_photo-1663852296872-51c74244d487?q=80&w=687&fit=crop",
-  },
-  {
-    id: 2,
-    category: "ТОМАТЕ",
-    title: "Тост с особенным томатным соусом",
-    image:
-      "https://images.unsplash.com/photo-1620921575116-fb8902865f81?q=80&w=735&fit=crop",
-  },
-  {
-    id: 3,
-    category: "АЛЬО ПОРО",
-    title: "Тёплый салат с луком-пореем",
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&fit=crop",
-  },
-  {
-    id: 4,
-    category: "БЕТЕРРАБА",
-    title: "Практичное ризотто со свёклой",
-    image:
-      "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=800&fit=crop",
-  },
-];
+const marketRecipes = seasonalRecipes.map((recipe) => {
+  return {
+    id: recipe.id,
+    slug: recipe.slug,
+    category: seasonalCategoryBySlug[recipe.slug] ?? recipe.category.name,
+    title: recipe.title,
+    image: recipe.image.url,
+    imageAlt: recipe.image.alt ?? recipe.title,
+  };
+});
+
+const activeHeroImageIndex = ref(0);
+
+const heroImages = computed(() => [
+  featuredRecipe.image.url,
+  ...featuredRecipe.previewImages,
+]);
+
+const activeHeroImage = computed(() => {
+  return (
+    heroImages.value[activeHeroImageIndex.value] ?? featuredRecipe.image.url
+  );
+});
+
+function setActiveHeroImage(index: number) {
+  activeHeroImageIndex.value = index;
+}
 </script>
 
 <template>
@@ -63,86 +77,127 @@ const marketRecipes = [
           class="home-page__hero-link"
         >
           <img
-            :src="featuredRecipe.heroImage"
-            :alt="featuredRecipe.title"
+            :src="activeHeroImage"
+            :alt="featuredRecipe.image?.alt"
             class="home-page__hero-image"
           />
-
-          <div class="home-page__hero-body">
-            <div class="home-page__hero-text">
-              <h1 class="home-page__hero-title">
-                {{ featuredRecipe.title }}
-              </h1>
-
-              <p class="home-page__hero-description">
-                {{ featuredRecipe.description }}
-              </p>
-            </div>
-
-            <div class="home-page__hero-previews" aria-label="Recipe previews">
-              <span
-                v-for="preview in featuredRecipe.previews"
-                :key="preview"
-                class="home-page__hero-preview"
-              >
-                <img
-                  :src="preview"
-                  alt=""
-                  class="home-page__hero-preview-image"
-                />
-              </span>
-            </div>
-          </div>
         </RouterLink>
 
-        <div class="home-page__slider-dots" aria-hidden="true">
-          <span
-            class="home-page__slider-dot home-page__slider-dot--active"
-          ></span>
-          <span class="home-page__slider-dot"></span>
-          <span class="home-page__slider-dot"></span>
-          <span class="home-page__slider-dot"></span>
+        <div class="home-page__hero-body">
+          <RouterLink
+            :to="{
+              name: 'recipe-details',
+              params: {
+                slug: featuredRecipe.slug,
+              },
+            }"
+            class="home-page__hero-link home-page__hero-text"
+          >
+            <h1 class="home-page__hero-title">
+              {{ featuredRecipe.title }}
+            </h1>
+
+            <p class="home-page__hero-description">
+              {{ featuredRecipe.description }}
+            </p>
+          </RouterLink>
+
+          <div
+            class="home-page__hero-previews flex items-center gap-2"
+            aria-label="Recipe previews"
+          >
+            <button
+              v-for="(preview, index) in featuredRecipe.previewImages"
+              :key="preview"
+              type="button"
+              class="home-page__hero-preview"
+              :class="{
+                'home-page__hero-preview--active':
+                  activeHeroImageIndex === index + 1,
+              }"
+              @click="setActiveHeroImage(index + 1)"
+            >
+              <img
+                :src="preview"
+                alt=""
+                class="home-page__hero-preview-image"
+              />
+            </button>
+          </div>
+        </div>
+
+        <div class="home-page__slider-dots flex justify-center gap-2">
+          <button
+            v-for="(_, index) in heroImages"
+            :key="index"
+            type="button"
+            class="home-page__slider-dot block"
+            :class="{
+              'home-page__slider-dot--active': activeHeroImageIndex === index,
+            }"
+            :aria-label="`Показать изображение ${index + 1}`"
+            @click="setActiveHeroImage(index)"
+          ></button>
         </div>
       </section>
 
       <section class="home-page__seasonal">
         <header class="home-page__section-header">
-          <div class="home-page__section-title-row">
+          <div class="home-page__section-title-row grid items-center gap-10px">
             <div class="home-page__section-line"></div>
 
-            <h2 class="home-page__section-title">ECONOMIZE NA FEIRA</h2>
+            <h2 class="home-page__section-title">Экономьте на рынке</h2>
 
             <div class="home-page__section-line"></div>
           </div>
 
           <p class="home-page__section-subtitle">
-            ALIMENTOS DA ÉPOCA TÊM PREÇO MAIS BAIXO E SÃO MAIS SABOROSOS
+            Сезонные продукты дешевле и вкуснее
           </p>
         </header>
 
-        <div class="home-page__recipe-grid">
+        <div class="home-page__recipe-grid grid gap-x-5 gap-y-8">
           <article
             v-for="recipe in marketRecipes"
             :key="recipe.id"
             class="home-page__recipe-card"
           >
-            <a href="#" class="home-page__recipe-link" @click.prevent>
+            <component
+              :is="recipe.slug ? RouterLink : 'a'"
+              :to="
+                recipe.slug
+                  ? {
+                      name: 'recipe-details',
+                      params: {
+                        slug: recipe.slug,
+                      },
+                    }
+                  : undefined
+              "
+              :href="recipe.slug ? undefined : '#'"
+              class="home-page__recipe-link"
+              @click="!recipe.slug && $event.preventDefault()"
+            >
               <span class="home-page__recipe-image-wrapper">
                 <img
                   :src="recipe.image"
-                  :alt="recipe.title"
+                  :alt="recipe.imageAlt"
                   class="home-page__recipe-image"
                 />
               </span>
 
-              <p class="home-page__recipe-category">
-                {{ recipe.category }}
-              </p>
+              <div class="home-page__recipe-content pt-8 px-8 pb-10">
+                <p
+                  class="home-page__recipe-category m-0 mb-3 text-3xs font-bold tracking-wide uppercase"
+                >
+                  {{ recipe.category }}
+                </p>
 
-              <h3 class="home-page__recipe-title">
-                {{ recipe.title }}
-              </h3>
-            </a>
+                <h3 class="home-page__recipe-title m-0">
+                  {{ recipe.title }}
+                </h3>
+              </div>
+            </component>
           </article>
         </div>
       </section>
@@ -204,19 +259,18 @@ const marketRecipes = [
     line-height: 1.5;
   }
 
-  &__hero-previews {
-    display: flex;
-    gap: 8px;
-  }
-
   &__hero-preview {
-    display: block;
     width: 52px;
     height: 40px;
     padding: 0;
     border: none;
     background-color: transparent;
     cursor: pointer;
+  }
+
+  &__hero-preview--active {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   &__hero-preview-image {
@@ -227,17 +281,17 @@ const marketRecipes = [
   }
 
   &__slider-dots {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    padding: 10px 0 28px;
+    padding: 8px 0 14px;
   }
 
   &__slider-dot {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    border: none;
     border-radius: var(--radius-round);
     background-color: var(--color-slider-dot);
+    cursor: pointer;
   }
 
   &__slider-dot--active {
@@ -245,7 +299,7 @@ const marketRecipes = [
   }
 
   &__seasonal {
-    padding: 0 16px 40px;
+    padding: 28px 16px 40px;
   }
 
   &__section-header {
@@ -254,10 +308,7 @@ const marketRecipes = [
   }
 
   &__section-title-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 14px;
+    grid-template-columns: minmax(40px, 1fr) auto minmax(40px, 1fr);
   }
 
   &__section-line {
@@ -292,13 +343,14 @@ const marketRecipes = [
   }
 
   &__recipe-grid {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 30px 16px;
   }
 
   &__recipe-card {
     min-width: 0;
+    overflow: hidden;
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
   }
 
   &__recipe-link {
@@ -325,13 +377,13 @@ const marketRecipes = [
       filter 180ms ease;
   }
 
+  &__recipe-content {
+    min-height: 78px;
+    background-color: var(--color-surface);
+  }
+
   &__recipe-category {
-    margin: 10px 0 4px;
     color: var(--color-seasonal);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
   }
 
   &__recipe-title {
