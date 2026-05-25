@@ -84,7 +84,8 @@ const rawRecipes: RecipeInput[] = [
       url: "https://plus.unsplash.com/premium_photo-1663852296872-51c74244d487?q=80&w=687&fit=crop",
       alt: "Салаты",
     },
-  },
+    },
+  seasonalTag: "Клубника",
   author: {
     id: "507f1f77bcf86cd799439011",
     name: "Андрей",
@@ -136,6 +137,7 @@ const rawRecipes: RecipeInput[] = [
         alt: "Тосты",
       },
     },
+    seasonalTag: "Помидор",
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",
@@ -188,6 +190,7 @@ const rawRecipes: RecipeInput[] = [
         alt: "Салаты",
       },
     },
+    seasonalTag: "Лук-порей",
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",
@@ -240,6 +243,7 @@ const rawRecipes: RecipeInput[] = [
         alt: "Горячие блюда",
       },
     },
+    seasonalTag: "Свёкла",
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",

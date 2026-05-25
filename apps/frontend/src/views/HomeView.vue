@@ -20,7 +20,7 @@ const marketRecipes = seasonalRecipes.map((recipe) => {
   return {
     id: recipe.id,
     slug: recipe.slug,
-    category: recipe.category.name,
+    category: recipe.seasonalTag ?? recipe.category.name,
     title: recipe.title,
     image: recipe.image.url,
     imageAlt: recipe.image.alt ?? recipe.title,
