@@ -10,19 +10,19 @@ const { isDarkTheme, toggleTheme } = useTheme();
 
 const navigationListItems = [
   {
-    label: "Список рецептів",
-    link: "#recipes",
+    label: "Список рецептов",
+    link: "/recipes",
   },
   {
-    label: "Сніданки",
+    label: "Завтраки",
     link: "#breakfast",
   },
   {
-    label: "Обіди",
+    label: "Обеды",
     link: "#lunch",
   },
   {
-    label: "Вечері",
+    label: "Ужины",
     link: "#dinner",
   },
 ];
@@ -36,11 +36,14 @@ const navigationListItems = [
       </template>
 
       <template #default="{ close }">
-        <nav aria-label="Main navigation" class="app-header__nav">
+        <nav
+          aria-label="Main navigation"
+          class="app-header__nav min-w-45 p-4 flex flex-col gap-1"
+        >
           <RouterLink
             v-for="item in navigationListItems"
             :key="item.link"
-            class="app-header__menu-link"
+            class="app-header__menu-link block py-5 px-6 rounded-md text-body text-sm font-medium leading-compact no-underline"
             :to="item.link"
             @click="close"
           >
@@ -73,7 +76,9 @@ const navigationListItems = [
 
 <style lang="scss" scoped>
 .app-header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
   width: 100%;
   height: 56px;
@@ -100,8 +105,7 @@ const navigationListItems = [
   }
 
   &__nav {
-    display: flex;
-    flex-direction: column;
+    min-width: 180px;
   }
 
   &__logo {
@@ -127,15 +131,10 @@ const navigationListItems = [
     object-fit: contain;
   }
 
-  &__menu-link {
-    padding: 10px 12px;
-    border-radius: var(--radius-md);
-    color: var(--color-text-body);
-    text-decoration: none;
-  }
-
-  &__menu-link:hover {
+  &__menu-link:hover,
+  &__menu-link:focus-visible {
     background-color: var(--color-border-soft);
+    color: var(--color-accent-strong);
   }
 }
 

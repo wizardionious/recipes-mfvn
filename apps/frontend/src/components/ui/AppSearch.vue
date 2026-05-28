@@ -3,7 +3,9 @@ import { SearchIcon, XIcon } from "@lucide/vue";
 import { nextTick, ref, useTemplateRef } from "vue";
 import AppButton from "./AppButton.vue";
 import { onClickOutside } from "@vueuse/core";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const searchInputRef = useTemplateRef<HTMLInputElement>("searchInputRef");
 const searchBodyRef = useTemplateRef<HTMLFormElement>("searchBodyRef");
 const toggleButtonRef = useTemplateRef<HTMLButtonElement>("toggleButtonRef");
@@ -24,14 +26,25 @@ function close() {
 
 const toggle = () => (isOpen.value ? close() : open());
 
-function submit() {
+async function submit() {
   const searchQuery = query.value.trim();
 
   if (!searchQuery) {
     return;
   }
 
-  console.log("Search:", searchQuery);
+  try {
+    await router.push({
+      path: "/recipes",
+      query: {
+        q: searchQuery,
+      },
+    });
+
+    close();
+  } catch (error) {
+    console.error("Search navigation failed:", error);
+  }
 }
 
 onClickOutside(searchBodyRef, close, { ignore: [toggleButtonRef] });
