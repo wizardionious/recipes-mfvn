@@ -5,6 +5,7 @@ import { recipes } from "@/data/recipes";
 import { computed, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { ArrowLeft } from "@lucide/vue";
+import { normalizeSearchText } from "@/utils/normalizeSearchText";
 
 defineOptions({
   name: "RecipesPage",
@@ -15,10 +16,14 @@ const route = useRoute();
 const router = useRouter();
 const localQuery = ref("");
 
+type Recipe = (typeof recipes)[number];
+
 const searchQuery = computed(() => {
-  return String(route.query.search ?? "")
-    .trim()
-    .toLowerCase();
+  return String(route.query.search ?? "").trim();
+});
+
+const normalizedSearchQuery = computed(() => {
+  return normalizeSearchText(searchQuery.value);
 });
 
 watch(
@@ -31,115 +36,180 @@ watch(
   },
 );
 
-async function submitSearch() {
-  const nextSearchQuery = localQuery.value.trim();
+async function goToRecipesSearch(searchQuery: string) {
+  const normalizedQuery = searchQuery.trim();
 
-  await router.push({
-    path: "/recipes",
-    query: {
-      ...(nextSearchQuery && { search: nextSearchQuery }),
-    },
-  });
+  try {
+    await router.push({
+      path: "/recipes",
+      query: {
+        ...(normalizedQuery && { search: normalizedQuery }),
+      },
+    });
+  } catch (error) {
+    console.error("Recipes search navigation failed:", error);
+  }
 }
 
-const searchResults = computed(() => {
-  if (!searchQuery.value) {
-    return recipes.map((recipe) => ({
-      id: recipe.id,
-      slug: recipe.slug,
-      category: recipe.category.name,
-      title: recipe.title,
-      image: recipe.image.url,
-      imageAlt: recipe.image.alt ?? recipe.title,
-    }));
+async function submitSearch() {
+  await goToRecipesSearch(localQuery.value);
+}
+
+async function clearSearch() {
+  
+}
+
+function mapRecipeToCard(recipe: Recipe) {
+  return {
+    id: recipe.id,
+    slug: recipe.slug,
+    category: recipe.category.name,
+    title: recipe.title,
+    image: recipe.image.url,
+    imageAlt: recipe.image.alt ?? recipe.title,
+  };
+}
+
+const recipeCards = computed(() => {
+  if (!normalizedSearchQuery.value) {
+    return recipes.map(mapRecipeToCard);
   }
 
   return recipes
     .filter((recipe) => {
-      const searchableText = [
-        recipe.title,
-        recipe.description,
-        recipe.category.name,
-        ...recipe.ingredients.map((ingredient) => ingredient.name),
-      ]
-        .join(" ")
-        .toLowerCase();
+      const searchableText = normalizeSearchText(
+        [
+          recipe.title,
+          recipe.description,
+          recipe.category.name,
+          ...recipe.ingredients.map((ingredient) => ingredient.name),
+        ].join(" "),
+      );
 
-      return searchableText.includes(searchQuery.value);
+      return searchableText.includes(normalizedSearchQuery.value);
     })
-    .map((recipe) => ({
-      id: recipe.id,
-      slug: recipe.slug,
-      category: recipe.category.name,
-      title: recipe.title,
-      image: recipe.image.url,
-      imageAlt: recipe.image.alt ?? recipe.title,
-    }));
+    .map(mapRecipeToCard);
 });
+
+function getRecipeWord(count: number) {
+  const absoluteCount = Math.abs(count);
+  const lastTwoDigits = absoluteCount % 100;
+  const lastDigit = absoluteCount % 10;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return "рецептов";
+  }
+
+  if (lastDigit === 1) {
+    return "рецепт";
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return "рецепта";
+  }
+
+  return "рецептов";
+}
+
+const resultCountText = computed(() => {
+  const count = recipeCards.value.length;
+  const recipeWord = getRecipeWord(count);
+
+  if (!searchQuery.value) {
+    return `Всего ${count} ${recipeWord}`;
+  }
+
+  if (recipeWord === "рецепт") {
+    return `Найден ${count} ${recipeWord}`;
+  }
+
+  return `Найдено ${count} ${recipeWord}`;
+});
+
+const suggestedSearchQueries = ["кофе", "хлеб", "свёкла", "клубника", "салат"];
+
+async function searchBySuggestion(suggestedQuery: string) {
+  localQuery.value = suggestedQuery;
+
+  await goToRecipesSearch(suggestedQuery);
+}
 </script>
 
 <template>
   <DefaultLayout>
-    <section class="search-page">
+    <section class="recipes-page">
       <RouterLink
         to="/"
-        class="search-page__back inline-flex items-center gap-2"
+        class="recipes-page__back inline-flex items-center gap-2"
       >
-        <ArrowLeft :size="16" />На главную
+        <ArrowLeft :size="16" aria-hidden="true" />На главную
       </RouterLink>
 
-      <header class="search-page__header">
-        <h1 class="search-page__title">Поиск рецептов</h1>
+      <header class="recipes-page__header">
+        <h1 class="recipes-page__title">
+          {{ searchQuery ? "Поиск рецептов" : "Каталог рецептов" }}
+        </h1>
 
-        <p v-if="searchQuery" class="search-page__subtitle">
+        <p v-if="searchQuery" class="recipes-page__subtitle">
           Результаты по запросу: <strong>{{ searchQuery }}</strong>
         </p>
 
-        <p v-else class="search-page__subtitle">
-          Введите запрос в поиске, чтобы найти рецепт.
+        <p v-else class="recipes-page__subtitle">
+          Ищите по названию, категории или ингредиенту.
         </p>
       </header>
 
       <form
-        class="search-page__form"
+        class="recipes-page__form"
         role="search"
         @submit.prevent="submitSearch"
       >
         <input
           v-model="localQuery"
-          class="search-page__input"
+          class="recipes-page__input"
           type="search"
-          placeholder="Введите название, категорию или ингредиент"
+          placeholder="Например: кофе"
+          aria-label="Поиск рецептов"
         />
 
-        <button class="search-page__button" type="submit">Найти</button>
+        <button class="recipes-page__button" type="submit">Найти</button>
       </form>
 
-      <p v-if="searchQuery" class="search-page__count">
-        Найдено рецептов: {{ searchResults.length }}
+      <p class="recipes-page__count" aria-live="polite">
+        {{ resultCountText }}
       </p>
 
-      <section v-if="searchResults.length" class="search-page__results">
+      <section v-if="recipeCards.length" class="recipes-page__results">
         <RecipeCard
-          v-for="recipeCard in searchResults"
+          v-for="recipeCard in recipeCards"
           :key="recipeCard.id"
           :recipe="recipeCard"
         />
       </section>
 
-      <section v-else-if="searchQuery" class="search-page__empty">
+      <section v-else-if="searchQuery" class="recipes-page__empty">
         <h2>Ничего не найдено</h2>
 
-        <p>
-          Попробуй другой запрос: название рецепта, категорию или ингредиент.
-        </p>
+        <p>Попробуй другой запрос или выбери одну из подсказок ниже.</p>
+
+        <div class="recipes-page__suggestions" aria-label="Подсказки поиска">
+          <button
+            v-for="suggestedQuery in suggestedSearchQueries"
+            :key="suggestedQuery"
+            type="button"
+            class="recipes-page__suggestion"
+            @click="searchBySuggestion(suggestedQuery)"
+          >
+            {{ suggestedQuery }}
+          </button>
+        </div>
       </section>
     </section>
   </DefaultLayout>
 </template>
 
 <style lang="scss" scoped>
-.search-page {
+.recipes-page {
   padding: 32px 16px 48px;
   background-color: var(--color-page-bg);
   color: var(--color-text-main);
@@ -204,6 +274,15 @@ const searchResults = computed(() => {
     font-size: 16px;
   }
 
+  &__input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &__input:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 0;
+  }
+
   &__button {
     height: 44px;
     padding: 0 18px;
@@ -213,6 +292,11 @@ const searchResults = computed(() => {
     color: var(--color-surface);
     font-weight: 700;
     cursor: pointer;
+  }
+
+  &__button:hover,
+  &__button:focus-visible {
+    background-color: var(--color-accent-strong);
   }
 
   &__results {
@@ -242,6 +326,7 @@ const searchResults = computed(() => {
     color: var(--color-text-muted);
   }
   @media (max-width: 480px) {
+    padding: 24px 16px 40px;
     &__form {
       flex-direction: column;
     }
@@ -254,6 +339,30 @@ const searchResults = computed(() => {
     &__title {
       font-size: 28px;
     }
+  }
+  &__suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  &__suggestion {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-page-bg);
+    color: var(--color-text-body);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &__suggestion:hover,
+  &__suggestion:focus-visible {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
   }
 }
 </style>
