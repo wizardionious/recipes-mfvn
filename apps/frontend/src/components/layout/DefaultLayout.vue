@@ -7,8 +7,10 @@ import AppHeader from "./AppHeader.vue";
   <div class="default-layout">
     <div class="default-layout__page">
       <AppHeader />
-
-      <slot />
+      
+      <main class="default-layout__main">
+        <slot />
+      </main>
 
       <AppFooter />
     </div>
@@ -26,6 +28,14 @@ import AppHeader from "./AppHeader.vue";
   max-width: 480px;
   min-height: 100dvh;
   margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
   background-color: var(--color-surface);
+}
+
+.default-layout__main {
+  flex: 1;
 }
 </style>
