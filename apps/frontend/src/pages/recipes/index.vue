@@ -56,7 +56,9 @@ async function submitSearch() {
 }
 
 async function clearSearch() {
-  
+  localQuery.value = "";
+
+  await goToRecipesSearch("");
 }
 
 function mapRecipeToCard(recipe: Recipe) {
@@ -171,8 +173,17 @@ async function searchBySuggestion(suggestedQuery: string) {
           placeholder="Например: кофе"
           aria-label="Поиск рецептов"
         />
-
-        <button class="recipes-page__button" type="submit">Найти</button>
+        <div class="recipes-page__actions">
+          <button class="recipes-page__button" type="submit">Найти</button>
+          <button
+            v-if="searchQuery"
+            class="recipes-page__button recipes-page__button--secondary"
+            type="button"
+            @click="clearSearch"
+          >
+            Очистить
+          </button>
+        </div>
       </form>
 
       <p class="recipes-page__count" aria-live="polite">
@@ -283,6 +294,11 @@ async function searchBySuggestion(suggestedQuery: string) {
     outline-offset: 0;
   }
 
+  &__actions {
+    display: flex;
+    gap: 8px;
+  }
+
   &__button {
     height: 44px;
     padding: 0 18px;
@@ -297,6 +313,19 @@ async function searchBySuggestion(suggestedQuery: string) {
   &__button:hover,
   &__button:focus-visible {
     background-color: var(--color-accent-strong);
+  }
+
+  &__button--secondary {
+    border: 1px solid var(--color-border-soft);
+    background-color: transparent;
+    color: var(--color-text-body);
+  }
+
+  &__button--secondary:hover,
+  &__button--secondary:focus-visible {
+    border-color: var(--color-accent);
+    background-color: transparent;
+    color: var(--color-accent-strong);
   }
 
   &__results {
@@ -329,6 +358,14 @@ async function searchBySuggestion(suggestedQuery: string) {
     padding: 24px 16px 40px;
     &__form {
       flex-direction: column;
+    }
+
+    &__actions {
+      width: 100%;
+    }
+
+    &__button {
+      flex: 1;
     }
 
     &__results {
