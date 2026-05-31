@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
 import CarouselIndicators from "@/components/ui/CarouselIndicators.vue";
+import RecipeCard from "@/components/ui/RecipeCard.vue";
 import SectionHeader from "@/components/ui/SectionHeader.vue";
 import { recipes } from "@/data/recipes";
 import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
+
+defineOptions({
+  name: "IndexPage",
+});
 
 const featuredRecipe = recipes.find(
   (recipe) => recipe.previewImages.length > 0,
@@ -49,111 +54,71 @@ function setActiveHeroImage(index: number) {
 
 <template>
   <DefaultLayout>
-    <main class="home-page">
-      <section class="home-page__hero">
+    <section class="home-page__hero">
+      <RouterLink
+        :to="`/recipes/${featuredRecipe.slug}`"
+        class="home-page__hero-link"
+      >
+        <img
+          :src="activeHeroImage"
+          :alt="featuredRecipe.image?.alt"
+          class="home-page__hero-image"
+        />
+      </RouterLink>
+
+      <div class="home-page__hero-body">
         <RouterLink
           :to="`/recipes/${featuredRecipe.slug}`"
-          class="home-page__hero-link"
+          class="home-page__hero-link home-page__hero-text"
         >
-          <img
-            :src="activeHeroImage"
-            :alt="featuredRecipe.image?.alt"
-            class="home-page__hero-image"
-          />
+          <h1 class="home-page__hero-title">
+            {{ featuredRecipe.title }}
+          </h1>
+
+          <p class="home-page__hero-description">
+            {{ featuredRecipe.description }}
+          </p>
         </RouterLink>
 
-        <div class="home-page__hero-body">
-          <RouterLink
-            :to="`/recipes/${featuredRecipe.slug}`"
-            class="home-page__hero-link home-page__hero-text"
+        <div class="home-page__hero-previews flex items-center gap-2">
+          <button
+            v-for="(preview, index) in featuredRecipe.previewImages"
+            :key="preview"
+            type="button"
+            class="home-page__hero-preview"
+            :class="{
+              'home-page__hero-preview--active':
+                activeHeroImageIndex === index + 1,
+            }"
+            @click="setActiveHeroImage(index + 1)"
           >
-            <h1 class="home-page__hero-title">
-              {{ featuredRecipe.title }}
-            </h1>
-
-            <p class="home-page__hero-description">
-              {{ featuredRecipe.description }}
-            </p>
-          </RouterLink>
-
-          <div class="home-page__hero-previews flex items-center gap-2">
-            <button
-              v-for="(preview, index) in featuredRecipe.previewImages"
-              :key="preview"
-              type="button"
-              class="home-page__hero-preview"
-              :class="{
-                'home-page__hero-preview--active':
-                  activeHeroImageIndex === index + 1,
-              }"
-              @click="setActiveHeroImage(index + 1)"
-            >
-              <img
-                :src="preview"
-                alt=""
-                class="home-page__hero-preview-image"
-              />
-            </button>
-          </div>
+            <img :src="preview" alt="" class="home-page__hero-preview-image" />
+          </button>
         </div>
+      </div>
 
-        <CarouselIndicators
-          :count="heroImages.length"
-          :active="activeHeroImageIndex"
-          @set-active="setActiveHeroImage"
-        />
-      </section>
+      <CarouselIndicators
+        :count="heroImages.length"
+        :active="activeHeroImageIndex"
+        @set-active="setActiveHeroImage"
+      />
+    </section>
 
-      <section class="home-page__seasonal" id="recipes">
-        <SectionHeader
-          title="Экономьте на рынке"
-          subtitle="Сезонные продукты дешевле и вкуснее"
-        />
+    <section class="home-page__seasonal" id="recipes">
+      <SectionHeader
+        title="Экономьте на рынке"
+        subtitle="Сезонные продукты дешевле и вкуснее"
+      />
 
-        <div class="home-page__recipe-grid grid gap-x-5 gap-y-8">
-          <article
-            v-for="recipe in marketRecipes"
-            :key="recipe.id"
-            class="home-page__recipe-card"
-          >
-            <component
-              :is="recipe.slug ? RouterLink : 'a'"
-              :to="recipe.slug ? `/recipes/${recipe.slug}` : undefined"
-              :href="recipe.slug ? undefined : '#'"
-              class="home-page__recipe-link"
-              @click="!recipe.slug && $event.preventDefault()"
-            >
-              <span class="home-page__recipe-image-wrapper">
-                <img
-                  :src="recipe.image"
-                  :alt="recipe.imageAlt"
-                  class="home-page__recipe-image"
-                />
-              </span>
-
-              <div class="home-page__recipe-content pt-8 px-8 pb-10">
-                <p
-                  class="home-page__recipe-category m-0 mb-3 text-3xs font-bold tracking-wide uppercase"
-                >
-                  {{ recipe.category }}
-                </p>
-
-                <h3 class="home-page__recipe-title m-0">
-                  {{ recipe.title }}
-                </h3>
-              </div>
-            </component>
-          </article>
-        </div>
-      </section>
-    </main>
+      <div class="home-page__recipe-grid grid gap-x-5 gap-y-8">
+        <RecipeCard v-for="recipe in marketRecipes" :key="recipe.id" :recipe />
+      </div>
+    </section>
   </DefaultLayout>
 </template>
 
 <style scoped lang="scss">
 .home-page {
-  background-color: var(--color-page-bg);
-
   &__hero {
     width: 100%;
     padding: 0 16px;
