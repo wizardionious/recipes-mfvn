@@ -11,19 +11,34 @@ const { isDarkTheme, toggleTheme } = useTheme();
 const navigationListItems = [
   {
     label: "Список рецептов",
-    link: "/recipes",
+    to: "/recipes",
   },
   {
     label: "Завтраки",
-    link: "#breakfast",
+    to: {
+      path: "/recipes",
+      query: {
+        category: "breakfasts",
+      },
+    },
   },
   {
     label: "Обеды",
-    link: "#lunch",
+    to: {
+      path: "/recipes",
+      query: {
+        category: "lunches",
+      },
+    },
   },
   {
     label: "Ужины",
-    link: "#dinner",
+    to: {
+      path: "/recipes",
+      query: {
+        category: "dinners",
+      },
+    },
   },
 ];
 </script>
@@ -42,9 +57,9 @@ const navigationListItems = [
         >
           <RouterLink
             v-for="item in navigationListItems"
-            :key="item.link"
+            :key="item.label"
             class="app-header__menu-link block py-5 px-6 rounded-md text-body text-sm font-medium leading-compact no-underline"
-            :to="item.link"
+            :to="item.to"
             @click="close"
           >
             {{ item.label }}

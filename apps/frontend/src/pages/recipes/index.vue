@@ -6,6 +6,7 @@ import { computed, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { ArrowLeft } from "@lucide/vue";
 import { normalizeSearchText } from "@/utils/normalizeSearchText";
+import { getRecipeCategories } from "@/utils/getRecipeCategories";
 
 defineOptions({
   name: "RecipesPage",
@@ -18,6 +19,10 @@ const localQuery = ref("");
 
 type Recipe = (typeof recipes)[number];
 
+const recipeCategories = computed(() => {
+  return getRecipeCategories(recipes);
+});
+
 const searchQuery = computed(() => {
   return String(route.query.search ?? "").trim();
 });
@@ -25,6 +30,16 @@ const searchQuery = computed(() => {
 const normalizedSearchQuery = computed(() => {
   return normalizeSearchText(searchQuery.value);
 });
+
+const categoryQuery = computed(() => {
+  return String(route.query.category ?? "").trim();
+});
+
+const navigationCategoryLabels: Record<string, string> = {
+  breakfasts: "Завтраки",
+  lunches: "Обеды",
+  dinners: "Ужины",
+};
 
 watch(
   searchQuery,
@@ -36,7 +51,10 @@ watch(
   },
 );
 
-async function goToRecipesSearch(searchQuery: string) {
+async function goToRecipesCatalog(
+  searchQuery: string,
+  categorySlug = categoryQuery.value,
+) {
   const normalizedQuery = searchQuery.trim();
 
   try {
@@ -44,21 +62,29 @@ async function goToRecipesSearch(searchQuery: string) {
       path: "/recipes",
       query: {
         ...(normalizedQuery && { search: normalizedQuery }),
+        ...(categorySlug && { category: categorySlug }),
       },
     });
   } catch (error) {
-    console.error("Recipes search navigation failed:", error);
+    console.error("Recipes catalog navigation failed:", error);
   }
 }
 
 async function submitSearch() {
-  await goToRecipesSearch(localQuery.value);
+  await goToRecipesCatalog(localQuery.value);
 }
 
 async function clearSearch() {
   localQuery.value = "";
 
-  await goToRecipesSearch("");
+  await goToRecipesCatalog("", "");
+}
+
+async function selectCategory(categorySlug: string) {
+  const nextCategorySlug =
+    categorySlug === categoryQuery.value ? "" : categorySlug;
+
+  await goToRecipesCatalog(localQuery.value, nextCategorySlug);
 }
 
 function mapRecipeToCard(recipe: Recipe) {
@@ -73,12 +99,16 @@ function mapRecipeToCard(recipe: Recipe) {
 }
 
 const recipeCards = computed(() => {
-  if (!normalizedSearchQuery.value) {
-    return recipes.map(mapRecipeToCard);
-  }
-
   return recipes
     .filter((recipe) => {
+      if (categoryQuery.value && recipe.category.slug !== categoryQuery.value) {
+        return false;
+      }
+
+      if (!normalizedSearchQuery.value) {
+        return true;
+      }
+
       const searchableText = normalizeSearchText(
         [
           recipe.title,
@@ -117,7 +147,7 @@ const resultCountText = computed(() => {
   const count = recipeCards.value.length;
   const recipeWord = getRecipeWord(count);
 
-  if (!searchQuery.value) {
+  if (!searchQuery.value && !categoryQuery.value) {
     return `Всего ${count} ${recipeWord}`;
   }
 
@@ -128,12 +158,34 @@ const resultCountText = computed(() => {
   return `Найдено ${count} ${recipeWord}`;
 });
 
+const activeCategoryName = computed(() => {
+  const activeCategory = recipeCategories.value.find((category) => {
+    return category.slug === categoryQuery.value;
+  });
+
+  return (
+    activeCategory?.name ?? navigationCategoryLabels[categoryQuery.value] ?? ""
+  );
+});
+
+const emptyStateTitle = computed(() => {
+  if (searchQuery.value && categoryQuery.value) {
+    return "Ничего не найдено в этой категории";
+  }
+
+  if (categoryQuery.value) {
+    return "В этой категории пока нет рецептов";
+  }
+
+  return "Ничего не найдено";
+});
+
 const suggestedSearchQueries = ["кофе", "хлеб", "свёкла", "клубника", "салат"];
 
 async function searchBySuggestion(suggestedQuery: string) {
   localQuery.value = suggestedQuery;
 
-  await goToRecipesSearch(suggestedQuery);
+  await goToRecipesCatalog(suggestedQuery);
 }
 </script>
 
@@ -152,8 +204,21 @@ async function searchBySuggestion(suggestedQuery: string) {
           {{ searchQuery ? "Поиск рецептов" : "Каталог рецептов" }}
         </h1>
 
-        <p v-if="searchQuery" class="recipes-page__subtitle">
-          Результаты по запросу: <strong>{{ searchQuery }}</strong>
+        <p
+          v-if="searchQuery && activeCategoryName"
+          class="recipes-page__subtitle"
+        >
+          Результаты по запросу: <strong>«{{ searchQuery }}»</strong> в
+          категории
+          <strong>«{{ activeCategoryName }}»</strong>
+        </p>
+
+        <p v-else-if="searchQuery" class="recipes-page__subtitle">
+          Результаты по запросу: <strong>«{{ searchQuery }}»</strong>
+        </p>
+
+        <p v-else-if="activeCategoryName" class="recipes-page__subtitle">
+          Категория: <strong>«{{ activeCategoryName }}»</strong>
         </p>
 
         <p v-else class="recipes-page__subtitle">
@@ -186,6 +251,30 @@ async function searchBySuggestion(suggestedQuery: string) {
         </div>
       </form>
 
+      <div class="recipes-page__categories" aria-label="Фильтр категорий">
+        <button
+          type="button"
+          class="recipes-page__category"
+          :class="{ 'recipes-page__category--active': !categoryQuery }"
+          @click="selectCategory('')"
+        >
+          Все
+        </button>
+
+        <button
+          v-for="category in recipeCategories"
+          :key="category.slug"
+          type="button"
+          class="recipes-page__category"
+          :class="{
+            'recipes-page__category--active': category.slug === categoryQuery,
+          }"
+          @click="selectCategory(category.slug)"
+        >
+          {{ category.name }}
+        </button>
+      </div>
+
       <p class="recipes-page__count" aria-live="polite">
         {{ resultCountText }}
       </p>
@@ -198,10 +287,35 @@ async function searchBySuggestion(suggestedQuery: string) {
         />
       </section>
 
-      <section v-else-if="searchQuery" class="recipes-page__empty">
-        <h2>Ничего не найдено</h2>
+      <section
+        v-else-if="searchQuery || categoryQuery"
+        class="recipes-page__empty"
+      >
+        <h2>{{ emptyStateTitle }}</h2>
 
-        <p>Попробуй другой запрос или выбери одну из подсказок ниже.</p>
+        <p v-if="searchQuery && activeCategoryName">
+          По запросу <strong>«{{ searchQuery }}»</strong> в категории
+          <strong>«{{ activeCategoryName }}»</strong> ничего не найдено.
+          Попробуй другой запрос или выбери другую категорию.
+        </p>
+
+        <p v-else-if="categoryQuery">
+          В категории
+          <strong>«{{ activeCategoryName || categoryQuery }}»</strong>
+          пока нет рецептов. Можно выбрать другую категорию или посмотреть весь
+          список.
+        </p>
+
+        <p v-else>Попробуй другой запрос или выбери одну из подсказок ниже.</p>
+
+        <button
+          v-if="categoryQuery"
+          type="button"
+          class="recipes-page__reset"
+          @click="clearSearch"
+        >
+          Показать все рецепты
+        </button>
 
         <div class="recipes-page__suggestions" aria-label="Подсказки поиска">
           <button
@@ -256,6 +370,12 @@ async function searchBySuggestion(suggestedQuery: string) {
     line-height: 1.5;
   }
 
+  &__subtitle strong,
+  &__empty strong {
+    color: var(--color-text-body);
+    font-weight: 700;
+  }
+
   &__count {
     margin: -12px auto 24px;
     color: var(--color-text-muted);
@@ -308,11 +428,15 @@ async function searchBySuggestion(suggestedQuery: string) {
     color: var(--color-surface);
     font-weight: 700;
     cursor: pointer;
-  }
 
-  &__button:hover,
-  &__button:focus-visible {
-    background-color: var(--color-accent-strong);
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-accent-strong);
+    }
+
+    &:active {
+      background-color: oklch(0.595 0.1367 3.86);
+    }
   }
 
   &__button--secondary {
@@ -326,6 +450,50 @@ async function searchBySuggestion(suggestedQuery: string) {
     border-color: var(--color-accent);
     background-color: transparent;
     color: var(--color-accent-strong);
+  }
+
+  &__categories {
+    max-width: 560px;
+    margin: -16px auto 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__category {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-text-body);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:focus-visible,
+    &:hover {
+      background-color: oklch(0.915 0 0);
+      /* border-color: var(--color-accent); */
+      /* color: var(--color-surface); */
+    }
+    &:active {
+      background-color: oklch(0.885 0 0);
+    }
+  }
+
+  &__category--active {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-surface);
+
+    &:hover,
+    &:focus-visible,
+    &:active {
+      background-color: var(--color-accent-strong);
+      border-color: var(--color-accent-strong);
+      color: var(--color-surface);
+    }
   }
 
   &__results {
@@ -354,29 +522,25 @@ async function searchBySuggestion(suggestedQuery: string) {
     margin: 0;
     color: var(--color-text-muted);
   }
-  @media (max-width: 480px) {
-    padding: 24px 16px 40px;
-    &__form {
-      flex-direction: column;
-    }
 
-    &__actions {
-      width: 100%;
-    }
-
-    &__button {
-      flex: 1;
-    }
-
-    &__results {
-      grid-template-columns: 1fr;
-      max-width: 280px;
-    }
-
-    &__title {
-      font-size: 28px;
-    }
+  &__reset {
+    margin-top: 18px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-text-body);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
   }
+
+  &__reset:hover,
+  &__reset:focus-visible {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+  }
+
   &__suggestions {
     display: flex;
     flex-wrap: wrap;
@@ -400,6 +564,30 @@ async function searchBySuggestion(suggestedQuery: string) {
   &__suggestion:focus-visible {
     border-color: var(--color-accent);
     color: var(--color-accent-strong);
+  }
+
+  @media (max-width: 480px) {
+    padding: 24px 16px 40px;
+    &__form {
+      flex-direction: column;
+    }
+
+    &__actions {
+      width: 100%;
+    }
+
+    &__button {
+      flex: 1;
+    }
+
+    &__results {
+      grid-template-columns: 1fr;
+      max-width: 280px;
+    }
+
+    &__title {
+      font-size: 28px;
+    }
   }
 }
 </style>
