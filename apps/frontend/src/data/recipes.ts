@@ -2,7 +2,28 @@ import type { Minutes } from "@recipes/shared";
 import type { RecipeInput } from "@/utils/addRecipeSlugs";
 import { addRecipeSlugs } from "@/utils/addRecipeSlugs";
 
-const rawRecipes: RecipeInput[] = [
+type RecipeMealType = "breakfast" | "lunch" | "dinner" | "snack";
+
+type RecipeTag =
+  | "seasonal"
+  | "natural"
+  | "smoothie"
+  | "steam"
+  | "fish"
+  | "turkey"
+  | "diet-5"
+  | "quick"
+  | "light"
+  | "salad"
+  | "toast"
+  | "hot-dish";
+
+type RecipeCatalogInput = RecipeInput & {
+  mealTypes: RecipeMealType[];
+  tags: RecipeTag[];
+};
+
+const rawRecipes: RecipeCatalogInput[] = [
   {
     id: "507f1f77bcf86cd799439001",
     title: "Хлеб, масло и идеальный кофе",
@@ -29,6 +50,8 @@ const rawRecipes: RecipeInput[] = [
         alt: "Завтраки",
       },
     },
+    mealTypes: ["breakfast"],
+tags: ["natural", "quick"],
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",
@@ -85,7 +108,9 @@ const rawRecipes: RecipeInput[] = [
       alt: "Салаты",
     },
     },
-  seasonalTag: "Клубника",
+    seasonalTag: "Клубника",
+  mealTypes: ["lunch", "dinner", "snack"],
+tags: ["seasonal", "natural", "light", "salad"],
   author: {
     id: "507f1f77bcf86cd799439011",
     name: "Андрей",
@@ -138,6 +163,8 @@ const rawRecipes: RecipeInput[] = [
       },
     },
     seasonalTag: "Помидор",
+    mealTypes: ["breakfast", "snack"],
+tags: ["seasonal", "natural", "quick", "toast"],
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",
@@ -191,6 +218,8 @@ const rawRecipes: RecipeInput[] = [
       },
     },
     seasonalTag: "Лук-порей",
+    mealTypes: ["lunch", "dinner"],
+tags: ["seasonal", "natural", "light", "salad"],
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",
@@ -243,7 +272,9 @@ const rawRecipes: RecipeInput[] = [
         alt: "Горячие блюда",
       },
     },
-    seasonalTag: "Свёкла",
+      seasonalTag: "Свёкла",
+    mealTypes: ["lunch", "dinner"],
+tags: ["seasonal", "natural", "hot-dish"],
     author: {
       id: "507f1f77bcf86cd799439011",
       name: "Андрей",
