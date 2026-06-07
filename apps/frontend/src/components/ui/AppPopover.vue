@@ -36,6 +36,8 @@ onClickOutside(contentRef, close, { ignore: [triggerRef] });
     type="button"
     aria-label="Open popover"
     aria-haspopup="menu"
+    :aria-expanded="isOpen"
+    :class="{ 'is-active': isOpen }"
     @click="toggle"
   >
     <slot name="trigger" />
@@ -51,21 +53,31 @@ onClickOutside(contentRef, close, { ignore: [triggerRef] });
 <style lang="scss" scoped>
 .popover-content {
   z-index: 1000;
+
   display: flex;
   flex-direction: column;
+  gap: 4px;
+
+  min-width: 180px;
   padding: 8px;
-  border-radius: 12px;
-  background-color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--popover-border);
+  border-radius: var(--radius-lg);
+
+  background-color: var(--popover-bg);
+  color: var(--popover-text);
+  box-shadow: var(--popover-shadow);
 }
 
 .v-enter-active,
 .v-leave-active {
-  transition: opacity 0.2s ease;
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
 }
 
 .v-enter-from,
 .v-leave-to {
   opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
