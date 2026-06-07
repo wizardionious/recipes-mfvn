@@ -2,64 +2,607 @@
   :root {
     color-scheme: light;
 
+    /*
+      1) Base system
+      Эти переменные можно использовать везде: размеры, радиусы, тени.
+    */
     --spacing: 0.25rem;
     --line-height: 1.25rem;
-
-    --color-page-bg: oklch(0.975 0 0);
-    --color-surface: oklch(0.99 0 0);
-
-    --color-text-main: #26313d;
-    --color-text-body: #333333;
-    --color-text-muted: #777777;
-
-    --color-accent: #d87891;
-    --color-accent-strong: #c85f7d;
-
-    --color-seasonal: #60b7aa;
-    --color-border-soft: #eeeeee;
-    --color-focus: #d87891;
-
-    --color-slider-dot: #d8d8d8;
-    --color-slider-dot-active: #777777;
-
-    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.12);
 
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
+    --radius-xl: 16px;
     --radius-round: 50%;
 
+    --duration-fast: 120ms;
+    --duration-base: 180ms;
+    --duration-slow: 240ms;
+
+    --ease-standard: ease;
+
+    --opacity-disabled: 0.52;
+    --opacity-muted: 0.72;
+
+    /*
+      2) Primitive palette
+      Сырые цвета бренда/интерфейса. В компонентах лучше использовать semantic/component tokens ниже.
+    */
+    --white: #ffffff;
+    --black: #120f0d;
+
+    --cream-50: #fffaf5;
+    --cream-100: #fbf8f4;
+    --cream-200: #f2eee9;
+    --cream-300: #e6d8cf;
+
+    --gray-50: #f7f7f7;
+    --gray-100: #eeeeee;
+    --gray-200: #e2e2e2;
+    --gray-300: #d8d8d8;
+    --gray-400: #a8a8a8;
+    --gray-500: #6f6f6f;
+    --gray-700: #444444;
+    --gray-900: #1f1f1f;
+
+    --ink-900: #122035;
+    --ink-800: #26313d;
+    --ink-700: #333333;
+    --ink-600: #5f5a55;
+
+    --pink-50: #fcf2f5;
+    --pink-100: #f8e2e8;
+    --pink-200: #f2d5dc;
+    --pink-300: #e9b8c5;
+    --pink-400: #d87891;
+    --pink-500: #b94664;
+    --pink-600: #ad3f5d;
+    --pink-700: #9a334e;
+
+    --mint-50: #e8f6f3;
+    --mint-100: #d5f0eb;
+    --mint-300: #8fd8c7;
+    --mint-500: #60b7aa;
+    --mint-700: #1f665b;
+
+    --yellow-100: #fff1d6;
+    --yellow-400: #f6d36b;
+    --yellow-700: #8a5a00;
+
+    --coral-100: #fde7e5;
+    --coral-500: #e96f67;
+    --coral-700: #9f332f;
+
+    --blue-100: #e3f2f8;
+    --blue-500: #2f7ea8;
+    --blue-700: #155b7e;
+
+    --green-100: #e7f4ed;
+    --green-500: #2f7d57;
+    --green-700: #20583d;
+
+    /*
+      3) Semantic colors
+      Цвета по смыслу: фон, текст, границы, акцент, состояние.
+    */
+    --color-bg-page: var(--cream-100);
+    --color-bg-surface: var(--white);
+    --color-bg-surface-muted: var(--cream-200);
+    --color-bg-surface-subtle: var(--gray-50);
+    --color-bg-surface-hover: var(--pink-50);
+    --color-bg-surface-active: var(--pink-100);
+    --color-bg-surface-selected: var(--pink-100);
+    --color-bg-surface-elevated: var(--white);
+    --color-bg-overlay: rgba(18, 15, 13, 0.48);
+
+    --color-text-primary: var(--ink-800);
+    --color-text-body: var(--ink-700);
+    --color-text-secondary: var(--ink-600);
+    --color-text-muted: var(--gray-500);
+    --color-text-subtle: #8a817a;
+    --color-text-disabled: var(--gray-400);
+    --color-text-inverse: var(--cream-50);
+
+    --color-border-soft: var(--gray-100);
+    --color-border-default: #e2d8d2;
+    --color-border-hover: #d1c5be;
+    --color-border-strong: #bba9a0;
+    --color-border-selected: var(--pink-500);
+    --color-border-disabled: var(--gray-200);
+
+    --color-accent: var(--pink-400);
+    --color-accent-soft: var(--pink-100);
+    --color-accent-subtle: var(--pink-50);
+    --color-accent-text: var(--pink-700);
+    --color-accent-interactive: var(--pink-500);
+    --color-accent-hover: var(--pink-600);
+    --color-accent-active: var(--pink-700);
+    --color-accent-contrast: var(--white);
+
+    --color-seasonal: var(--mint-500);
+    --color-seasonal-soft: var(--mint-100);
+    --color-seasonal-subtle: var(--mint-50);
+    --color-seasonal-text: var(--mint-700);
+    --color-seasonal-hover: #4fa99c;
+    --color-seasonal-active: var(--mint-700);
+
+    --color-link: var(--color-accent-text);
+    --color-link-hover: var(--color-accent-hover);
+    --color-link-active: var(--color-accent-active);
+
+    --color-focus: var(--color-accent-interactive);
+    --color-focus-ring: var(--color-accent-interactive);
+    --color-focus-ring-soft: rgba(185, 70, 100, 0.24);
+    --color-focus-ring-offset: var(--color-bg-surface);
+
+    --color-selection-bg: var(--pink-100);
+    --color-selection-text: var(--ink-900);
+
+    /*
+      4) Status colors
+      Для сообщений, ошибок, успеха, предупреждений.
+    */
+    --color-success: var(--green-500);
+    --color-success-hover: var(--green-700);
+    --color-success-soft: var(--green-100);
+    --color-success-border: #9fd0b6;
+    --color-success-text: var(--green-700);
+
+    --color-warning: var(--yellow-700);
+    --color-warning-hover: #714800;
+    --color-warning-soft: var(--yellow-100);
+    --color-warning-border: #efcf85;
+    --color-warning-text: var(--yellow-700);
+
+    --color-error: var(--coral-700);
+    --color-error-hover: #842723;
+    --color-error-soft: var(--coral-100);
+    --color-error-border: #f0aaa5;
+    --color-error-text: var(--coral-700);
+
+    --color-info: var(--blue-500);
+    --color-info-hover: var(--blue-700);
+    --color-info-soft: var(--blue-100);
+    --color-info-border: #a8d4e8;
+    --color-info-text: var(--blue-700);
+
+    /*
+      5) Shadows
+    */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-medium: 0 12px 32px rgba(0, 0, 0, 0.16);
+    --shadow-strong: 0 18px 48px rgba(0, 0, 0, 0.22);
+
+    /*
+      6) Interactive base tokens
+      Универсальные состояния для кликабельных элементов.
+    */
+    --interactive-bg: transparent;
+    --interactive-bg-hover: var(--color-bg-surface-hover);
+    --interactive-bg-active: var(--color-bg-surface-active);
+    --interactive-bg-selected: var(--color-bg-surface-selected);
+    --interactive-text: var(--color-text-body);
+    --interactive-text-hover: var(--color-accent-hover);
+    --interactive-text-active: var(--color-accent-active);
+    --interactive-text-selected: var(--color-accent-text);
+    --interactive-border: transparent;
+    --interactive-border-hover: var(--color-border-hover);
+    --interactive-border-selected: var(--color-border-selected);
+    --interactive-focus-ring: var(--color-focus-ring);
+
+    /*
+      7) Buttons
+    */
+    --button-primary-bg: var(--color-accent-interactive);
+    --button-primary-bg-hover: var(--color-accent-hover);
+    --button-primary-bg-active: var(--color-accent-active);
+    --button-primary-text: var(--color-accent-contrast);
+    --button-primary-text-hover: var(--color-accent-contrast);
+    --button-primary-text-active: var(--color-accent-contrast);
+    --button-primary-border: var(--button-primary-bg);
+    --button-primary-border-hover: var(--button-primary-bg-hover);
+    --button-primary-border-active: var(--button-primary-bg-active);
+
+    --button-secondary-bg: var(--color-bg-surface-muted);
+    --button-secondary-bg-hover: var(--color-bg-surface-hover);
+    --button-secondary-bg-active: var(--color-bg-surface-active);
+    --button-secondary-text: var(--color-text-body);
+    --button-secondary-text-hover: var(--color-accent-hover);
+    --button-secondary-text-active: var(--color-accent-active);
+    --button-secondary-border: var(--color-border-default);
+    --button-secondary-border-hover: var(--color-border-hover);
+    --button-secondary-border-active: var(--color-border-strong);
+
+    --button-ghost-bg: transparent;
+    --button-ghost-bg-hover: var(--color-bg-surface-hover);
+    --button-ghost-bg-active: var(--color-bg-surface-active);
+    --button-ghost-text: var(--color-text-body);
+    --button-ghost-text-hover: var(--color-accent-hover);
+    --button-ghost-text-active: var(--color-accent-active);
+    --button-ghost-border: transparent;
+
+    --button-icon-bg: transparent;
+    --button-icon-bg-hover: var(--color-bg-surface-hover);
+    --button-icon-bg-active: var(--color-bg-surface-active);
+    --button-icon-text: var(--color-text-body);
+    --button-icon-text-hover: var(--color-accent-hover);
+    --button-icon-text-active: var(--color-accent-active);
+    --button-icon-focus-ring: var(--color-focus-ring);
+
+    --button-disabled-bg: var(--color-bg-surface-muted);
+    --button-disabled-text: var(--color-text-disabled);
+    --button-disabled-border: var(--color-border-disabled);
+
+    /*
+      8) Inputs / search
+    */
+    --input-bg: var(--color-bg-surface-muted);
+    --input-bg-hover: #e8e2de;
+    --input-bg-focus: var(--color-bg-surface-elevated);
+    --input-bg-disabled: var(--gray-100);
+    --input-text: var(--color-text-body);
+    --input-placeholder: var(--color-text-muted);
+    --input-border: transparent;
+    --input-border-hover: var(--color-border-hover);
+    --input-border-focus: var(--color-focus-ring);
+    --input-border-error: var(--color-error);
+    --input-focus-ring: var(--color-focus-ring);
+
+    --search-bg: var(--color-bg-surface);
+    --search-form-bg: var(--color-bg-surface);
+    --search-icon: var(--color-text-muted);
+    --search-input-bg: var(--input-bg);
+    --search-input-bg-hover: var(--input-bg-hover);
+    --search-input-bg-focus: var(--input-bg-focus);
+    --search-input-text: var(--input-text);
+    --search-input-placeholder: var(--input-placeholder);
+    --search-input-focus-ring: var(--input-focus-ring);
+
+    /*
+      9) Header / navigation / popover
+    */
+    --header-bg: var(--color-bg-surface);
+    --header-text: var(--color-text-body);
+    --header-border: var(--color-border-soft);
+    --header-shadow: none;
+
+    --nav-link-bg: transparent;
+    --nav-link-bg-hover: var(--color-bg-surface-hover);
+    --nav-link-bg-active: var(--color-bg-surface-active);
+    --nav-link-bg-current: var(--color-bg-surface-selected);
+    --nav-link-text: var(--color-text-body);
+    --nav-link-text-hover: var(--color-accent-hover);
+    --nav-link-text-active: var(--color-accent-active);
+    --nav-link-text-current: var(--color-accent-text);
+    --nav-link-focus-ring: var(--color-focus-ring);
+
+    --popover-bg: var(--color-bg-surface-elevated);
+    --popover-text: var(--color-text-body);
+    --popover-border: var(--color-border-default);
+    --popover-shadow: var(--shadow-medium);
+
+    /*
+      10) Cards / recipes
+    */
+    --card-bg: var(--color-bg-surface);
+    --card-bg-hover: var(--color-bg-surface-elevated);
+    --card-bg-active: var(--color-bg-surface-active);
+    --card-text: var(--color-text-body);
+    --card-title: var(--color-text-primary);
+    --card-subtitle: var(--color-text-muted);
+    --card-border: var(--color-border-soft);
+    --card-border-hover: var(--color-border-hover);
+    --card-shadow: var(--shadow-soft);
+    --card-shadow-hover: var(--shadow-medium);
+    --card-image-bg: var(--color-bg-surface-muted);
+    --card-focus-ring: var(--color-focus-ring);
+
+    --recipe-category-text: var(--color-accent-text);
+    --recipe-category-bg: var(--color-accent-subtle);
+
+    /*
+      11) Filters / chips / tags
+    */
+    --chip-bg: var(--color-bg-surface);
+    --chip-bg-hover: var(--color-bg-surface-hover);
+    --chip-bg-active: var(--color-bg-surface-active);
+    --chip-bg-selected: var(--color-accent-interactive);
+    --chip-text: var(--color-text-body);
+    --chip-text-hover: var(--color-accent-hover);
+    --chip-text-active: var(--color-accent-active);
+    --chip-text-selected: var(--color-accent-contrast);
+    --chip-border: var(--color-border-default);
+    --chip-border-hover: var(--color-border-hover);
+    --chip-border-selected: var(--color-accent-interactive);
+    --chip-focus-ring: var(--color-focus-ring);
+
+    --tag-bg: var(--color-bg-surface-muted);
+    --tag-text: var(--color-text-secondary);
+    --tag-bg-accent: var(--color-accent-subtle);
+    --tag-text-accent: var(--color-accent-text);
+    --tag-bg-seasonal: var(--color-seasonal-subtle);
+    --tag-text-seasonal: var(--color-seasonal-text);
+
+    /*
+      12) Slider / loading / empty
+    */
+    --color-slider-dot: var(--gray-300);
+    --color-slider-dot-hover: var(--gray-500);
+    --color-slider-dot-active: var(--color-text-muted);
+
+    --skeleton-bg: var(--color-bg-surface-muted);
+    --skeleton-highlight: rgba(255, 255, 255, 0.72);
+
+    --empty-state-bg: var(--color-bg-surface);
+    --empty-state-text: var(--color-text-muted);
+    --loading-spinner: var(--color-accent-interactive);
+
+    /*
+      13) Footer
+    */
     --footer-shell: #f3e4e7;
-    --footer-card: #fffaf5;
+    --footer-card: var(--cream-50);
     --footer-promo: #f7cfd8;
-    --footer-text: #122035;
-    --footer-cta: #f6d36b;
+    --footer-text: var(--ink-900);
+    --footer-cta: var(--yellow-400);
     --footer-mint: #74c7b8;
-    --footer-coral: #e96f67;
+    --footer-coral: var(--coral-500);
+
+    /*
+      14) Old aliases
+      Оставлены, чтобы текущие компоненты не сломались.
+      Новые компоненты лучше писать через semantic/component tokens выше.
+    */
+    --color-page-bg: var(--color-bg-page);
+    --color-surface: var(--color-bg-surface);
+    --color-text-main: var(--color-text-primary);
+    --color-accent-strong: var(--color-accent-hover);
   }
 
   [data-theme='dark'] {
     color-scheme: dark;
 
-    --color-page-bg: #120f0d;
-    --color-surface: #1f1a16;
+    /* Base backgrounds */
+    --color-bg-page: #120f0d;
+    --color-bg-surface: #1f1a16;
+    --color-bg-surface-muted: #2a241f;
+    --color-bg-surface-subtle: #211b17;
+    --color-bg-surface-hover: #342820;
+    --color-bg-surface-active: #46342b;
+    --color-bg-surface-selected: #3a2028;
+    --color-bg-surface-elevated: #261f1a;
+    --color-bg-overlay: rgba(0, 0, 0, 0.64);
 
-    --color-text-main: #fff7ed;
+    /* Text */
+    --color-text-primary: #fff7ed;
     --color-text-body: #f5e7d8;
+    --color-text-secondary: #d8c8b8;
     --color-text-muted: #b8a99a;
+    --color-text-subtle: #938477;
+    --color-text-disabled: #74685f;
+    --color-text-inverse: var(--ink-900);
 
-    --color-accent: #f08aa5;
-    --color-accent-strong: #ff9ab4;
-
-    --color-seasonal: #8fd8c7;
+    /* Borders */
     --color-border-soft: #3a2f29;
-    --color-focus: #f08aa5;
+    --color-border-default: #463a32;
+    --color-border-hover: #5a493f;
+    --color-border-strong: #6d5a4e;
+    --color-border-selected: #ff9ab4;
+    --color-border-disabled: #302720;
 
-    --color-slider-dot: #6b5a50;
-    --color-slider-dot-active: #f5e7d8;
+    /* Accent */
+    --color-accent: #f08aa5;
+    --color-accent-soft: #3a2028;
+    --color-accent-subtle: #28191d;
+    --color-accent-text: #ffb0c2;
+    --color-accent-interactive: #f08aa5;
+    --color-accent-hover: #ff9ab4;
+    --color-accent-active: #ffb0c2;
+    --color-accent-contrast: var(--ink-900);
 
+    /* Seasonal */
+    --color-seasonal: #8fd8c7;
+    --color-seasonal-soft: #17352e;
+    --color-seasonal-subtle: #102720;
+    --color-seasonal-text: #a8eadc;
+    --color-seasonal-hover: #a8eadc;
+    --color-seasonal-active: #c4fff2;
+
+    /* Links / focus */
+    --color-link: var(--color-accent-text);
+    --color-link-hover: var(--color-accent-hover);
+    --color-link-active: var(--color-accent-active);
+
+    --color-focus: var(--color-accent-hover);
+    --color-focus-ring: var(--color-accent-hover);
+    --color-focus-ring-soft: rgba(255, 154, 180, 0.28);
+    --color-focus-ring-offset: var(--color-bg-page);
+
+    --color-selection-bg: #3a2028;
+    --color-selection-text: #fff7ed;
+
+    /* Status */
+    --color-success: #79d8c4;
+    --color-success-hover: #a8eadc;
+    --color-success-soft: #17352e;
+    --color-success-border: #2e6f60;
+    --color-success-text: #a8eadc;
+
+    --color-warning: #ffd35a;
+    --color-warning-hover: #ffe28a;
+    --color-warning-soft: #3a2c12;
+    --color-warning-border: #7a5a16;
+    --color-warning-text: #ffe28a;
+
+    --color-error: #ff8fa3;
+    --color-error-hover: #ffb0c2;
+    --color-error-soft: #3a1820;
+    --color-error-border: #7d3340;
+    --color-error-text: #ffb0c2;
+
+    --color-info: #8fd8ff;
+    --color-info-hover: #bceaff;
+    --color-info-soft: #102f3d;
+    --color-info-border: #28637d;
+    --color-info-text: #bceaff;
+
+    /* Shadows */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.32);
     --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-medium: 0 12px 32px rgba(0, 0, 0, 0.6);
+    --shadow-strong: 0 18px 48px rgba(0, 0, 0, 0.72);
 
+    /* Interactive base */
+    --interactive-bg: transparent;
+    --interactive-bg-hover: var(--color-bg-surface-hover);
+    --interactive-bg-active: var(--color-bg-surface-active);
+    --interactive-bg-selected: var(--color-bg-surface-selected);
+    --interactive-text: var(--color-text-body);
+    --interactive-text-hover: var(--color-accent-hover);
+    --interactive-text-active: var(--color-accent-active);
+    --interactive-text-selected: var(--color-accent-text);
+    --interactive-border: transparent;
+    --interactive-border-hover: var(--color-border-hover);
+    --interactive-border-selected: var(--color-border-selected);
+    --interactive-focus-ring: var(--color-focus-ring);
+
+    /* Buttons */
+    --button-primary-bg: var(--color-accent-interactive);
+    --button-primary-bg-hover: var(--color-accent-hover);
+    --button-primary-bg-active: var(--color-accent-active);
+    --button-primary-text: var(--color-accent-contrast);
+    --button-primary-text-hover: var(--color-accent-contrast);
+    --button-primary-text-active: var(--color-accent-contrast);
+    --button-primary-border: var(--button-primary-bg);
+    --button-primary-border-hover: var(--button-primary-bg-hover);
+    --button-primary-border-active: var(--button-primary-bg-active);
+
+    --button-secondary-bg: var(--color-bg-surface-muted);
+    --button-secondary-bg-hover: var(--color-bg-surface-hover);
+    --button-secondary-bg-active: var(--color-bg-surface-active);
+    --button-secondary-text: var(--color-text-body);
+    --button-secondary-text-hover: var(--color-accent-hover);
+    --button-secondary-text-active: var(--color-accent-active);
+    --button-secondary-border: var(--color-border-default);
+    --button-secondary-border-hover: var(--color-border-hover);
+    --button-secondary-border-active: var(--color-border-strong);
+
+    --button-ghost-bg: transparent;
+    --button-ghost-bg-hover: var(--color-bg-surface-hover);
+    --button-ghost-bg-active: var(--color-bg-surface-active);
+    --button-ghost-text: var(--color-text-body);
+    --button-ghost-text-hover: var(--color-accent-hover);
+    --button-ghost-text-active: var(--color-accent-active);
+    --button-ghost-border: transparent;
+
+    --button-icon-bg: transparent;
+    --button-icon-bg-hover: var(--color-bg-surface-hover);
+    --button-icon-bg-active: var(--color-bg-surface-active);
+    --button-icon-text: var(--color-text-body);
+    --button-icon-text-hover: var(--color-accent-hover);
+    --button-icon-text-active: var(--color-accent-active);
+    --button-icon-focus-ring: var(--color-focus-ring);
+
+    --button-disabled-bg: var(--color-bg-surface-muted);
+    --button-disabled-text: var(--color-text-disabled);
+    --button-disabled-border: var(--color-border-disabled);
+
+    /* Inputs / search */
+    --input-bg: var(--color-bg-surface-muted);
+    --input-bg-hover: var(--color-bg-surface-hover);
+    --input-bg-focus: var(--color-bg-surface-elevated);
+    --input-bg-disabled: #211b17;
+    --input-text: var(--color-text-body);
+    --input-placeholder: var(--color-text-muted);
+    --input-border: transparent;
+    --input-border-hover: var(--color-border-hover);
+    --input-border-focus: var(--color-focus-ring);
+    --input-border-error: var(--color-error);
+    --input-focus-ring: var(--color-focus-ring);
+
+    --search-bg: var(--color-bg-surface);
+    --search-form-bg: var(--color-bg-surface);
+    --search-icon: var(--color-text-muted);
+    --search-input-bg: var(--input-bg);
+    --search-input-bg-hover: var(--input-bg-hover);
+    --search-input-bg-focus: var(--input-bg-focus);
+    --search-input-text: var(--input-text);
+    --search-input-placeholder: var(--input-placeholder);
+    --search-input-focus-ring: var(--input-focus-ring);
+
+    /* Header / navigation / popover */
+    --header-bg: var(--color-bg-surface);
+    --header-text: var(--color-text-body);
+    --header-border: var(--color-border-soft);
+    --header-shadow: none;
+
+    --nav-link-bg: transparent;
+    --nav-link-bg-hover: var(--color-bg-surface-hover);
+    --nav-link-bg-active: var(--color-bg-surface-active);
+    --nav-link-bg-current: var(--color-bg-surface-selected);
+    --nav-link-text: var(--color-text-body);
+    --nav-link-text-hover: var(--color-accent-hover);
+    --nav-link-text-active: var(--color-accent-active);
+    --nav-link-text-current: var(--color-accent-text);
+    --nav-link-focus-ring: var(--color-focus-ring);
+
+    --popover-bg: var(--color-bg-surface-elevated);
+    --popover-text: var(--color-text-body);
+    --popover-border: var(--color-border-default);
+    --popover-shadow: var(--shadow-medium);
+
+    /* Cards / recipes */
+    --card-bg: var(--color-bg-surface);
+    --card-bg-hover: var(--color-bg-surface-elevated);
+    --card-bg-active: var(--color-bg-surface-active);
+    --card-text: var(--color-text-body);
+    --card-title: var(--color-text-primary);
+    --card-subtitle: var(--color-text-muted);
+    --card-border: var(--color-border-soft);
+    --card-border-hover: var(--color-border-hover);
+    --card-shadow: var(--shadow-soft);
+    --card-shadow-hover: var(--shadow-medium);
+    --card-image-bg: var(--color-bg-surface-muted);
+    --card-focus-ring: var(--color-focus-ring);
+
+    --recipe-category-text: var(--color-accent-text);
+    --recipe-category-bg: var(--color-accent-subtle);
+
+    /* Filters / chips / tags */
+    --chip-bg: var(--color-bg-surface);
+    --chip-bg-hover: var(--color-bg-surface-hover);
+    --chip-bg-active: var(--color-bg-surface-active);
+    --chip-bg-selected: var(--color-accent-interactive);
+    --chip-text: var(--color-text-body);
+    --chip-text-hover: var(--color-accent-hover);
+    --chip-text-active: var(--color-accent-active);
+    --chip-text-selected: var(--color-accent-contrast);
+    --chip-border: var(--color-border-default);
+    --chip-border-hover: var(--color-border-hover);
+    --chip-border-selected: var(--color-accent-interactive);
+    --chip-focus-ring: var(--color-focus-ring);
+
+    --tag-bg: var(--color-bg-surface-muted);
+    --tag-text: var(--color-text-secondary);
+    --tag-bg-accent: var(--color-accent-subtle);
+    --tag-text-accent: var(--color-accent-text);
+    --tag-bg-seasonal: var(--color-seasonal-subtle);
+    --tag-text-seasonal: var(--color-seasonal-text);
+
+    /* Slider / loading / empty */
+    --color-slider-dot: #6b5a50;
+    --color-slider-dot-hover: #9c897b;
+    --color-slider-dot-active: var(--color-text-body);
+
+    --skeleton-bg: var(--color-bg-surface-muted);
+    --skeleton-highlight: rgba(255, 255, 255, 0.08);
+
+    --empty-state-bg: var(--color-bg-surface);
+    --empty-state-text: var(--color-text-muted);
+    --loading-spinner: var(--color-accent-interactive);
+
+    /* Footer */
     --footer-shell: #1f1714;
     --footer-card: #14110f;
     --footer-promo: #c94f3f;
@@ -67,5 +610,11 @@
     --footer-cta: #ffd35a;
     --footer-mint: #79d8c4;
     --footer-coral: #ef6f61;
+
+    /* Old aliases */
+    --color-page-bg: var(--color-bg-page);
+    --color-surface: var(--color-bg-surface);
+    --color-text-main: var(--color-text-primary);
+    --color-accent-strong: var(--color-accent-hover);
   }
 }
