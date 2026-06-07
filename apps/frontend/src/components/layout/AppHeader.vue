@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { MenuIcon, MoonIcon, SunIcon } from "@lucide/vue";
+import { useRoute } from "vue-router";
 import { useTheme } from "@/composables/useTheme";
 import logoURL from "@/assets/Logo_MyRecipes_transparent.png";
 import AppButton from "@/components/ui/AppButton.vue";
@@ -7,40 +8,56 @@ import AppPopover from "@/components/ui/AppPopover.vue";
 import AppSearch from "@/components/ui/AppSearch.vue";
 
 const { isDarkTheme, toggleTheme } = useTheme();
+const route = useRoute();
 
 const navigationListItems = [
   {
     label: "Список рецептов",
     to: "/recipes",
+    meal: null,
   },
   {
     label: "Завтраки",
     to: {
       path: "/recipes",
       query: {
-        category: "breakfasts",
+        meal: "breakfast",
       },
     },
+    meal: "breakfast",
   },
   {
     label: "Обеды",
     to: {
       path: "/recipes",
       query: {
-        category: "lunches",
+        meal: "lunch",
       },
     },
+    meal: "lunch",
   },
   {
     label: "Ужины",
     to: {
       path: "/recipes",
       query: {
-        category: "dinners",
+        meal: "dinner",
       },
     },
+    meal: "dinner",
   },
 ];
+
+function isNavigationItemActive(item: (typeof navigationListItems)[number]) {
+  const currentMeal =
+    typeof route.query.meal === "string" ? route.query.meal : null;
+
+  if (item.meal === null) {
+    return route.path === "/recipes" && currentMeal === null;
+  }
+
+  return route.path === "/recipes" && currentMeal === item.meal;
+}
 </script>
 
 <template>
@@ -59,7 +76,9 @@ const navigationListItems = [
             v-for="item in navigationListItems"
             :key="item.label"
             class="app-header__menu-link block py-5 px-6 rounded-md text-body text-sm font-medium leading-compact no-underline"
+            :class="{ 'is-current': isNavigationItemActive(item) }"
             :to="item.to"
+            :aria-current="isNavigationItemActive(item) ? 'page' : undefined"
             @click="close"
           >
             {{ item.label }}
@@ -98,16 +117,21 @@ const navigationListItems = [
   width: 100%;
   height: 56px;
   display: grid;
-  // Fixed side columns keep the logo visually centered between menu and search buttons.
   grid-template-columns: 76px minmax(0, 1fr) 76px;
   align-items: center;
   padding: 0 8px;
   column-gap: 8px;
 
-  background-color: var(--color-surface);
-  color: var(--color-text-body);
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  border-bottom: 1px solid var(--header-border);
+  box-shadow: var(--header-shadow);
 
-  border-bottom: 1px solid var(--color-border-soft);
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
 
   &__actions {
     justify-self: end;
@@ -135,8 +159,24 @@ const navigationListItems = [
 
     padding: 0;
     background-color: transparent;
+    color: inherit;
     text-decoration: none;
     line-height: 0;
+
+    border-radius: var(--radius-md);
+
+    transition:
+      box-shadow var(--duration-base) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+
+    &:focus-visible {
+      outline: 2px solid var(--nav-link-focus-ring);
+      outline-offset: 3px;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
   }
 
   &__logo-image {
@@ -146,10 +186,44 @@ const navigationListItems = [
     object-fit: contain;
   }
 
-  &__menu-link:hover,
-  &__menu-link:focus-visible {
-    background-color: var(--color-border-soft);
-    color: var(--color-accent-strong);
+  &__menu-link {
+    background-color: var(--nav-link-bg);
+    color: var(--nav-link-text);
+
+    transition:
+      background-color var(--duration-base) var(--ease-standard),
+      color var(--duration-base) var(--ease-standard),
+      box-shadow var(--duration-base) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      background-color: var(--nav-link-bg-hover);
+      color: var(--nav-link-text-hover);
+    }
+
+    &:active {
+      background-color: var(--nav-link-bg-active);
+      color: var(--nav-link-text-active);
+      transform: translateY(1px);
+    }
+
+    &.is-current,
+    &[aria-current="page"] {
+      background-color: var(--nav-link-bg-current);
+      color: var(--nav-link-text-current);
+      font-weight: 700;
+      box-shadow: inset 3px 0 0 var(--color-accent-interactive);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nav-link-focus-ring);
+      outline-offset: 2px;
+    }
+
+    &[aria-current="page"] {
+      background-color: var(--nav-link-bg-current);
+      color: var(--nav-link-text-current);
+    }
   }
 }
 
