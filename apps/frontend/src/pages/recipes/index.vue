@@ -1,27 +1,34 @@
 <script lang="ts" setup>
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
 import RecipeCard from "@/components/ui/RecipeCard.vue";
+import RecipeSearchForm from "./components/RecipeSearchForm.vue";
 import { recipes } from "@/data/recipes";
 import { computed, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { ArrowLeft } from "@lucide/vue";
 import { normalizeSearchText } from "@/utils/normalizeSearchText";
-import { getRecipeCategories } from "@/utils/getRecipeCategories";
 
 defineOptions({
   name: "RecipesPage",
 });
 
 const route = useRoute();
-
 const router = useRouter();
+
 const localQuery = ref("");
+const isFiltersPanelOpen = ref(false);
+
+type FilterMode = "basic" | "advanced";
+
+const filterMode = computed<FilterMode>(() => {
+  return route.query.filterMode === "advanced" ? "advanced" : "basic";
+});
+
+const isAdvancedFilterMode = computed(() => {
+  return filterMode.value === "advanced";
+});
 
 type Recipe = (typeof recipes)[number];
-
-const recipeCategories = computed(() => {
-  return getRecipeCategories(recipes);
-});
 
 const searchQuery = computed(() => {
   return String(route.query.search ?? "").trim();
@@ -31,15 +38,158 @@ const normalizedSearchQuery = computed(() => {
   return normalizeSearchText(searchQuery.value);
 });
 
-const categoryQuery = computed(() => {
-  return String(route.query.category ?? "").trim();
+type RecipeFilterOption = {
+  label: string;
+  value: string;
+};
+
+type RecipeTagFilterGroup = {
+  title: string;
+  options: RecipeFilterOption[];
+};
+
+const mealTypeFilters: RecipeFilterOption[] = [
+  { label: "Завтраки", value: "breakfast" },
+  { label: "Обеды", value: "lunch" },
+  { label: "Ужины", value: "dinner" },
+  { label: "Перекусы", value: "snack" },
+];
+
+const recipeTagFilterGroups: RecipeTagFilterGroup[] = [
+  {
+    title: "Способ приготовления",
+    options: [
+      { label: "На пару", value: "steam" },
+      { label: "Сковородка", value: "pan" },
+      { label: "Плита", value: "stove" },
+      { label: "Духовка", value: "oven" },
+      { label: "Аэрогриль", value: "air-fryer" },
+      { label: "Без готовки", value: "no-cook" },
+    ],
+  },
+  {
+    title: "Основной ингредиент",
+    options: [
+      { label: "Рыба", value: "fish" },
+      { label: "Мясо", value: "meat" },
+      { label: "Птица", value: "poultry" },
+      { label: "Индейка", value: "turkey" },
+      { label: "Курица", value: "chicken" },
+      { label: "Яйца", value: "eggs" },
+      { label: "Овощи", value: "vegetables" },
+      { label: "Крупы", value: "grains" },
+      { label: "Ягоды", value: "berries" },
+      { label: "Фрукты", value: "fruits" },
+    ],
+  },
+  {
+    title: "Диеты и питание",
+    options: [
+      { label: "Диета №5", value: "diet-5" },
+      { label: "Натуральное питание", value: "natural" },
+      { label: "Белковые", value: "protein" },
+      { label: "Лёгкие", value: "light" },
+      { label: "Низкожирные", value: "low-fat" },
+      { label: "Без жарки", value: "no-fry" },
+    ],
+  },
+  {
+    title: "Тип блюда",
+    options: [
+      { label: "Салаты", value: "salad" },
+      { label: "Тосты", value: "toast" },
+      { label: "Смузи", value: "smoothie" },
+      { label: "Горячие блюда", value: "hot-dish" },
+      { label: "Супы", value: "soup" },
+      { label: "Гарниры", value: "side-dish" },
+    ],
+  },
+  {
+    title: "Сезонность",
+    options: [
+      { label: "Сезонные", value: "seasonal" },
+      { label: "Весна", value: "spring" },
+      { label: "Лето", value: "summer" },
+      { label: "Осень", value: "autumn" },
+      { label: "Зима", value: "winter" },
+    ],
+  },
+  {
+    title: "Скорость",
+    options: [
+      { label: "Быстро", value: "quick" },
+      { label: "До 15 минут", value: "under-15-min" },
+      { label: "До 30 минут", value: "under-30-min" },
+    ],
+  },
+];
+
+const recipeTagFilters = computed<RecipeFilterOption[]>(() => {
+  return recipeTagFilterGroups.flatMap((group) => group.options);
 });
 
-const navigationCategoryLabels: Record<string, string> = {
-  breakfasts: "Завтраки",
-  lunches: "Обеды",
-  dinners: "Ужины",
+type RecipeWithFilters = Recipe & {
+  mealTypes?: string[];
+  tags?: string[];
+  seasonalTag?: string;
 };
+
+function getQueryList(queryValue: unknown) {
+  if (Array.isArray(queryValue)) {
+    return queryValue
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof queryValue !== "string") {
+    return [];
+  }
+
+  const trimmedValue = queryValue.trim();
+
+  return trimmedValue ? [trimmedValue] : [];
+}
+
+function getSingleTagPerGroup(tags: string[]) {
+  const result: string[] = [];
+
+  recipeTagFilterGroups.forEach((group) => {
+    const selectedOption = group.options.find((option) => {
+      return tags.includes(option.value);
+    });
+
+    if (selectedOption) {
+      result.push(selectedOption.value);
+    }
+  });
+
+  return result;
+}
+
+const selectedMealTypes = computed(() => {
+  const mealTypes = getQueryList(route.query.meal);
+
+  return isAdvancedFilterMode.value ? mealTypes : mealTypes.slice(0, 1);
+});
+
+const selectedTags = computed(() => {
+  const tags = getQueryList(route.query.tag);
+
+  return isAdvancedFilterMode.value ? tags : getSingleTagPerGroup(tags);
+});
+
+const hasSelectedFilters = computed(() => {
+  return selectedMealTypes.value.length > 0 || selectedTags.value.length > 0;
+});
+
+const selectedFiltersCount = computed(() => {
+  return selectedMealTypes.value.length + selectedTags.value.length;
+});
+
+const hasActiveSearchOrFilters = computed(() => {
+  return Boolean(searchQuery.value) || hasSelectedFilters.value;
+});
 
 watch(
   searchQuery,
@@ -52,17 +202,26 @@ watch(
 );
 
 async function goToRecipesCatalog(
-  searchQuery: string,
-  categorySlug = categoryQuery.value,
+  options: {
+    searchQuery?: string;
+    mealTypes?: string[];
+    tags?: string[];
+    filterMode?: FilterMode;
+  } = {},
 ) {
-  const normalizedQuery = searchQuery.trim();
+  const normalizedQuery = (options.searchQuery ?? localQuery.value).trim();
+  const nextMealTypes = options.mealTypes ?? selectedMealTypes.value;
+  const nextTags = options.tags ?? selectedTags.value;
+  const nextFilterMode = options.filterMode ?? filterMode.value;
 
   try {
     await router.push({
       path: "/recipes",
       query: {
         ...(normalizedQuery && { search: normalizedQuery }),
-        ...(categorySlug && { category: categorySlug }),
+        ...(nextMealTypes.length && { meal: nextMealTypes }),
+        ...(nextTags.length && { tag: nextTags }),
+        ...(nextFilterMode === "advanced" && { filterMode: "advanced" }),
       },
     });
   } catch (error) {
@@ -71,20 +230,124 @@ async function goToRecipesCatalog(
 }
 
 async function submitSearch() {
-  await goToRecipesCatalog(localQuery.value);
+  await goToRecipesCatalog({
+    searchQuery: localQuery.value,
+  });
 }
 
 async function clearSearch() {
   localQuery.value = "";
 
-  await goToRecipesCatalog("", "");
+  await goToRecipesCatalog({
+    searchQuery: "",
+    mealTypes: [],
+    tags: [],
+    filterMode: "basic",
+  });
 }
 
-async function selectCategory(categorySlug: string) {
-  const nextCategorySlug =
-    categorySlug === categoryQuery.value ? "" : categorySlug;
+async function resetFilters() {
+  localQuery.value = searchQuery.value;
 
-  await goToRecipesCatalog(localQuery.value, nextCategorySlug);
+  await goToRecipesCatalog({
+    searchQuery: searchQuery.value,
+    mealTypes: [],
+    tags: [],
+    filterMode: filterMode.value,
+  });
+}
+
+function openFiltersPanel() {
+  isFiltersPanelOpen.value = true;
+}
+
+function closeFiltersPanel() {
+  isFiltersPanelOpen.value = false;
+}
+
+function toggleQueryValue(currentValues: string[], value: string) {
+  if (currentValues.includes(value)) {
+    return currentValues.filter((currentValue) => currentValue !== value);
+  }
+
+  return [...currentValues, value];
+}
+
+async function toggleAdvancedFilterMode() {
+  const nextFilterMode: FilterMode = isAdvancedFilterMode.value
+    ? "basic"
+    : "advanced";
+
+  const nextMealTypes =
+    nextFilterMode === "advanced"
+      ? selectedMealTypes.value
+      : selectedMealTypes.value.slice(0, 1);
+
+  const nextTags =
+    nextFilterMode === "advanced"
+      ? selectedTags.value
+      : getSingleTagPerGroup(selectedTags.value);
+
+  await goToRecipesCatalog({
+    searchQuery: searchQuery.value,
+    mealTypes: nextMealTypes,
+    tags: nextTags,
+    filterMode: nextFilterMode,
+  });
+}
+
+async function toggleMealType(mealType: string) {
+  if (isAdvancedFilterMode.value) {
+    await goToRecipesCatalog({
+      mealTypes: toggleQueryValue(selectedMealTypes.value, mealType),
+    });
+
+    return;
+  }
+
+  const isCurrentMealTypeSelected = selectedMealTypes.value.includes(mealType);
+
+  await goToRecipesCatalog({
+    mealTypes: isCurrentMealTypeSelected ? [] : [mealType],
+  });
+}
+
+function getTagGroupValues(tag: string): string[] {
+  const tagGroup = recipeTagFilterGroups.find((group) => {
+    return group.options.some((option) => option.value === tag);
+  });
+
+  if (!tagGroup) {
+    return [];
+  }
+
+  return tagGroup.options.map((option) => option.value);
+}
+
+async function toggleTag(tag: string) {
+  if (isAdvancedFilterMode.value) {
+    await goToRecipesCatalog({
+      tags: toggleQueryValue(selectedTags.value, tag),
+    });
+
+    return;
+  }
+
+  const tagGroupValues = getTagGroupValues(tag);
+
+  const tagsFromOtherGroups = selectedTags.value.filter((selectedTag) => {
+    return !tagGroupValues.includes(selectedTag);
+  });
+
+  const isCurrentTagAlreadySelected = selectedTags.value.includes(tag);
+
+  const nextTags = isCurrentTagAlreadySelected
+    ? tagsFromOtherGroups
+    : [...tagsFromOtherGroups, tag];
+
+  await goToRecipesCatalog({
+    tags: nextTags,
+  });
 }
 
 function mapRecipeToCard(recipe: Recipe) {
@@ -101,7 +364,33 @@ function mapRecipeToCard(recipe: Recipe) {
 const recipeCards = computed(() => {
   return recipes
     .filter((recipe) => {
-      if (categoryQuery.value && recipe.category.slug !== categoryQuery.value) {
+      const recipeWithFilters = recipe as RecipeWithFilters;
+
+      const hasMealType =
+        selectedMealTypes.value.length === 0 ||
+        selectedMealTypes.value.some((mealType) => {
+          return recipeWithFilters.mealTypes?.includes(mealType);
+        });
+
+      if (!hasMealType) {
+        return false;
+      }
+
+      const hasSelectedTagGroups = recipeTagFilterGroups.every((group) => {
+        const selectedGroupTags = group.options
+          .map((option) => option.value)
+          .filter((value) => selectedTags.value.includes(value));
+
+        if (selectedGroupTags.length === 0) {
+          return true;
+        }
+
+        return selectedGroupTags.some((tag) => {
+          return recipeWithFilters.tags?.includes(tag);
+        });
+      });
+
+      if (!hasSelectedTagGroups) {
         return false;
       }
 
@@ -114,8 +403,11 @@ const recipeCards = computed(() => {
           recipe.title,
           recipe.description,
           recipe.category.name,
+          recipeWithFilters.seasonalTag,
           ...recipe.ingredients.map((ingredient) => ingredient.name),
-        ].join(" "),
+        ]
+          .filter(Boolean)
+          .join(" "),
       );
 
       return searchableText.includes(normalizedSearchQuery.value);
@@ -147,7 +439,7 @@ const resultCountText = computed(() => {
   const count = recipeCards.value.length;
   const recipeWord = getRecipeWord(count);
 
-  if (!searchQuery.value && !categoryQuery.value) {
+  if (!hasActiveSearchOrFilters.value) {
     return `Всего ${count} ${recipeWord}`;
   }
 
@@ -158,23 +450,29 @@ const resultCountText = computed(() => {
   return `Найдено ${count} ${recipeWord}`;
 });
 
-const activeCategoryName = computed(() => {
-  const activeCategory = recipeCategories.value.find((category) => {
-    return category.slug === categoryQuery.value;
-  });
+const activeFilterNames = computed(() => {
+  const activeMealTypeNames = mealTypeFilters
+    .filter((filter) => selectedMealTypes.value.includes(filter.value))
+    .map((filter) => filter.label);
 
-  return (
-    activeCategory?.name ?? navigationCategoryLabels[categoryQuery.value] ?? ""
-  );
+  const activeTagNames = recipeTagFilters.value
+    .filter((filter) => selectedTags.value.includes(filter.value))
+    .map((filter) => filter.label);
+
+  return [...activeMealTypeNames, ...activeTagNames];
+});
+
+const activeFilterText = computed(() => {
+  return activeFilterNames.value.join(", ");
 });
 
 const emptyStateTitle = computed(() => {
-  if (searchQuery.value && categoryQuery.value) {
-    return "Ничего не найдено в этой категории";
+  if (searchQuery.value && hasSelectedFilters.value) {
+    return "Ничего не найдено по этим фильтрам";
   }
 
-  if (categoryQuery.value) {
-    return "В этой категории пока нет рецептов";
+  if (hasSelectedFilters.value) {
+    return "По выбранным фильтрам пока нет рецептов";
   }
 
   return "Ничего не найдено";
@@ -185,7 +483,9 @@ const suggestedSearchQueries = ["кофе", "хлеб", "свёкла", "клу�
 async function searchBySuggestion(suggestedQuery: string) {
   localQuery.value = suggestedQuery;
 
-  await goToRecipesCatalog(suggestedQuery);
+  await goToRecipesCatalog({
+    searchQuery: suggestedQuery,
+  });
 }
 </script>
 
@@ -205,74 +505,204 @@ async function searchBySuggestion(suggestedQuery: string) {
         </h1>
 
         <p
-          v-if="searchQuery && activeCategoryName"
+          v-if="searchQuery && activeFilterText"
           class="recipes-page__subtitle"
         >
-          Результаты по запросу: <strong>«{{ searchQuery }}»</strong> в
-          категории
-          <strong>«{{ activeCategoryName }}»</strong>
+          Результаты по запросу: <strong>«{{ searchQuery }}»</strong> с
+          фильтрами:
+          <strong>«{{ activeFilterText }}»</strong>
         </p>
 
         <p v-else-if="searchQuery" class="recipes-page__subtitle">
           Результаты по запросу: <strong>«{{ searchQuery }}»</strong>
         </p>
 
-        <p v-else-if="activeCategoryName" class="recipes-page__subtitle">
-          Категория: <strong>«{{ activeCategoryName }}»</strong>
+        <p v-else-if="activeFilterText" class="recipes-page__subtitle">
+          Фильтры: <strong>«{{ activeFilterText }}»</strong>
         </p>
 
         <p v-else class="recipes-page__subtitle">
-          Ищите по названию, категории или ингредиенту.
+          Ищите по названию, приёму пищи, тегу или ингредиенту.
         </p>
       </header>
 
-      <form
-        class="recipes-page__form"
-        role="search"
-        @submit.prevent="submitSearch"
-      >
-        <input
-          v-model="localQuery"
-          class="recipes-page__input"
-          type="search"
-          placeholder="Например: кофе"
-          aria-label="Поиск рецептов"
-        />
-        <div class="recipes-page__actions">
-          <button class="recipes-page__button" type="submit">Найти</button>
-          <button
-            v-if="searchQuery"
-            class="recipes-page__button recipes-page__button--secondary"
-            type="button"
-            @click="clearSearch"
+      <RecipeSearchForm
+        v-model="localQuery"
+        :show-clear-button="hasActiveSearchOrFilters"
+        @submit-search="submitSearch"
+        @clear-search="clearSearch"
+      />
+
+      <div class="recipes-page__filter-bar">
+        <button
+          type="button"
+          class="recipes-page__filter-open"
+          @click="openFiltersPanel"
+        >
+          Фильтры
+
+          <span
+            v-if="selectedFiltersCount"
+            class="recipes-page__filter-open-count"
           >
-            Очистить
-          </button>
-        </div>
-      </form>
-
-      <div class="recipes-page__categories" aria-label="Фильтр категорий">
-        <button
-          type="button"
-          class="recipes-page__category"
-          :class="{ 'recipes-page__category--active': !categoryQuery }"
-          @click="selectCategory('')"
-        >
-          Все
+            {{ selectedFiltersCount }}
+          </span>
         </button>
 
+        <p v-if="activeFilterText" class="recipes-page__filter-bar-text">
+          Активные: <strong>«{{ activeFilterText }}»</strong>
+        </p>
+
         <button
-          v-for="category in recipeCategories"
-          :key="category.slug"
+          v-if="hasSelectedFilters"
           type="button"
-          class="recipes-page__category"
-          :class="{
-            'recipes-page__category--active': category.slug === categoryQuery,
-          }"
-          @click="selectCategory(category.slug)"
+          class="recipes-page__filter-bar-reset"
+          @click="resetFilters"
         >
-          {{ category.name }}
+          Сбросить
         </button>
+      </div>
+
+      <div
+        v-if="isFiltersPanelOpen"
+        class="recipes-page__filters-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Фильтры рецептов"
+        @click.self="closeFiltersPanel"
+      >
+        <aside class="recipes-page__filters-panel">
+          <header class="recipes-page__filters-panel-header">
+            <button
+              type="button"
+              class="recipes-page__filters-panel-close"
+              aria-label="Закрыть фильтры"
+              @click="closeFiltersPanel"
+            >
+              ×
+            </button>
+
+            <h2 class="recipes-page__filters-panel-title">Фильтры</h2>
+
+            <button
+              v-if="hasSelectedFilters"
+              type="button"
+              class="recipes-page__filters-panel-reset"
+              @click="resetFilters"
+            >
+              Очистить
+            </button>
+          </header>
+
+          <div class="recipes-page__filters-panel-body">
+            <div class="recipes-page__filter-mode">
+              <div class="recipes-page__filter-mode-content">
+                <h3 class="recipes-page__filter-mode-title">Режим подбора</h3>
+
+                <p class="recipes-page__filter-mode-text">
+                  {{
+                    isAdvancedFilterMode
+                      ? "Расширенный режим: можно выбрать несколько вариантов в каждой группе."
+                      : "Обычный режим: в каждой группе выбирается только один вариант."
+                  }}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="recipes-page__filter-mode-button"
+                :class="{
+                  'recipes-page__filter-mode-button--active':
+                    isAdvancedFilterMode,
+                }"
+                @click="toggleAdvancedFilterMode"
+              >
+                {{ isAdvancedFilterMode ? "Выключить" : "Расширенный режим" }}
+              </button>
+            </div>
+
+            <div class="recipes-page__filter-group">
+              <h3 class="recipes-page__filter-title">Приём пищи</h3>
+
+              <div class="recipes-page__filter-list">
+                <button
+                  v-for="filter in mealTypeFilters"
+                  :key="filter.value"
+                  type="button"
+                  class="recipes-page__filter-chip"
+                  :class="{
+                    'recipes-page__filter-chip--active':
+                      selectedMealTypes.includes(filter.value),
+                  }"
+                  @click="toggleMealType(filter.value)"
+                >
+                  {{ filter.label }}
+                </button>
+              </div>
+            </div>
+
+            <div class="recipes-page__dropdown-filters">
+              <details
+                v-for="group in recipeTagFilterGroups"
+                :key="group.title"
+                class="recipes-page__filter-dropdown"
+              >
+                <summary class="recipes-page__filter-summary">
+                  <span class="recipes-page__filter-summary-main">
+                    <span>{{ group.title }}</span>
+
+                    <span
+                      v-if="
+                        group.options.filter((option) =>
+                          selectedTags.includes(option.value),
+                        ).length
+                      "
+                      class="recipes-page__filter-summary-count"
+                    >
+                      {{
+                        group.options.filter((option) =>
+                          selectedTags.includes(option.value),
+                        ).length
+                      }}
+                    </span>
+                  </span>
+                </summary>
+
+                <div
+                  class="recipes-page__filter-list recipes-page__filter-list--inside"
+                >
+                  <button
+                    v-for="filter in group.options"
+                    :key="filter.value"
+                    type="button"
+                    class="recipes-page__filter-chip"
+                    :class="{
+                      'recipes-page__filter-chip--active':
+                        selectedTags.includes(filter.value),
+                    }"
+                    @click="toggleTag(filter.value)"
+                  >
+                    {{ filter.label }}
+                  </button>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <footer class="recipes-page__filters-panel-footer">
+            <p class="recipes-page__filters-panel-count">
+              {{ resultCountText }}
+            </p>
+
+            <button
+              type="button"
+              class="recipes-page__filters-panel-submit"
+              @click="closeFiltersPanel"
+            >
+              Показать рецепты
+            </button>
+          </footer>
+        </aside>
       </div>
 
       <p class="recipes-page__count" aria-live="polite">
@@ -287,29 +717,24 @@ async function searchBySuggestion(suggestedQuery: string) {
         />
       </section>
 
-      <section
-        v-else-if="searchQuery || categoryQuery"
-        class="recipes-page__empty"
-      >
+      <section v-else-if="hasActiveSearchOrFilters" class="recipes-page__empty">
         <h2>{{ emptyStateTitle }}</h2>
 
-        <p v-if="searchQuery && activeCategoryName">
-          По запросу <strong>«{{ searchQuery }}»</strong> в категории
-          <strong>«{{ activeCategoryName }}»</strong> ничего не найдено.
-          Попробуй другой запрос или выбери другую категорию.
+        <p v-if="searchQuery && activeFilterText">
+          По запросу <strong>«{{ searchQuery }}»</strong> с фильтрами
+          <strong>«{{ activeFilterText }}»</strong> ничего не найдено. Попробуй
+          другой запрос или очисти фильтры.
         </p>
 
-        <p v-else-if="categoryQuery">
-          В категории
-          <strong>«{{ activeCategoryName || categoryQuery }}»</strong>
-          пока нет рецептов. Можно выбрать другую категорию или посмотреть весь
-          список.
+        <p v-else-if="activeFilterText">
+          По фильтрам <strong>«{{ activeFilterText }}»</strong> пока нет
+          рецептов. Можно выбрать другие фильтры или посмотреть весь список.
         </p>
 
         <p v-else>Попробуй другой запрос или выбери одну из подсказок ниже.</p>
 
         <button
-          v-if="categoryQuery"
+          v-if="hasSelectedFilters"
           type="button"
           class="recipes-page__reset"
           @click="clearSearch"
@@ -371,129 +796,386 @@ async function searchBySuggestion(suggestedQuery: string) {
   }
 
   &__subtitle strong,
-  &__empty strong {
+  &__empty strong,
+  &__filter-bar-text strong {
     color: var(--color-text-body);
     font-weight: 700;
   }
 
-  &__count {
-    margin: -12px auto 24px;
+  &__filter-bar {
+    max-width: 560px;
+    margin: 0 auto 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__filter-open {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text-body);
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+  }
+
+  &__filter-open:hover,
+  &__filter-open:focus-visible {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+  }
+
+  &__filter-open-count {
+    min-width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 7px;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__filter-bar-text {
+    flex: 1;
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  &__filter-bar-reset {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--color-text-body);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &__filter-bar-reset:hover,
+  &__filter-bar-reset:focus-visible {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+  }
+
+  &__filters-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    background-color: var(--color-page-bg);
+  }
+
+  &__filters-panel {
+    width: min(520px, 100%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-page-bg);
+    color: var(--color-text-main);
+  }
+
+  &__filters-panel-header {
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-border-soft);
+    background-color: var(--color-surface);
+  }
+
+  &__filters-panel-close {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--color-text-body);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  &__filters-panel-close:hover,
+  &__filters-panel-close:focus-visible {
+    background-color: var(--color-page-bg);
+    color: var(--color-accent-strong);
+  }
+
+  &__filters-panel-title {
+    margin: 0;
+    color: var(--color-text-main);
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  &__filters-panel-reset {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--color-accent-strong);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &__filters-panel-reset:hover,
+  &__filters-panel-reset:focus-visible {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  &__filters-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  &__filters-panel-footer {
+    padding: 14px 16px 16px;
+    border-top: 1px solid var(--color-border-soft);
+    background-color: var(--color-surface);
+  }
+
+  &__filters-panel-count {
+    margin: 0 0 10px;
     color: var(--color-text-muted);
     font-size: 14px;
     text-align: center;
   }
 
-  &__form {
-    max-width: 560px;
-    margin: 0 auto 32px;
-    display: flex;
-    gap: 12px;
-    padding: 12px;
-    background-color: var(--color-surface);
-    box-shadow: var(--shadow-soft);
-  }
-
-  &__input {
-    flex: 1;
-    min-width: 0;
-    height: 44px;
-    padding: 0 14px;
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
-    color: var(--color-text-body);
-    font-size: 16px;
-  }
-
-  &__input::placeholder {
-    color: var(--color-text-muted);
-  }
-
-  &__input:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 0;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  &__button {
-    height: 44px;
-    padding: 0 18px;
+  &__filters-panel-submit {
+    width: 100%;
+    min-height: 48px;
     border: none;
     border-radius: var(--radius-md);
     background-color: var(--color-accent);
     color: var(--color-surface);
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      background-color: var(--color-accent-strong);
-    }
-
-    &:active {
-      background-color: oklch(0.595 0.1367 3.86);
-    }
   }
 
-  &__button--secondary {
+  &__filters-panel-submit:hover,
+  &__filters-panel-submit:focus-visible {
+    background-color: var(--color-accent-strong);
+  }
+
+  &__filter-mode {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
     border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  &__filter-mode-content {
+    min-width: 0;
+  }
+
+  &__filter-mode-title {
+    margin: 0 0 4px;
+    color: var(--color-text-main);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__filter-mode-text {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  &__filter-mode-button {
+    flex-shrink: 0;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 999px;
     background-color: transparent;
     color: var(--color-text-body);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
-  &__button--secondary:hover,
-  &__button--secondary:focus-visible {
+  &__filter-mode-button:hover,
+  &__filter-mode-button:focus-visible {
     border-color: var(--color-accent);
-    background-color: transparent;
     color: var(--color-accent-strong);
   }
 
-  &__categories {
-    max-width: 560px;
-    margin: -16px auto 24px;
+  &__filter-mode-button--active {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  &__filter-mode-button--active:hover,
+  &__filter-mode-button--active:focus-visible {
+    border-color: var(--color-accent-strong);
+    background-color: var(--color-accent-strong);
+    color: var(--color-surface);
+  }
+
+  &__filter-group {
+    padding: 16px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  &__filter-title {
+    margin: 0 0 12px;
+    color: var(--color-text-main);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__filter-list {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: 8px;
   }
 
-  &__category {
+  &__filter-list--inside {
+    padding: 0 16px 16px;
+  }
+
+  &__filter-chip {
     padding: 8px 12px;
     border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius-md);
+    border-radius: 999px;
     background-color: transparent;
     color: var(--color-text-body);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-
-    &:focus-visible,
-    &:hover {
-      background-color: oklch(0.915 0 0);
-      /* border-color: var(--color-accent); */
-      /* color: var(--color-surface); */
-    }
-    &:active {
-      background-color: oklch(0.885 0 0);
-    }
   }
 
-  &__category--active {
-    background-color: var(--color-accent);
+  &__filter-chip:hover,
+  &__filter-chip:focus-visible {
     border-color: var(--color-accent);
-    color: var(--color-surface);
+    color: var(--color-accent-strong);
+  }
 
-    &:hover,
-    &:focus-visible,
-    &:active {
-      background-color: var(--color-accent-strong);
-      border-color: var(--color-accent-strong);
-      color: var(--color-surface);
-    }
+  &__filter-chip:active {
+    background-color: oklch(0.885 0 0);
+  }
+
+  &__filter-chip--active {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  &__filter-chip--active:hover,
+  &__filter-chip--active:focus-visible,
+  &__filter-chip--active:active {
+    border-color: var(--color-accent-strong);
+    background-color: var(--color-accent-strong);
+    color: var(--color-surface);
+  }
+
+  &__dropdown-filters {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__filter-dropdown {
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  &__filter-summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 16px;
+    color: var(--color-text-main);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  &__filter-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  &__filter-summary::after {
+    content: "↓";
+    color: var(--color-text-muted);
+    font-size: 16px;
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
+
+  &__filter-dropdown[open] &__filter-summary::after {
+    transform: rotate(180deg);
+  }
+
+  &__filter-summary-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__filter-summary-count {
+    min-width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 7px;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__count {
+    margin: 0 auto 24px;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    text-align: center;
   }
 
   &__results {
@@ -568,16 +1250,33 @@ async function searchBySuggestion(suggestedQuery: string) {
 
   @media (max-width: 480px) {
     padding: 24px 16px 40px;
-    &__form {
+
+    &__filter-bar {
+      max-width: 100%;
+      align-items: stretch;
       flex-direction: column;
     }
 
-    &__actions {
+    &__filter-open,
+    &__filter-bar-reset {
       width: 100%;
     }
 
-    &__button {
-      flex: 1;
+    &__filter-bar-text {
+      text-align: center;
+    }
+
+    &__filters-panel {
+      width: 100%;
+    }
+
+    &__filter-mode {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    &__filter-mode-button {
+      width: 100%;
     }
 
     &__results {
