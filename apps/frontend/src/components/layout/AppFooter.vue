@@ -1,4 +1,109 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { computed, onMounted, ref, watch } from "vue";
+import { RouterLink, useRoute } from "vue-router";
+
+type SavedFooterPage = {
+  path: string;
+  title: string;
+  savedAt: string;
+};
+
+const route = useRoute();
+
+const SAVED_PAGES_KEY = "my-recipes:saved-pages";
+const TASTY_KEY_PREFIX = "my-recipes:tasty:";
+
+const isSaved = ref(false);
+const tastyCount = ref(0);
+
+const currentPath = computed(() => route.fullPath);
+
+const currentTitle = computed(() => {
+  const routeTitle = route.meta.title;
+
+  if (typeof routeTitle === "string") {
+    return routeTitle;
+  }
+
+  if (typeof document !== "undefined" && document.title) {
+    return document.title;
+  }
+
+  return "Мои рецепты";
+});
+
+function readSavedPages(): SavedFooterPage[] {
+  const rawSavedPages = localStorage.getItem(SAVED_PAGES_KEY);
+
+  if (!rawSavedPages) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(rawSavedPages) as SavedFooterPage[];
+  } catch {
+    return [];
+  }
+}
+
+function writeSavedPages(pages: SavedFooterPage[]) {
+  localStorage.setItem(SAVED_PAGES_KEY, JSON.stringify(pages));
+}
+
+function getTastyKey() {
+  return `${TASTY_KEY_PREFIX}${currentPath.value}`;
+}
+
+function syncFooterState() {
+  const savedPages = readSavedPages();
+
+  isSaved.value = savedPages.some((page) => page.path === currentPath.value);
+
+  const savedTastyCount = Number(localStorage.getItem(getTastyKey()) ?? 0);
+
+  tastyCount.value = Number.isFinite(savedTastyCount) ? savedTastyCount : 0;
+}
+
+function toggleSaveCurrentPage() {
+  const savedPages = readSavedPages();
+
+  const existingPageIndex = savedPages.findIndex(
+    (page) => page.path === currentPath.value,
+  );
+
+  if (existingPageIndex >= 0) {
+    savedPages.splice(existingPageIndex, 1);
+    isSaved.value = false;
+  } else {
+    savedPages.unshift({
+      path: currentPath.value,
+      title: currentTitle.value,
+      savedAt: new Date().toISOString(),
+    });
+
+    isSaved.value = true;
+  }
+
+  writeSavedPages(savedPages);
+}
+
+function markAsTasty() {
+  tastyCount.value += 1;
+
+  localStorage.setItem(getTastyKey(), String(tastyCount.value));
+}
+
+onMounted(() => {
+  syncFooterState();
+});
+
+watch(
+  () => route.fullPath,
+  () => {
+    syncFooterState();
+  },
+);
+</script>
 
 <template>
   <footer class="app-footer">
@@ -6,19 +111,39 @@
       <section class="app-footer__promo">
         <div class="app-footer__grid"></div>
 
-        <span class="app-footer__label app-footer__label--left">
-          Сохрани<br />
+        <button
+          type="button"
+          class="app-footer__label app-footer__label--left"
+          :class="{ 'app-footer__label--active': isSaved }"
+          :aria-pressed="isSaved"
+          @click="toggleSaveCurrentPage"
+        >
+          {{ isSaved ? "Сохранено" : "Сохрани" }}<br />
           рецепт
-        </span>
+        </button>
 
-        <a href="/recipes" class="app-footer__cta"> Найти рецепт </a>
+        <RouterLink to="/recipes" class="app-footer__cta">
+          Найти рецепт
+        </RouterLink>
 
-        <span class="app-footer__label app-footer__label--right"> Вкусно! </span>
+        <button
+          type="button"
+          class="app-footer__label app-footer__label--right"
+          :aria-label="`Отметить как вкусно. Сейчас отметок: ${tastyCount}`"
+          @click="markAsTasty"
+        >
+          <span>Вкусно!</span>
+
+          <span v-if="tastyCount > 0" class="app-footer__label-count">
+            {{ tastyCount }}
+          </span>
+        </button>
       </section>
 
       <section class="app-footer__bottom">
         <p class="app-footer__text">
-          Домашние рецепты, идеи для ужина и маленькие кулинарные находки на каждый день.
+          Домашние рецепты, идеи для ужина и маленькие кулинарные находки на
+          каждый день.
         </p>
 
         <div class="app-footer__row">
@@ -189,14 +314,29 @@
   min-height: 46px;
   padding: 8px 10px;
 
+  appearance: none;
   border: 2px solid var(--footer-text);
 
   color: #14110f;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
   text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.app-footer__label--active {
+  background-color: var(--footer-cta);
+}
+
+.app-footer__label-count {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .app-footer__label--left {
@@ -213,6 +353,8 @@
 
   width: 66px;
   height: 66px;
+
+  flex-direction: column;
 
   border-radius: 50%;
   background-color: #2f7ed8;
