@@ -1,17 +1,14 @@
 <script lang="ts" setup>
-import AppCard from "./AppCard.vue";
-
-type RecipeCardData = {
-  id: string | number;
-  slug: string;
-  category: string;
-  title: string;
-  image: string;
-  imageAlt: string;
-};
+import AppCard from "@/components/ui/AppCard.vue";
+import type { RecipeCatalogInput } from "@/data/recipes";
 
 defineProps<{
-  recipe: RecipeCardData;
+  recipe: Pick<
+    RecipeCatalogInput,
+    "id" | "slug" | "title" | "image"
+  > & {
+    category: Pick<RecipeCatalogInput["category"], "name">;
+  };
 }>();
 </script>
 
@@ -19,13 +16,13 @@ defineProps<{
   <AppCard
     tag="section"
     :title="recipe.title"
-    :subtitle="recipe.category"
+    :subtitle="recipe.category.name"
     :link="`/recipes/${recipe.slug}`"
   >
     <template #header>
       <img
-        :src="recipe.image"
-        :alt="recipe.imageAlt"
+        :src="recipe.image.url"
+        :alt="recipe.image.alt"
         class="recipe-card__image"
       />
     </template>

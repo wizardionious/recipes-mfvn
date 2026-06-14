@@ -6,18 +6,27 @@ import DefaultLayout from "@/components/layout/DefaultLayout.vue";
 import { recipes } from "@/data/recipes";
 import { ArrowLeft } from "@lucide/vue";
 import SectionHeader from "@/components/ui/SectionHeader.vue";
+import {
+  RecipeIngredient,
+  RecipeInstructions,
+} from "@/entities/recipe";
 
 const route = useRoute("/recipes/[slug]");
 
 const recipe = computed(() => {
-  return recipes.find((recipeItem) => recipeItem.slug === route.params.slug);
+  return recipes.find(
+    (recipeItem) => recipeItem.slug === route.params.slug,
+  );
 });
 </script>
 
 <template>
   <DefaultLayout>
     <main class="recipe-details">
-      <article v-if="recipe" class="recipe-details__article">
+      <article
+        v-if="recipe"
+        class="recipe-details__article"
+      >
         <RouterLink
           to="/"
           class="recipe-details__back inline-flex items-center gap-2 text-sm"
@@ -46,10 +55,16 @@ const recipe = computed(() => {
               {{ recipe.description }}
             </p>
 
-            <div class="recipe-details__meta flex flex-wrap gap-10px">
-              <span>Время: {{ recipe.cookingTime }} мин.</span>
+            <div
+              class="recipe-details__meta flex flex-wrap gap-10px"
+            >
+              <span
+                >Время: {{ recipe.cookingTime }} мин.</span
+              >
               <span>Порций: {{ recipe.servings }}</span>
-              <span>Сложность: {{ recipe.difficulty }}</span>
+              <span
+                >Сложность: {{ recipe.difficulty }}</span
+              >
             </div>
           </div>
         </section>
@@ -58,34 +73,20 @@ const recipe = computed(() => {
           <SectionHeader title="Ингредиенты" />
 
           <ul class="recipe-details__ingredients">
-            <li
+            <RecipeIngredient
               v-for="ingredient in recipe.ingredients"
               :key="ingredient.name"
-              class="recipe-details__ingredient flex justify-between gap-4"
-            >
-              <span class="recipe-details__ingredient-name">
-                {{ ingredient.name }}
-              </span>
-
-              <span class="recipe-details__ingredient-amount">
-                {{ ingredient.quantity }} {{ ingredient.unit }}
-              </span>
-            </li>
+              :ingredient
+            />
           </ul>
         </section>
 
         <section class="recipe-details__section">
           <SectionHeader title="Приготовление" />
 
-          <ol class="recipe-details__instructions">
-            <li
-              v-for="instruction in recipe.instructions"
-              :key="instruction"
-              class="recipe-details__instruction"
-            >
-              {{ instruction }}
-            </li>
-          </ol>
+          <RecipeInstructions
+            :instructions="recipe.instructions"
+          />
         </section>
       </article>
 
@@ -228,41 +229,6 @@ const recipe = computed(() => {
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  &__ingredient {
-    padding: 14px 16px;
-    background-color: var(--color-surface);
-    color: var(--color-text-body);
-    font-size: 15px;
-    line-height: 1.4;
-  }
-
-  &__ingredient-name {
-    font-weight: 600;
-  }
-
-  &__ingredient-amount {
-    color: var(--color-text-muted);
-    white-space: nowrap;
-  }
-
-  &__instructions {
-    max-width: 760px;
-    margin: 0;
-    padding: 24px 28px 24px 52px;
-    background-color: var(--color-surface);
-  }
-
-  &__instruction {
-    margin-bottom: 14px;
-    color: var(--color-text-body);
-    font-size: 16px;
-    line-height: 1.7;
-  }
-
-  &__instruction:last-child {
-    margin-bottom: 0;
   }
 
   &__not-found {

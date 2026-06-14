@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
 import CarouselIndicators from "@/components/ui/CarouselIndicators.vue";
-import RecipeCard from "@/components/ui/RecipeCard.vue";
+import { RecipeCard } from "@/entities/recipe";
 import SectionHeader from "@/components/ui/SectionHeader.vue";
 import { recipes } from "@/data/recipes";
 import { computed, ref } from "vue";
@@ -25,12 +25,11 @@ const seasonalRecipes = recipes
 
 const marketRecipes = seasonalRecipes.map((recipe) => {
   return {
-    id: recipe.id,
-    slug: recipe.slug,
-    category: recipe.seasonalTag ?? recipe.category.name,
-    title: recipe.title,
-    image: recipe.image.url,
-    imageAlt: recipe.image.alt ?? recipe.title,
+    ...recipe,
+    category: {
+      ...recipe.category,
+      name: recipe.seasonalTag ?? recipe.category.name,
+    },
   };
 });
 
@@ -43,7 +42,8 @@ const heroImages = computed(() => [
 
 const activeHeroImage = computed(() => {
   return (
-    heroImages.value[activeHeroImageIndex.value] ?? featuredRecipe.image.url
+    heroImages.value[activeHeroImageIndex.value] ??
+    featuredRecipe.image.url
   );
 });
 
@@ -80,9 +80,13 @@ function setActiveHeroImage(index: number) {
           </p>
         </RouterLink>
 
-        <div class="home-page__hero-previews flex items-center gap-2">
+        <div
+          class="home-page__hero-previews flex items-center gap-2"
+        >
           <button
-            v-for="(preview, index) in featuredRecipe.previewImages"
+            v-for="(
+              preview, index
+            ) in featuredRecipe.previewImages"
             :key="preview"
             type="button"
             class="home-page__hero-preview"
@@ -92,7 +96,11 @@ function setActiveHeroImage(index: number) {
             }"
             @click="setActiveHeroImage(index + 1)"
           >
-            <img :src="preview" alt="" class="home-page__hero-preview-image" />
+            <img
+              :src="preview"
+              alt=""
+              class="home-page__hero-preview-image"
+            />
           </button>
         </div>
       </div>
@@ -110,8 +118,14 @@ function setActiveHeroImage(index: number) {
         subtitle="Сезонные продукты дешевле и вкуснее"
       />
 
-      <div class="home-page__recipe-grid grid gap-x-5 gap-y-8">
-        <RecipeCard v-for="recipe in marketRecipes" :key="recipe.id" :recipe />
+      <div
+        class="home-page__recipe-grid grid gap-x-5 gap-y-8"
+      >
+        <RecipeCard
+          v-for="recipe in marketRecipes"
+          :key="recipe.id"
+          :recipe
+        />
       </div>
     </section>
   </DefaultLayout>

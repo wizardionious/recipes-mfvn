@@ -1,11 +1,16 @@
-import type { RecipeWithComputed } from '@recipes/shared';
-import { createSlug } from '@/utils/createSlug';
+import type { RecipeWithComputed } from "@recipes/shared";
+import { createSlug } from "@/utils/createSlug";
 
-export type RecipeInput = Omit<RecipeWithComputed, 'slug'> & {
+export type RecipeInput = Omit<
+  RecipeWithComputed,
+  "slug"
+> & {
   slug?: string;
 };
 
-export function addRecipeSlugs(recipes: RecipeInput[]): RecipeWithComputed[] {
+export function addRecipeSlugs(
+  recipes: RecipeInput[],
+): RecipeWithComputed[] {
   const usedSlugs = new Set<string>();
 
   return recipes.map((recipe) => {

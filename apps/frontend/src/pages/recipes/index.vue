@@ -1,10 +1,14 @@
 <script lang="ts" setup>
 import DefaultLayout from "@/components/layout/DefaultLayout.vue";
-import RecipeCard from "@/components/ui/RecipeCard.vue";
+import { RecipeCard } from "@/entities/recipe";
 import RecipeSearchForm from "./components/RecipeSearchForm.vue";
 import { recipes } from "@/data/recipes";
 import { computed, ref, watch } from "vue";
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import {
+  RouterLink,
+  useRoute,
+  useRouter,
+} from "vue-router";
 import { ArrowLeft } from "@lucide/vue";
 import { normalizeSearchText } from "@/utils/normalizeSearchText";
 
@@ -21,7 +25,9 @@ const isFiltersPanelOpen = ref(false);
 type FilterMode = "basic" | "advanced";
 
 const filterMode = computed<FilterMode>(() => {
-  return route.query.filterMode === "advanced" ? "advanced" : "basic";
+  return route.query.filterMode === "advanced"
+    ? "advanced"
+    : "basic";
 });
 
 const isAdvancedFilterMode = computed(() => {
@@ -124,9 +130,13 @@ const recipeTagFilterGroups: RecipeTagFilterGroup[] = [
   },
 ];
 
-const recipeTagFilters = computed<RecipeFilterOption[]>(() => {
-  return recipeTagFilterGroups.flatMap((group) => group.options);
-});
+const recipeTagFilters = computed<RecipeFilterOption[]>(
+  () => {
+    return recipeTagFilterGroups.flatMap(
+      (group) => group.options,
+    );
+  },
+);
 
 type RecipeWithFilters = Recipe & {
   mealTypes?: string[];
@@ -137,7 +147,10 @@ type RecipeWithFilters = Recipe & {
 function getQueryList(queryValue: unknown) {
   if (Array.isArray(queryValue)) {
     return queryValue
-      .filter((value): value is string => typeof value === "string")
+      .filter(
+        (value): value is string =>
+          typeof value === "string",
+      )
       .map((value) => value.trim())
       .filter(Boolean);
   }
@@ -170,25 +183,37 @@ function getSingleTagPerGroup(tags: string[]) {
 const selectedMealTypes = computed(() => {
   const mealTypes = getQueryList(route.query.meal);
 
-  return isAdvancedFilterMode.value ? mealTypes : mealTypes.slice(0, 1);
+  return isAdvancedFilterMode.value
+    ? mealTypes
+    : mealTypes.slice(0, 1);
 });
 
 const selectedTags = computed(() => {
   const tags = getQueryList(route.query.tag);
 
-  return isAdvancedFilterMode.value ? tags : getSingleTagPerGroup(tags);
+  return isAdvancedFilterMode.value
+    ? tags
+    : getSingleTagPerGroup(tags);
 });
 
 const hasSelectedFilters = computed(() => {
-  return selectedMealTypes.value.length > 0 || selectedTags.value.length > 0;
+  return (
+    selectedMealTypes.value.length > 0 ||
+    selectedTags.value.length > 0
+  );
 });
 
 const selectedFiltersCount = computed(() => {
-  return selectedMealTypes.value.length + selectedTags.value.length;
+  return (
+    selectedMealTypes.value.length +
+    selectedTags.value.length
+  );
 });
 
 const hasActiveSearchOrFilters = computed(() => {
-  return Boolean(searchQuery.value) || hasSelectedFilters.value;
+  return (
+    Boolean(searchQuery.value) || hasSelectedFilters.value
+  );
 });
 
 watch(
@@ -209,23 +234,34 @@ async function goToRecipesCatalog(
     filterMode?: FilterMode;
   } = {},
 ) {
-  const normalizedQuery = (options.searchQuery ?? localQuery.value).trim();
-  const nextMealTypes = options.mealTypes ?? selectedMealTypes.value;
+  const normalizedQuery = (
+    options.searchQuery ?? localQuery.value
+  ).trim();
+  const nextMealTypes =
+    options.mealTypes ?? selectedMealTypes.value;
   const nextTags = options.tags ?? selectedTags.value;
-  const nextFilterMode = options.filterMode ?? filterMode.value;
+  const nextFilterMode =
+    options.filterMode ?? filterMode.value;
 
   try {
     await router.push({
       path: "/recipes",
       query: {
         ...(normalizedQuery && { search: normalizedQuery }),
-        ...(nextMealTypes.length && { meal: nextMealTypes }),
+        ...(nextMealTypes.length && {
+          meal: nextMealTypes,
+        }),
         ...(nextTags.length && { tag: nextTags }),
-        ...(nextFilterMode === "advanced" && { filterMode: "advanced" }),
+        ...(nextFilterMode === "advanced" && {
+          filterMode: "advanced",
+        }),
       },
     });
   } catch (error) {
-    console.error("Recipes catalog navigation failed:", error);
+    console.error(
+      "Recipes catalog navigation failed:",
+      error,
+    );
   }
 }
 
@@ -265,18 +301,22 @@ function closeFiltersPanel() {
   isFiltersPanelOpen.value = false;
 }
 
-function toggleQueryValue(currentValues: string[], value: string) {
+function toggleQueryValue(
+  currentValues: string[],
+  value: string,
+) {
   if (currentValues.includes(value)) {
-    return currentValues.filter((currentValue) => currentValue !== value);
+    return currentValues.filter(
+      (currentValue) => currentValue !== value,
+    );
   }
 
   return [...currentValues, value];
 }
 
 async function toggleAdvancedFilterMode() {
-  const nextFilterMode: FilterMode = isAdvancedFilterMode.value
-    ? "basic"
-    : "advanced";
+  const nextFilterMode: FilterMode =
+    isAdvancedFilterMode.value ? "basic" : "advanced";
 
   const nextMealTypes =
     nextFilterMode === "advanced"
@@ -299,13 +339,17 @@ async function toggleAdvancedFilterMode() {
 async function toggleMealType(mealType: string) {
   if (isAdvancedFilterMode.value) {
     await goToRecipesCatalog({
-      mealTypes: toggleQueryValue(selectedMealTypes.value, mealType),
+      mealTypes: toggleQueryValue(
+        selectedMealTypes.value,
+        mealType,
+      ),
     });
 
     return;
   }
 
-  const isCurrentMealTypeSelected = selectedMealTypes.value.includes(mealType);
+  const isCurrentMealTypeSelected =
+    selectedMealTypes.value.includes(mealType);
 
   await goToRecipesCatalog({
     mealTypes: isCurrentMealTypeSelected ? [] : [mealType],
@@ -314,7 +358,9 @@ async function toggleMealType(mealType: string) {
 
 function getTagGroupValues(tag: string): string[] {
   const tagGroup = recipeTagFilterGroups.find((group) => {
-    return group.options.some((option) => option.value === tag);
+    return group.options.some(
+      (option) => option.value === tag,
+    );
   });
 
   if (!tagGroup) {
@@ -335,11 +381,14 @@ async function toggleTag(tag: string) {
 
   const tagGroupValues = getTagGroupValues(tag);
 
-  const tagsFromOtherGroups = selectedTags.value.filter((selectedTag) => {
-    return !tagGroupValues.includes(selectedTag);
-  });
+  const tagsFromOtherGroups = selectedTags.value.filter(
+    (selectedTag) => {
+      return !tagGroupValues.includes(selectedTag);
+    },
+  );
 
-  const isCurrentTagAlreadySelected = selectedTags.value.includes(tag);
+  const isCurrentTagAlreadySelected =
+    selectedTags.value.includes(tag);
 
   const nextTags = isCurrentTagAlreadySelected
     ? tagsFromOtherGroups
@@ -350,36 +399,29 @@ async function toggleTag(tag: string) {
   });
 }
 
-function mapRecipeToCard(recipe: Recipe) {
-  return {
-    id: recipe.id,
-    slug: recipe.slug,
-    category: recipe.category.name,
-    title: recipe.title,
-    image: recipe.image.url,
-    imageAlt: recipe.image.alt ?? recipe.title,
-  };
-}
-
 const recipeCards = computed(() => {
-  return recipes
-    .filter((recipe) => {
-      const recipeWithFilters = recipe as RecipeWithFilters;
+  return recipes.filter((recipe) => {
+    const recipeWithFilters = recipe as RecipeWithFilters;
 
-      const hasMealType =
-        selectedMealTypes.value.length === 0 ||
-        selectedMealTypes.value.some((mealType) => {
-          return recipeWithFilters.mealTypes?.includes(mealType);
-        });
+    const hasMealType =
+      selectedMealTypes.value.length === 0 ||
+      selectedMealTypes.value.some((mealType) => {
+        return recipeWithFilters.mealTypes?.includes(
+          mealType,
+        );
+      });
 
-      if (!hasMealType) {
-        return false;
-      }
+    if (!hasMealType) {
+      return false;
+    }
 
-      const hasSelectedTagGroups = recipeTagFilterGroups.every((group) => {
+    const hasSelectedTagGroups =
+      recipeTagFilterGroups.every((group) => {
         const selectedGroupTags = group.options
           .map((option) => option.value)
-          .filter((value) => selectedTags.value.includes(value));
+          .filter((value) =>
+            selectedTags.value.includes(value),
+          );
 
         if (selectedGroupTags.length === 0) {
           return true;
@@ -390,29 +432,32 @@ const recipeCards = computed(() => {
         });
       });
 
-      if (!hasSelectedTagGroups) {
-        return false;
-      }
+    if (!hasSelectedTagGroups) {
+      return false;
+    }
 
-      if (!normalizedSearchQuery.value) {
-        return true;
-      }
+    if (!normalizedSearchQuery.value) {
+      return true;
+    }
 
-      const searchableText = normalizeSearchText(
-        [
-          recipe.title,
-          recipe.description,
-          recipe.category.name,
-          recipeWithFilters.seasonalTag,
-          ...recipe.ingredients.map((ingredient) => ingredient.name),
-        ]
-          .filter(Boolean)
-          .join(" "),
-      );
+    const searchableText = normalizeSearchText(
+      [
+        recipe.title,
+        recipe.description,
+        recipe.category.name,
+        recipeWithFilters.seasonalTag,
+        ...recipe.ingredients.map(
+          (ingredient) => ingredient.name,
+        ),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
 
-      return searchableText.includes(normalizedSearchQuery.value);
-    })
-    .map(mapRecipeToCard);
+    return searchableText.includes(
+      normalizedSearchQuery.value,
+    );
+  });
 });
 
 function getRecipeWord(count: number) {
@@ -452,11 +497,15 @@ const resultCountText = computed(() => {
 
 const activeFilterNames = computed(() => {
   const activeMealTypeNames = mealTypeFilters
-    .filter((filter) => selectedMealTypes.value.includes(filter.value))
+    .filter((filter) =>
+      selectedMealTypes.value.includes(filter.value),
+    )
     .map((filter) => filter.label);
 
   const activeTagNames = recipeTagFilters.value
-    .filter((filter) => selectedTags.value.includes(filter.value))
+    .filter((filter) =>
+      selectedTags.value.includes(filter.value),
+    )
     .map((filter) => filter.label);
 
   return [...activeMealTypeNames, ...activeTagNames];
@@ -478,7 +527,13 @@ const emptyStateTitle = computed(() => {
   return "Ничего не найдено";
 });
 
-const suggestedSearchQueries = ["кофе", "хлеб", "свёкла", "клубника", "салат"];
+const suggestedSearchQueries = [
+  "кофе",
+  "хлеб",
+  "свёкла",
+  "клубника",
+  "салат",
+];
 
 async function searchBySuggestion(suggestedQuery: string) {
   localQuery.value = suggestedQuery;
@@ -496,33 +551,46 @@ async function searchBySuggestion(suggestedQuery: string) {
         to="/"
         class="recipes-page__back inline-flex items-center gap-2"
       >
-        <ArrowLeft :size="16" aria-hidden="true" />На главную
+        <ArrowLeft :size="16" aria-hidden="true" />На
+        главную
       </RouterLink>
 
       <header class="recipes-page__header">
         <h1 class="recipes-page__title">
-          {{ searchQuery ? "Поиск рецептов" : "Каталог рецептов" }}
+          {{
+            searchQuery
+              ? "Поиск рецептов"
+              : "Каталог рецептов"
+          }}
         </h1>
 
         <p
           v-if="searchQuery && activeFilterText"
           class="recipes-page__subtitle"
         >
-          Результаты по запросу: <strong>«{{ searchQuery }}»</strong> с
-          фильтрами:
+          Результаты по запросу:
+          <strong>«{{ searchQuery }}»</strong> с фильтрами:
           <strong>«{{ activeFilterText }}»</strong>
         </p>
 
-        <p v-else-if="searchQuery" class="recipes-page__subtitle">
-          Результаты по запросу: <strong>«{{ searchQuery }}»</strong>
+        <p
+          v-else-if="searchQuery"
+          class="recipes-page__subtitle"
+        >
+          Результаты по запросу:
+          <strong>«{{ searchQuery }}»</strong>
         </p>
 
-        <p v-else-if="activeFilterText" class="recipes-page__subtitle">
+        <p
+          v-else-if="activeFilterText"
+          class="recipes-page__subtitle"
+        >
           Фильтры: <strong>«{{ activeFilterText }}»</strong>
         </p>
 
         <p v-else class="recipes-page__subtitle">
-          Ищите по названию, приёму пищи, тегу или ингредиенту.
+          Ищите по названию, приёму пищи, тегу или
+          ингредиенту.
         </p>
       </header>
 
@@ -549,8 +617,12 @@ async function searchBySuggestion(suggestedQuery: string) {
           </span>
         </button>
 
-        <p v-if="activeFilterText" class="recipes-page__filter-bar-text">
-          Активные: <strong>«{{ activeFilterText }}»</strong>
+        <p
+          v-if="activeFilterText"
+          class="recipes-page__filter-bar-text"
+        >
+          Активные:
+          <strong>«{{ activeFilterText }}»</strong>
         </p>
 
         <button
@@ -572,7 +644,9 @@ async function searchBySuggestion(suggestedQuery: string) {
         @click.self="closeFiltersPanel"
       >
         <aside class="recipes-page__filters-panel">
-          <header class="recipes-page__filters-panel-header">
+          <header
+            class="recipes-page__filters-panel-header"
+          >
             <button
               type="button"
               class="recipes-page__filters-panel-close"
@@ -582,7 +656,9 @@ async function searchBySuggestion(suggestedQuery: string) {
               ×
             </button>
 
-            <h2 class="recipes-page__filters-panel-title">Фильтры</h2>
+            <h2 class="recipes-page__filters-panel-title">
+              Фильтры
+            </h2>
 
             <button
               v-if="hasSelectedFilters"
@@ -596,8 +672,12 @@ async function searchBySuggestion(suggestedQuery: string) {
 
           <div class="recipes-page__filters-panel-body">
             <div class="recipes-page__filter-mode">
-              <div class="recipes-page__filter-mode-content">
-                <h3 class="recipes-page__filter-mode-title">Режим подбора</h3>
+              <div
+                class="recipes-page__filter-mode-content"
+              >
+                <h3 class="recipes-page__filter-mode-title">
+                  Режим подбора
+                </h3>
 
                 <p class="recipes-page__filter-mode-text">
                   {{
@@ -617,12 +697,18 @@ async function searchBySuggestion(suggestedQuery: string) {
                 }"
                 @click="toggleAdvancedFilterMode"
               >
-                {{ isAdvancedFilterMode ? "Выключить" : "Расширенный режим" }}
+                {{
+                  isAdvancedFilterMode
+                    ? "Выключить"
+                    : "Расширенный режим"
+                }}
               </button>
             </div>
 
             <div class="recipes-page__filter-group">
-              <h3 class="recipes-page__filter-title">Приём пищи</h3>
+              <h3 class="recipes-page__filter-title">
+                Приём пищи
+              </h3>
 
               <div class="recipes-page__filter-list">
                 <button
@@ -632,7 +718,9 @@ async function searchBySuggestion(suggestedQuery: string) {
                   class="recipes-page__filter-chip"
                   :class="{
                     'recipes-page__filter-chip--active':
-                      selectedMealTypes.includes(filter.value),
+                      selectedMealTypes.includes(
+                        filter.value,
+                      ),
                   }"
                   @click="toggleMealType(filter.value)"
                 >
@@ -647,21 +735,29 @@ async function searchBySuggestion(suggestedQuery: string) {
                 :key="group.title"
                 class="recipes-page__filter-dropdown"
               >
-                <summary class="recipes-page__filter-summary">
-                  <span class="recipes-page__filter-summary-main">
+                <summary
+                  class="recipes-page__filter-summary"
+                >
+                  <span
+                    class="recipes-page__filter-summary-main"
+                  >
                     <span>{{ group.title }}</span>
 
                     <span
                       v-if="
                         group.options.filter((option) =>
-                          selectedTags.includes(option.value),
+                          selectedTags.includes(
+                            option.value,
+                          ),
                         ).length
                       "
                       class="recipes-page__filter-summary-count"
                     >
                       {{
                         group.options.filter((option) =>
-                          selectedTags.includes(option.value),
+                          selectedTags.includes(
+                            option.value,
+                          ),
                         ).length
                       }}
                     </span>
@@ -689,7 +785,9 @@ async function searchBySuggestion(suggestedQuery: string) {
             </div>
           </div>
 
-          <footer class="recipes-page__filters-panel-footer">
+          <footer
+            class="recipes-page__filters-panel-footer"
+          >
             <p class="recipes-page__filters-panel-count">
               {{ resultCountText }}
             </p>
@@ -709,7 +807,10 @@ async function searchBySuggestion(suggestedQuery: string) {
         {{ resultCountText }}
       </p>
 
-      <section v-if="recipeCards.length" class="recipes-page__results">
+      <section
+        v-if="recipeCards.length"
+        class="recipes-page__results"
+      >
         <RecipeCard
           v-for="recipeCard in recipeCards"
           :key="recipeCard.id"
@@ -717,21 +818,31 @@ async function searchBySuggestion(suggestedQuery: string) {
         />
       </section>
 
-      <section v-else-if="hasActiveSearchOrFilters" class="recipes-page__empty">
+      <section
+        v-else-if="hasActiveSearchOrFilters"
+        class="recipes-page__empty"
+      >
         <h2>{{ emptyStateTitle }}</h2>
 
         <p v-if="searchQuery && activeFilterText">
-          По запросу <strong>«{{ searchQuery }}»</strong> с фильтрами
-          <strong>«{{ activeFilterText }}»</strong> ничего не найдено. Попробуй
-          другой запрос или очисти фильтры.
+          По запросу <strong>«{{ searchQuery }}»</strong> с
+          фильтрами
+          <strong>«{{ activeFilterText }}»</strong> ничего
+          не найдено. Попробуй другой запрос или очисти
+          фильтры.
         </p>
 
         <p v-else-if="activeFilterText">
-          По фильтрам <strong>«{{ activeFilterText }}»</strong> пока нет
-          рецептов. Можно выбрать другие фильтры или посмотреть весь список.
+          По фильтрам
+          <strong>«{{ activeFilterText }}»</strong> пока нет
+          рецептов. Можно выбрать другие фильтры или
+          посмотреть весь список.
         </p>
 
-        <p v-else>Попробуй другой запрос или выбери одну из подсказок ниже.</p>
+        <p v-else>
+          Попробуй другой запрос или выбери одну из
+          подсказок ниже.
+        </p>
 
         <button
           v-if="hasSelectedFilters"
@@ -742,7 +853,10 @@ async function searchBySuggestion(suggestedQuery: string) {
           Показать все рецепты
         </button>
 
-        <div class="recipes-page__suggestions" aria-label="Подсказки поиска">
+        <div
+          class="recipes-page__suggestions"
+          aria-label="Подсказки поиска"
+        >
           <button
             v-for="suggestedQuery in suggestedSearchQueries"
             :key="suggestedQuery"
@@ -1143,7 +1257,8 @@ async function searchBySuggestion(suggestedQuery: string) {
     content: "↓";
     color: var(--color-text-muted);
     font-size: 16px;
-    transition: transform var(--duration-fast) var(--ease-standard);
+    transition: transform var(--duration-fast)
+      var(--ease-standard);
   }
 
   &__filter-dropdown[open] &__filter-summary::after {
