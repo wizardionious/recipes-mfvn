@@ -11,6 +11,7 @@ import {
 } from "vue-router";
 import { ArrowLeft } from "@lucide/vue";
 import { normalizeSearchText } from "@/utils/normalizeSearchText";
+import { pluralize } from "@/shared/lib/pluralize.ts";
 
 defineOptions({
   name: "RecipesPage",
@@ -460,39 +461,23 @@ const recipeCards = computed(() => {
   });
 });
 
-function getRecipeWord(count: number) {
-  const absoluteCount = Math.abs(count);
-  const lastTwoDigits = absoluteCount % 100;
-  const lastDigit = absoluteCount % 10;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-    return "рецептов";
-  }
-
-  if (lastDigit === 1) {
-    return "рецепт";
-  }
-
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return "рецепта";
-  }
-
-  return "рецептов";
-}
-
 const resultCountText = computed(() => {
   const count = recipeCards.value.length;
-  const recipeWord = getRecipeWord(count);
+  const recipeWord = pluralize(count, {
+    one: "рецепт",
+    few: "рецепта",
+    many: "рецептов",
+  });
 
   if (!hasActiveSearchOrFilters.value) {
-    return `Всего ${count} ${recipeWord}`;
+    return `Всего ${recipeWord}`;
   }
 
-  if (recipeWord === "рецепт") {
-    return `Найден ${count} ${recipeWord}`;
+  if (recipeWord.split(" ")[1] === "рецепт") {
+    return `Найден ${recipeWord}`;
   }
 
-  return `Найдено ${count} ${recipeWord}`;
+  return `Найдено ${recipeWord}`;
 });
 
 const activeFilterNames = computed(() => {
