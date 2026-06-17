@@ -582,8 +582,8 @@ async function searchBySuggestion(suggestedQuery: string) {
       <RecipeSearchForm
         v-model="localQuery"
         :show-clear-button="hasActiveSearchOrFilters"
-        @submit-search="submitSearch"
-        @clear-search="clearSearch"
+        @submit="submitSearch"
+        @clear="clearSearch"
       />
 
       <div class="recipes-page__filter-bar">

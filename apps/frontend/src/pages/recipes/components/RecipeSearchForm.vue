@@ -1,36 +1,24 @@
 <script lang="ts" setup>
-import { computed } from "vue";
-
-const props = defineProps<{
-  modelValue: string;
+defineProps<{
   showClearButton: boolean;
 }>();
 
+const model = defineModel<string>();
+
 const emit = defineEmits<{
-  (event: "update:modelValue", value: string): void;
-  (event: "submit-search"): void;
-  (event: "clear-search"): void;
+  submit: [];
+  clear: [];
 }>();
-
-const searchQuery = computed({
-  get() {
-    return props.modelValue;
-  },
-
-  set(value: string) {
-    emit("update:modelValue", value);
-  },
-});
 </script>
 
 <template>
   <form
     class="recipe-search-form"
     role="search"
-    @submit.prevent="emit('submit-search')"
+    @submit.prevent="emit('submit')"
   >
     <input
-      v-model="searchQuery"
+      v-model="model"
       class="recipe-search-form__input"
       type="search"
       placeholder="Например: кофе"
@@ -38,7 +26,10 @@ const searchQuery = computed({
     />
 
     <div class="recipe-search-form__actions">
-      <button class="recipe-search-form__button" type="submit">
+      <button
+        class="recipe-search-form__button"
+        type="submit"
+      >
         Найти
       </button>
 
@@ -46,7 +37,7 @@ const searchQuery = computed({
         v-if="showClearButton"
         class="recipe-search-form__button recipe-search-form__button--secondary"
         type="button"
-        @click="emit('clear-search')"
+        @click="emit('clear')"
       >
         Очистить
       </button>
